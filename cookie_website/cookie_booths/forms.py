@@ -7,7 +7,7 @@ from .models import Booth_Location
 
 class BoothLocationForm(forms.ModelForm):
     class Meta:
-        model = Booth_Location
+        model = BoothLocation
         fields = ['booth_location',
                   'booth_address',
                   'booth_notes',
