@@ -1,17 +1,17 @@
 from django.test import TestCase
 from django.utils import timezone
 
-from cookie_booths.models import Booth_Location, Booth_Day, Booth_Block
+from cookie_booths.models import BoothHours, BoothLocation, BoothDay, BoothBlock
 
 import datetime
 import pytz
 
 class BoothBlockTestCase(TestCase):
     def test_reserve_block(self):
-        location = Booth_Location.objects.create()
-        day = Booth_Day.objects.create(booth=location)
-        block = Booth_Block.objects.create(booth_day=day, \
-                                           booth_block_enabled=False)
+        location = BoothLocation.objects.create()
+        day = BoothDay.objects.create(booth=location)
+        block = BoothBlock.objects.create(booth_day=day,
+                                          booth_block_enabled=False)
 
         troop_id_1 = 5
         troop_id_2 = 6
@@ -34,35 +34,35 @@ class BoothBlockTestCase(TestCase):
         self.assertTrue(block.booth_block_current_troop_owner == troop_id_1)
         self.assertTrue(block.booth_block_reserved == True)
 
+
 class BoothDayTestCase(TestCase):
     def test_add_or_update_hours(self):
         # Setup
-        location = Booth_Location.objects.create()
+        location = BoothLocation.objects.create()
         date = datetime.date(2021, 10, 22)
 
-        day = Booth_Day.objects.create(booth=location, \
-                                       booth_day_date=date, \
-                                       booth_day_hours_set=False, \
-
-                                       booth_day_enabled=False)
+        day = BoothDay.objects.create(booth=location,
+                                      booth_day_date=date,
+                                      booth_day_hours_set=False,
+                                      booth_day_enabled=False)
 
         open_time = datetime.datetime(2021, 10, 22, 8, 0, 0, 0, pytz.UTC)
         close_time = datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)
 
-        # Pre-conditions - we have no Booth_Blocks that have been created
-        self.assertTrue(Booth_Block.objects.count() == 0)
+        # Pre-conditions - we have no BoothBlocks that have been created
+        self.assertTrue(BoothBlock.objects.count() == 0)
 
         # Case 1 - we have no hours set.
         # We're setting a 4 hour block, so in 2 hour increments, this should result in two blocks created
         day.add_or_update_hours(open_time, close_time)
-        self.assertEqual(Booth_Block.objects.count(), 2)
+        self.assertEqual(BoothBlock.objects.count(), 2)
         # One should be 8-10, the other 10-12
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 8, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 8, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC)))
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)))
 
         # Case 2 - hours already set. We're moving to hours totally exclusive of the current hours
         # All blocks currently there should be deleted, and we should have two new blocks created
@@ -71,93 +71,94 @@ class BoothDayTestCase(TestCase):
 
         day.add_or_update_hours(open_time, close_time)
         # Confirm we still have two blocks present
-        self.assertEqual(Booth_Block.objects.count(), 2)
+        self.assertEqual(BoothBlock.objects.count(), 2)
         # And confirm that the time ranges are what we expected - 14-16, 16-18
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 14, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 16, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 16, 0, 0, 0, pytz.UTC)))
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 16, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 18, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 16, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 18, 0, 0, 0, pytz.UTC)))
 
         # Case 3 - hours already set. We're going to extend the closing time. We expect a new block added on the end
         close_time = datetime.datetime(2021, 10, 22, 20, 0, 0, 0, pytz.UTC)
 
         day.add_or_update_hours(open_time, close_time)
         # Confirm we now have three blocks
-        self.assertEqual(Booth_Block.objects.count(), 3)
+        self.assertEqual(BoothBlock.objects.count(), 3)
         # The existing blocks should not have been modified, and we'll have one new one
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 14, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 16, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 16, 0, 0, 0, pytz.UTC)))
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 16, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 18, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 16, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 18, 0, 0, 0, pytz.UTC)))
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 18, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 20, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 18, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 20, 0, 0, 0, pytz.UTC)))
 
         # Case 4 - hours already set. Extend the closing by a not clean amount (3 hours)
         close_time = datetime.datetime(2021, 10, 22, 23, 0, 0, 0, pytz.UTC)
 
         day.add_or_update_hours(open_time, close_time)
         # We should now have four blocks, with some extra dangling time at the end
-        self.assertEqual(Booth_Block.objects.count(), 4)
+        self.assertEqual(BoothBlock.objects.count(), 4)
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 20, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 22, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 20, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 22, 0, 0, 0, pytz.UTC)))
 
         # Case 5 - hours already set. Move the closing hours in. We expect that block we added on the end to get deleted
         close_time = datetime.datetime(2021, 10, 22, 21, 0, 0, 0, pytz.UTC)
 
         day.add_or_update_hours(open_time, close_time)
         # Confirm that block was removed
-        self.assertEqual(Booth_Block.objects.count(), 3)
+        self.assertEqual(BoothBlock.objects.count(), 3)
         self.assertFalse(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 20, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 22, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 20, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 22, 0, 0, 0, pytz.UTC)))
 
         # Case 6 - hours already set. Make the opening time earlier. We expect a block added on that side
         open_time = datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)
 
         day.add_or_update_hours(open_time, close_time)
         # Confirm a block was added
-        self.assertEqual(Booth_Block.objects.count(), 4)
+        self.assertEqual(BoothBlock.objects.count(), 4)
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 14, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 14, 0, 0, 0, pytz.UTC)))
 
         # Case 7 - hours already set. Make the opening time earlier, in an odd increment. We expect one block to be added
         open_time = datetime.datetime(2021, 10, 22, 9, 0, 0, 0, pytz.UTC)
 
         day.add_or_update_hours(open_time, close_time)
         # Confirm a block was added
-        self.assertEqual(Booth_Block.objects.count(), 5)
+        self.assertEqual(BoothBlock.objects.count(), 5)
         self.assertTrue(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)))
 
         # Case 8 - hours already set. Make the opening time later. We expect a block to be deleted to move in
         open_time = datetime.datetime(2021, 10, 22, 11, 0, 0, 0, pytz.UTC)
 
         day.add_or_update_hours(open_time, close_time)
         # Confirm a block was removed
-        self.assertEqual(Booth_Block.objects.count(), 4)
+        self.assertEqual(BoothBlock.objects.count(), 4)
         self.assertFalse(
-            Booth_Block.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC), \
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)))
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)))
+
 
 class BoothLocationTestCase(TestCase):
     def test_add_or_update_day(self):
         # The block creation was tested up in BoothDayTestCase.
-        # But this is just testing that this all cascades down properly from Booth_Location - creating a day,
+        # But this is just testing that this all cascades down properly from BoothLocation - creating a day,
         # which in turn should create a number of blocks
-        location = Booth_Location.objects.create(booth_location="Walmart", \
-                                                 booth_address="123 Feels Pretty Good Kay St", \
-                                                 booth_enabled=False, \
-                                                 booth_is_golden_ticket=False, \
-                                                 booth_requires_masks=True, \
-                                                 booth_is_outside=True,
+        location = BoothLocation.objects.create(booth_location="Walmart",
+                                                booth_address="123 Feels Pretty Good Kay St",
+                                                booth_enabled=False,
+                                                booth_is_golden_ticket=False,
+                                                booth_requires_masks=True,
+                                                booth_is_outside=True,
                                                  booth_notes="You can sell cookies here")
 
         date = datetime.datetime(2021, 10, 22)
@@ -168,37 +169,176 @@ class BoothLocationTestCase(TestCase):
         location.add_or_update_day(date, date_open_time, date_close_time)
 
         # Confirm what was constructed as a result.
-        # One Booth_Day, with the open and close times we have specified
-        self.assertEqual(Booth_Day.objects.count(), 1)
+        # One BoothDay, with the open and close times we have specified
+        self.assertEqual(BoothDay.objects.count(), 1)
         self.assertTrue(
-            Booth_Day.objects.filter(booth_day_date=date, \
-                                     booth_day_hours_set=True, \
-                                     booth_day_open_time=date_open_time, \
-                                     booth_day_close_time=date_close_time))
+            BoothDay.objects.filter(booth_day_date=date,
+                                    booth_day_hours_set=True,
+                                    booth_day_open_time=date_open_time,
+                                    booth_day_close_time=date_close_time))
 
-        # Two Booth_Blocks, based on the open/close times
-        self.assertEqual(Booth_Block.objects.count(), 2)
+        # Two BoothBlocks, based on the open/close times
+        self.assertEqual(BoothBlock.objects.count(), 2)
 
         # Case 2 - Edit the exiting date with updated open/close times
         # We want to confirm the existing day was updated and a new one was not created
         date_open_time = datetime.datetime(2021, 10, 22, 6, 0, 0, 0, pytz.UTC)
         location.add_or_update_day(date, date_open_time, date_close_time)
 
-        # Confirm the updates - one Booth_Day still, with the parameters we expect. 3 Booth_Blocks
-        self.assertEqual(Booth_Day.objects.count(), 1)
+        # Confirm the updates - one BoothDay still, with the parameters we expect. 3 BoothBlocks
+        self.assertEqual(BoothDay.objects.count(), 1)
         self.assertTrue(
-            Booth_Day.objects.filter(booth_day_date=date, \
-                                     booth_day_hours_set=True, \
-                                     booth_day_open_time=date_open_time, \
-                                     booth_day_close_time=date_close_time))
-        self.assertEqual(Booth_Block.objects.count(), 3)
+            BoothDay.objects.filter(booth_day_date=date,
+                                    booth_day_hours_set=True,
+                                    booth_day_open_time=date_open_time,
+                                    booth_day_close_time=date_close_time))
+        self.assertEqual(BoothBlock.objects.count(), 3)
 
         # Case 3 - add a new date. Confirm it was added separately
         date = datetime.datetime(2021, 10, 23)
         location.add_or_update_day(date, date_open_time, date_close_time)
 
         # Confirm we now have two days, and six blocks (3 for each day)
-        self.assertEqual(Booth_Day.objects.count(), 2)
-        self.assertEqual(Booth_Block.objects.count(), 6)
+        self.assertEqual(BoothDay.objects.count(), 2)
+        self.assertEqual(BoothBlock.objects.count(), 6)
 
+    def test_set_or_update_hours(self):
+        # This tests setting or updating complex hour schedules for a location, and making sure days and blocks are
+        # updated correctly
+        location = BoothLocation.objects.create(booth_location="Walmart",
+                                                booth_address="123 Feels Pretty Good Kay St",
+                                                booth_enabled=False,
+                                                booth_is_golden_ticket=False,
+                                                booth_requires_masks=True,
+                                                booth_is_outside=True,
+                                                booth_notes="You can sell cookies here")
 
+        # We're going to create a two week hours block.
+        # Starting from Sunday, October 17, 2021 until Saturday, October 30, 2021.
+        # The business will be open on Sunday and Saturday, 12pm to 5pm
+        open_date = datetime.datetime(2021, 10, 17, 0, 0, 0, 0, pytz.UTC)
+        close_date = datetime.datetime(2021, 10, 30, 0, 0, 0, 0, pytz.UTC)
+
+        open_time = datetime.time(12, 0, 0, 0, pytz.UTC)
+        close_time = datetime.time(17, 0, 0, 0, pytz.UTC)
+
+        hours = BoothHours(booth_start_date=open_date,
+                           booth_end_date=close_date,
+                           sunday_open=True,
+                           sunday_open_time=open_time,
+                           sunday_close_time=close_time,
+                           saturday_open=True,
+                           saturday_open_time=open_time,
+                           saturday_close_time=close_time)
+
+        # Set the hours for this location, and see the cascaded results
+        location.set_or_update_hours(hours)
+
+        # We should see four days generated over the two week period:
+        # Saturday, October 23/30
+        # Sunday, October 17/24
+        self.assertEqual(BoothDay.objects.count(), 4)
+        self.assertTrue(
+            BoothDay.objects.filter(booth_day_date=datetime.datetime(2021, 10, 17, 0, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothDay.objects.filter(booth_day_date=datetime.datetime(2021, 10, 23, 0, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothDay.objects.filter(booth_day_date=datetime.datetime(2021, 10, 24, 0, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothDay.objects.filter(booth_day_date=datetime.datetime(2021, 10, 30, 0, 0, 0, 0, pytz.UTC)))
+
+        # We'd expect 2 blocks per day to be generated, so 8 blocks total
+        # Each day will have a 12-2pm, and a 2pm-4pm block
+        self.assertEqual(BoothBlock.objects.count(), 8)
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 17, 12, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 17, 14, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 17, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 17, 16, 0, 0, 0, pytz.UTC)))
+
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 23, 12, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 23, 14, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 23, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 23, 16, 0, 0, 0, pytz.UTC)))
+
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 24, 12, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 24, 14, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 24, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 24, 16, 0, 0, 0, pytz.UTC)))
+
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 30, 12, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 30, 14, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 30, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 30, 16, 0, 0, 0, pytz.UTC)))
+
+        # NOW, update the open/close dates, as well as hours and make sure everything updates okay.
+        # Shifting from
+        # Sunday, October 17 to Saturday, October 30, to
+        # Sunday, October 24 to Saturday, November 6
+        open_date = datetime.datetime(2021, 10, 24, 0, 0, 0, 0, pytz.UTC)
+        close_date = datetime.datetime(2021, 11, 6, 0, 0, 0, 0, pytz.UTC)
+
+        # Hours will change from 12-5pm to 2pm-6pm
+        open_time = datetime.time(14, 0, 0, 0, pytz.UTC)
+        close_time = datetime.time(18, 0, 0, 0, pytz.UTC)
+
+        new_hours = BoothHours(booth_start_date=open_date,
+                               booth_end_date=close_date,
+                               sunday_open=True,
+                               sunday_open_time=open_time,
+                               sunday_close_time=close_time,
+                               saturday_open=True,
+                               saturday_open_time=open_time,
+                               saturday_close_time=close_time)
+
+        location.set_or_update_hours(new_hours)
+
+        # We should still only have 4 days, but they have shifted one week
+        # Saturday, October 30/November 6
+        # Sunday, October 24/31
+        self.assertEqual(BoothDay.objects.count(), 4)
+        self.assertTrue(
+            BoothDay.objects.filter(booth_day_date=datetime.datetime(2021, 10, 24, 0, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothDay.objects.filter(booth_day_date=datetime.datetime(2021, 10, 30, 0, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothDay.objects.filter(booth_day_date=datetime.datetime(2021, 10, 31, 0, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothDay.objects.filter(booth_day_date=datetime.datetime(2021, 11, 6, 0, 0, 0, 0, pytz.UTC)))
+
+        # We'll still only have two blocks per day, but they've shifted by two hours
+        self.assertEqual(BoothBlock.objects.count(), 8)
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 24, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 24, 16, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 24, 16, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 24, 18, 0, 0, 0, pytz.UTC)))
+
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 30, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 30, 16, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 30, 16, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 30, 18, 0, 0, 0, pytz.UTC)))
+
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 31, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 31, 16, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 31, 16, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 10, 31, 18, 0, 0, 0, pytz.UTC)))
+
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 11, 6, 14, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 11, 6, 16, 0, 0, 0, pytz.UTC)))
+        self.assertTrue(
+            BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 11, 6, 16, 0, 0, 0, pytz.UTC),
+                                      booth_block_end_time=datetime.datetime(2021, 11, 6, 18, 0, 0, 0, pytz.UTC)))

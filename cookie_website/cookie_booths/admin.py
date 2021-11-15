@@ -1,7 +1,8 @@
 from django.contrib import admin
 
-from .models import Booth_Location, Booth_Day, Booth_Block
+from .models import BoothHours, BoothLocation, BoothDay, BoothBlock
 
-admin.site.register(Booth_Location)
-admin.site.register(Booth_Day)
-admin.site.register(Booth_Block)
+admin.site.register(BoothHours)
+admin.site.register(BoothLocation)
+admin.site.register(BoothDay)
+admin.site.register(BoothBlock)
