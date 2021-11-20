@@ -20,6 +20,9 @@ class Troop(models.Model):
     super_troop = models.BooleanField(default=False)
     daisy_troop = models.BooleanField(default=False)
 
+    booth_tickets_per_week = models.PositiveSmallIntegerField(default=0)
+    booth_golden_tickets_per_week = models.PositiveSmallIntegerField(default=0)
+
     def __str__(self):
         return 'Troop ' + str(self.troop_number)
 

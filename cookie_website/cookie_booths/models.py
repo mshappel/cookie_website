@@ -157,6 +157,7 @@ class BoothDay(models.Model):
     booth_day_close_time = models.DateTimeField(blank=True, null=True)
 
     booth_day_enabled = models.BooleanField(default=False)
+    booth_day_freeforall_enabled = models.BooleanField(default=False)
 
     def enable_day(self):
         # If we're already enabled, nothing to do
@@ -167,6 +168,7 @@ class BoothDay(models.Model):
 
         for block in BoothBlock.objects.filter(booth_day__id=self.id):
             block.booth_block_enabled = True
+            block.save()
 
     def disable_day(self):
         # If we're already disabled, nothing to do
@@ -177,6 +179,7 @@ class BoothDay(models.Model):
 
         for block in BoothBlock.objects.filter(booth_day__id=self.id):
             block.booth_block_enabled = False
+            block.save()
 
     def add_or_update_hours(self, open_time, close_time):
         # TODO: Enforce permission
@@ -235,14 +238,40 @@ class BoothDay(models.Model):
 
         return
 
+    def enable_freeforall(self):
+        # If we're already enabled, nothing to do
+        if self.booth_day_freeforall_enabled and self.booth_day_enabled:
+            return
+
+        self.booth_day_freeforall_enabled = True
+        self.booth_day_enabled = True
+
+        for block in BoothBlock.objects.filter(booth_day__id=self.id):
+            block.booth_block_enabled = True
+            block.booth_block_freeforall_enabled = True
+            block.save()
+
+    def disable_freeforall(self):
+        # If we're already disabled, nothing to do
+        if not self.booth_day_freeforall_enabled and not self.booth_day_enabled:
+            return
+
+        self.booth_day_freeforall_enabled = False
+        self.booth_day_enabled = False
+
+        for block in BoothBlock.objects.filter(booth_day__id=self.id):
+            block.booth_block_enabled = False
+            block.booth_block_freeforall_enabled = False
+            block.save()
+
     # Add block forward in time
     def __add_block_forwards(self, start_end):
         # Create a new block
-        booth_block = BoothBlock.objects.create(booth_day=self,
-                                                booth_block_start_time=start_end[0],
-                                                booth_block_end_time=start_end[1],
-                                                booth_block_reserved=False,
-                                                booth_block_enabled=self.booth_day_enabled)
+        BoothBlock.objects.create(booth_day=self,
+                                  booth_block_start_time=start_end[0],
+                                  booth_block_end_time=start_end[1],
+                                  booth_block_reserved=False,
+                                  booth_block_enabled=self.booth_day_enabled)
 
         cont = True
         # Shift hours forward, if we can
@@ -265,11 +294,11 @@ class BoothDay(models.Model):
     # Add block backward in time
     def __add_block_backwards(self, start_end):
         # Create a new block
-        booth_block = BoothBlock.objects.create(booth_day=self,
-                                                booth_block_start_time=start_end[0],
-                                                booth_block_end_time=start_end[1],
-                                                booth_block_reserved=False,
-                                                booth_block_enabled=self.booth_day_enabled)
+        BoothBlock.objects.create(booth_day=self,
+                                  booth_block_start_time=start_end[0],
+                                  booth_block_end_time=start_end[1],
+                                  booth_block_reserved=False,
+                                  booth_block_enabled=self.booth_day_enabled)
 
         cont = True
         # Shift hours backward
@@ -301,6 +330,7 @@ class BoothBlock(models.Model):
     booth_block_reserved = models.BooleanField(default=False)
 
     booth_block_enabled = models.BooleanField(default=False)
+    booth_block_freeforall_enabled = models.BooleanField(default=False)
 
     def cancel_block(self, troop_id):
         # TODO: Need to Enforce permissions to allow canceling only if the calling user either
