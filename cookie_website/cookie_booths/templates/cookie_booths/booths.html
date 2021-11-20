@@ -5,14 +5,51 @@
   <h2>Booth Editor</h2>
 {% endblock page_header %}
 
-{% block content %}
 
+{% block content %}
   <select name="Booths" id="Booths">
     {% for booth in booths %}
-      <option>{{booth}}</option>
+      <option value = "{{booth.booth_location}}">{{booth.booth_location}}</option>
     {% endfor %}
   </select>
 
-  <button name="View">View Booth</button>
+<div class="col-9" id = "booth_info">
+   	<hr />
+   	<table class="table table-stripped table-fixed">
+		<thead>
+			<tr>
+				<td>Booth</td>
+				<td>Booth Address</td>
+			</tr>
+		</thead>
+   		<tbody>
+   		</tbody>
+   	</table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+   $("#Booths").change(function(e){
+   	e.preventDefault();
+   	var booth_location = $(this).val();
+   	var data = {booth_location};
+   	$.ajax({
+   		type : 'GET',
+   		url :  "{% url 'cookie_booths:load_location' %}",
+   		data : data,
+   		success : function(response){
+   			$("#booth_info table tbody").html(`<tr>
+   				<td>${response.booth_info.booth_location || "-"}</td>
+   				<td>${response.booth_info.booth_address || "-"}</td>
+   				</tr>`)
+   		},
+   		error : function(response){
+   			console.log(response)
+   		}
+   	})
+   })
+})
+</script>
 
 {% endblock content %}
