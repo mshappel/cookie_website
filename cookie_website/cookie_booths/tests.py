@@ -148,6 +148,95 @@ class BoothDayTestCase(TestCase):
             BoothBlock.objects.filter(booth_block_start_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0, pytz.UTC),
                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)))
 
+    def test_enable_day_ffa(self):
+        # Testing that enable_day, disable_day, enable_freeforall, disable_freeforall work as expected
+        # Setup - two dates for a location, with the same time
+        location = BoothLocation.objects.create()
+        date_1 = datetime.date(2021, 10, 22)
+        date_2 = datetime.date(2021, 10, 23)
+
+        day_1 = BoothDay.objects.create(booth=location,
+                                        booth_day_date=date_1,
+                                        booth_day_hours_set=False,
+                                        booth_day_enabled=False)
+        day_2 = BoothDay.objects.create(booth=location,
+                                        booth_day_date=date_2,
+                                        booth_day_hours_set=False,
+                                        booth_day_enabled=False)
+
+        open_time_1 = datetime.datetime(2021, 10, 22, 8, 0, 0, 0, pytz.UTC)
+        close_time_1 = datetime.datetime(2021, 10, 22, 12, 0, 0, 0, pytz.UTC)
+
+        day_1.add_or_update_hours(open_time_1, close_time_1)
+
+        open_time_2 = datetime.datetime(2021, 10, 23, 8, 0, 0, 0, pytz.UTC)
+        close_time_2 = datetime.datetime(2021, 10, 23, 12, 0, 0, 0, pytz.UTC)
+
+        day_2.add_or_update_hours(open_time_2, close_time_2)
+
+        # Verify that they are all disabled by default
+        self.assertFalse(day_1.booth_day_enabled)
+        self.assertFalse(day_2.booth_day_enabled)
+        self.assertFalse(day_1.booth_day_freeforall_enabled)
+        self.assertFalse(day_2.booth_day_freeforall_enabled)
+
+        for block in BoothBlock.objects.all():
+            self.assertFalse(block.booth_block_enabled)
+            self.assertFalse(block.booth_block_freeforall_enabled)
+
+        # Enable blocks for this location up until and including day_1
+        day_1.enable_day()
+
+        self.assertTrue(day_1.booth_day_enabled)
+        self.assertFalse(day_2.booth_day_enabled)
+        self.assertFalse(day_1.booth_day_freeforall_enabled)
+        self.assertFalse(day_2.booth_day_freeforall_enabled)
+
+        for block in BoothBlock.objects.filter(booth_day=day_1):
+            self.assertTrue(block.booth_block_enabled)
+            self.assertFalse(block.booth_block_freeforall_enabled)
+        for block in BoothBlock.objects.filter(booth_day=day_2):
+            self.assertFalse(block.booth_block_enabled)
+            self.assertFalse(block.booth_block_freeforall_enabled)
+
+        # Disabling should disable all of the associated blocks
+        day_1.disable_day()
+
+        self.assertFalse(day_1.booth_day_enabled)
+        self.assertFalse(day_2.booth_day_enabled)
+        self.assertFalse(day_1.booth_day_freeforall_enabled)
+        self.assertFalse(day_2.booth_day_freeforall_enabled)
+
+        for block in BoothBlock.objects.all():
+            self.assertFalse(block.booth_block_enabled)
+            self.assertFalse(block.booth_block_freeforall_enabled)
+
+        # Enabling FFA will enable the booth blocks and FFA
+        day_1.enable_freeforall()
+
+        self.assertTrue(day_1.booth_day_enabled)
+        self.assertFalse(day_2.booth_day_enabled)
+        self.assertTrue(day_1.booth_day_freeforall_enabled)
+        self.assertFalse(day_2.booth_day_freeforall_enabled)
+
+        for block in BoothBlock.objects.filter(booth_day=day_1):
+            self.assertTrue(block.booth_block_enabled)
+            self.assertTrue(block.booth_block_freeforall_enabled)
+        for block in BoothBlock.objects.filter(booth_day=day_2):
+            self.assertFalse(block.booth_block_enabled)
+            self.assertFalse(block.booth_block_freeforall_enabled)
+
+        # Disabling FFA will disable blocks and FFA
+        day_1.disable_freeforall()
+
+        self.assertFalse(day_1.booth_day_enabled)
+        self.assertFalse(day_2.booth_day_enabled)
+        self.assertFalse(day_1.booth_day_freeforall_enabled)
+        self.assertFalse(day_2.booth_day_freeforall_enabled)
+
+        for block in BoothBlock.objects.all():
+            self.assertFalse(block.booth_block_enabled)
+            self.assertFalse(block.booth_block_freeforall_enabled)
 
 class BoothLocationTestCase(TestCase):
     def test_add_or_update_day(self):
