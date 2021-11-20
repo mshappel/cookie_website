@@ -1,5 +1,7 @@
+import json
 
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from .forms import BoothLocationForm
 from .models import BoothLocation, BoothDay
 
@@ -31,6 +33,19 @@ def new_location(request):
     # Display a blank or invalid form.
     context = {'form': form}
     return render(request, 'cookie_booths/new_booth_location.html', context)
+
+
+def load_location(request):
+    booth_location = request.GET.get('booth_location')
+
+    booth = BoothLocation.objects.get(booth_location=booth_location)
+    booth_info = {
+        "booth_location": booth.booth_location,
+        "booth_address": booth.booth_address
+    }
+    response = {"booth_info": booth_info}
+    print(response)
+    return JsonResponse(response)
 
 
 def edit_location(request, booth_id):
