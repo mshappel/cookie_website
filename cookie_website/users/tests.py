@@ -16,14 +16,14 @@ class TroopTestCase(TestCase):
 
         # Validate the ticket allocation of both
         self.assertTrue(normal_troop.total_booth_tickets_per_week ==
-                        TroopTicketParameters.normal_troop_total_tickets_per_week)
+                        TroopTicketParameters.NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK)
         self.assertTrue(normal_troop.booth_golden_tickets_per_week ==
-                        TroopTicketParameters.normal_troop_golden_tickets_per_week)
+                        TroopTicketParameters.NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK)
 
         self.assertTrue(super_troop.total_booth_tickets_per_week ==
-                        TroopTicketParameters.super_troop_total_tickets_per_week)
+                        TroopTicketParameters.SUPER_TROOP_TOTAL_TICKETS_PER_WEEK)
         self.assertTrue(super_troop.booth_golden_tickets_per_week ==
-                        TroopTicketParameters.super_troop_golden_tickets_per_week)
+                        TroopTicketParameters.SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK)
 
         # Now create a booth day to test around - First a golden ticket
         golden_location = BoothLocation.objects.create(booth_is_golden_ticket=True)

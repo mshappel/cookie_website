@@ -7,11 +7,11 @@ from cookie_booths.models import BoothDay, BoothBlock
 
 
 class TroopTicketParameters:
-    normal_troop_total_tickets_per_week = 5
-    normal_troop_golden_tickets_per_week = 1
+    NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK = 5
+    NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK = 1
 
-    super_troop_total_tickets_per_week = 10
-    super_troop_golden_tickets_per_week = 2
+    SUPER_TROOP_TOTAL_TICKETS_PER_WEEK = 10
+    SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK = 2
 
 
 # User-related Models
@@ -85,11 +85,11 @@ def update_tickets(sender, instance, **kwargs):
     # A troop could be updated after the fact. In that case, if they've booked more blocks than they should've,
     # oh well.
     if instance.super_troop:
-        instance.total_booth_tickets_per_week = TroopTicketParameters.super_troop_total_tickets_per_week
-        instance.booth_golden_tickets_per_week = TroopTicketParameters.super_troop_golden_tickets_per_week
+        instance.total_booth_tickets_per_week = TroopTicketParameters.SUPER_TROOP_TOTAL_TICKETS_PER_WEEK
+        instance.booth_golden_tickets_per_week = TroopTicketParameters.SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK
     else:
-        instance.total_booth_tickets_per_week = TroopTicketParameters.normal_troop_total_tickets_per_week
-        instance.booth_golden_tickets_per_week = TroopTicketParameters.normal_troop_golden_tickets_per_week
+        instance.total_booth_tickets_per_week = TroopTicketParameters.NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK
+        instance.booth_golden_tickets_per_week = TroopTicketParameters.NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK
 
 
 # Groups
