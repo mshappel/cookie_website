@@ -1,10 +1,11 @@
 from django.test import TestCase
 from django.utils import timezone
 
-from cookie_booths.models import BoothHours, BoothLocation, BoothDay, BoothBlock
+from .models import BoothHours, BoothLocation, BoothDay, BoothBlock
 
 import datetime
 import pytz
+
 
 class BoothBlockTestCase(TestCase):
     def test_reserve_block(self):

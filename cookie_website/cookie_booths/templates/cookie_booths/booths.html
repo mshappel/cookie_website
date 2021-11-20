@@ -1,0 +1,18 @@
+{% extends "cookie_booths/base.html" %}
+{% load bootstrap4 %}
+
+{% block page_header %}
+  <h2>Booth Editor</h2>
+{% endblock page_header %}
+
+{% block content %}
+
+  <select name="Booths" id="Booths">
+    {% for booth in booths %}
+      <option>{{booth}}</option>
+    {% endfor %}
+  </select>
+
+  <button name="View">View Booth</button>
+
+{% endblock content %}

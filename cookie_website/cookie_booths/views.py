@@ -1,4 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from .forms import BoothLocationForm
+from .models import BoothLocation
 
 
 def index(request):
@@ -6,9 +8,28 @@ def index(request):
     return render(request, 'cookie_booths/index.html')
 
 
+def booth_locations(request):
+    """Display all booths"""
+    booths = BoothLocation.objects.order_by('booth_location')
+    context = {'booths': booths}
+    return render(request, 'cookie_booths/booths.html', context)
+
+
 def new_location(request):
-    # Create new BoothLocationForm
-    return
+    """Add a new booth location"""
+    if request.method != 'POST':
+        # No data submitted; create a blank form.
+        form = BoothLocationForm()
+    else:
+        # POST data submitted; process data.
+        form = BoothLocationForm(data=request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('cookie_booths:index')
+
+    # Display a blank or invalid form.
+    context = {'form': form}
+    return render(request, 'cookie_booths/new_booth_location.html', context)
 
 
 def edit_location(request, booth_id):
