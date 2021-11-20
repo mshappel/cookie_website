@@ -353,6 +353,7 @@ class BoothBlock(models.Model):
 
         # TODO: Send email confirmation?
 
+        self.save()
         return True
 
 
