@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from .models import BoothDay
 
 
 def index(request):
@@ -23,12 +24,44 @@ def edit_location_hours(request, booth_id):
 
 
 def enable_location(request, booth_id, date):
-    # Enable all dates for a particular boot up to and including a particular date
+    # Enable all dates for a particular booth up to and including a particular date
+    for booth_day in BoothDay.objects.filter(booth_id=booth_id, booth_day_date__lte=date):
+        booth_day.enable_day()
+
     return
 
 
 def enable_all_locations(request, date):
     # Enable all dates for all locations up to and including a particular date
+    for booth_day in BoothDay.objects.filter(booth_day_date__lte=date):
+        booth_day.enable_day()
+
+    return
+
+
+def enable_location_ffa(request, booth_id, date):
+    # Enable free-for-all for a particular booth up to and including a particular date.
+    # Will also enable dates up until that day if not already
+    for booth_day in BoothDay.objects.filter(booth_id=booth_id, booth_day_date__lte=date):
+        booth_day.enable_freeforall()
+
+    return
+
+
+def enable_all_locations_ffa(request, date):
+    # Enable free-for-all for all locations up to and including a particular date.
+    # Will also enable those dates if not already
+    for booth_day in BoothDay.objects.filter(booth_day_date__lte=date):
+        booth_day.enable_freeforall()
+
+    return
+
+
+def disable_all_locations(request, date):
+    # Disable all locations, including any active FFA, up to and including a particular date
+    for booth_day in BoothDay.objects.filter(booth_day_date__lte=date):
+        booth_day.disable_freeforall()
+
     return
 
 
