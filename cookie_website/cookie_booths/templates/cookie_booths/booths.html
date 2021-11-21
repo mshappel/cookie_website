@@ -7,49 +7,27 @@
 
 
 {% block content %}
-  <select name="Booths" id="Booths">
-    {% for booth in booths %}
-      <option value = "{{booth.booth_location}}">{{booth.booth_location}}</option>
-    {% endfor %}
-  </select>
-
-<div class="col-9" id = "booth_info">
-   	<hr />
-   	<table class="table table-stripped table-fixed">
-		<thead>
+<table id="example" class="table table-striped table-bordered" cellspacing="0" width="100%">
+	<thead>
+    	<tr>
+        	<th>Location</th>
+			<th>Address</th>
+			<th>Edit Booth</th>
+			<th>Edit Hours</th>
+			<th>Delete Booth</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for booth in booths %}
 			<tr>
-				<td>Booth</td>
-				<td>Booth Address</td>
+				<td>{{ booth.booth_location }}</td>
+				<td>{{ booth.booth_address }}</td>
+				<td><a href="{% url 'cookie_booths:edit_location' booth.id %}">Edit Booth</a></td>
+				<td><a href="#">Edit Hours</a></td>
+				<td><a href="{% url 'cookie_booths:delete_booth' booth.pk %}">Delete Booth</a></td>
 			</tr>
-		</thead>
-   		<tbody>
-   		</tbody>
-   	</table>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script type="text/javascript">
-$(document).ready(function(){
-   $("#Booths").change(function(e){
-   	e.preventDefault();
-   	var booth_location = $(this).val();
-   	var data = {booth_location};
-   	$.ajax({
-   		type : 'GET',
-   		url :  "{% url 'cookie_booths:load_location' %}",
-   		data : data,
-   		success : function(response){
-   			$("#booth_info table tbody").html(`<tr>
-   				<td>${response.booth_info.booth_location || "-"}</td>
-   				<td>${response.booth_info.booth_address || "-"}</td>
-   				</tr>`)
-   		},
-   		error : function(response){
-   			console.log(response)
-   		}
-   	})
-   })
-})
-</script>
+		{% endfor %}
+	</tbody>
+</table>
 
 {% endblock content %}
