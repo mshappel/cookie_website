@@ -2,14 +2,115 @@ from datetime import timedelta, datetime
 
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import pre_delete
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
 MIN_BOOTH_BLOCK_HOURS = 2
 
 
+class BoothLocation(models.Model):
+    """Contains data relevant for booths"""
+    # ID is referenced via Django object ID
+    booth_location = models.CharField(max_length=300)
+    booth_address = models.CharField(max_length=300)
+
+    booth_enabled = models.BooleanField(default=False)
+
+    booth_is_golden_ticket = models.BooleanField(default=False)
+    booth_requires_masks = models.BooleanField(default=False)
+    booth_is_outside = models.BooleanField(default=False)
+
+    booth_notes = models.CharField(max_length=100, blank=True)
+
+    class Meta:
+        verbose_name_plural = "booth locations"
+        verbose_name = "booth location"
+
+    def __str__(self):
+        return self.booth_location
+
+    def update_hours(self):
+        # We need to create or delete booth days, or update their hours, based on new hours, and we have
+        # A few steps for this
+        hours = BoothHours.objects.get(booth_location=self)
+
+        # Delete any days outside of the new start/end date - this will cascade down to the blocks
+        BoothDay.objects.filter(Q(booth=self),
+                                Q(booth_day_date__lt=hours.booth_start_date) | Q(
+                                    booth_day_date__gt=hours.booth_end_date)).delete()
+
+        # Go through each day between the new start and end date
+        for date in self.__daterange(hours.booth_start_date, hours.booth_end_date):
+            # Figure out what day of the week it is, and either:
+            # 1. If we're closed that day, delete a day if it's present
+            if (((date.weekday() == 0) and (not hours.monday_open)) or
+                    ((date.weekday() == 1) and (not hours.tuesday_open)) or
+                    ((date.weekday() == 2) and (not hours.wednesday_open)) or
+                    ((date.weekday() == 3) and (not hours.thursday_open)) or
+                    ((date.weekday() == 4) and (not hours.friday_open)) or
+                    ((date.weekday() == 5) and (not hours.saturday_open)) or
+                    ((date.weekday() == 6) and (not hours.sunday_open))):
+                BoothDay.objects.filter(booth=self, booth_day_date=date).delete()
+            # 2. If we're open, add or update those hours
+            else:
+                if date.weekday() == 0:  # Monday
+                    self.add_or_update_day(date,
+                                           datetime.combine(date, hours.monday_open_time),
+                                           datetime.combine(date, hours.monday_close_time))
+                elif date.weekday() == 1:  # Tuesday
+                    self.add_or_update_day(date,
+                                           datetime.combine(date, hours.tuesday_open_time),
+                                           datetime.combine(date, hours.tuesday_close_time))
+                elif date.weekday() == 2:  # Wednesday
+                    self.add_or_update_day(date,
+                                           datetime.combine(date, hours.wendesday_open_time),
+                                           datetime.combine(date, hours.wednesday_close_time))
+                elif date.weekday() == 3:  # Thursday
+                    self.add_or_update_day(date,
+                                           datetime.combine(date, hours.thursday_open_time),
+                                           datetime.combine(date, hours.thursday_close_time))
+                elif date.weekday() == 4:  # Friday
+                    self.add_or_update_day(date,
+                                           datetime.combine(date, hours.friday_open_time),
+                                           datetime.combine(date, hours.friday_close_time))
+                elif date.weekday() == 5:  # Saturday
+                    self.add_or_update_day(date,
+                                           datetime.combine(date, hours.saturday_open_time),
+                                           datetime.combine(date, hours.saturday_close_time))
+                else:  # Sunday
+                    self.add_or_update_day(date,
+                                           datetime.combine(date, hours.sunday_open_time),
+                                           datetime.combine(date, hours.sunday_close_time))
+        return
+
+    def add_or_update_day(self, date, open_time, close_time):
+        # First see if we have a Booth_Day existing for that date. If so, grab it and update the open/close time
+        booth_day = None
+        try:
+            booth_day = BoothDay.objects.get(booth_day_date=date)
+        except BoothDay.DoesNotExist:
+            # If it doesn't exist yet, create it
+            booth_day = BoothDay.objects.create(booth=self,
+                                                booth_day_date=date,
+                                                booth_day_enabled=False,
+                                                booth_day_hours_set=False)
+
+        # Set the hours
+        booth_day.add_or_update_hours(open_time, close_time)
+        booth_day.save()
+
+        return
+
+    def __daterange(self, start_date, end_date):
+        # Need +1 to be inclusive of the end date
+        for n in range(int((end_date - start_date).days) + 1):
+            yield start_date + timedelta(n)
+
+
 class BoothHours(models.Model):
+    booth_location = models.OneToOneField(BoothLocation, null=True, on_delete=models.CASCADE)
+
     booth_start_date = models.DateField(blank=True, null=True)
     booth_end_date = models.DateField(blank=True, null=True)
 
@@ -40,110 +141,6 @@ class BoothHours(models.Model):
     saturday_open = models.BooleanField(default=False)
     saturday_open_time = models.TimeField(blank=True, null=True)
     saturday_close_time = models.TimeField(blank=True, null=True)
-
-
-class BoothLocation(models.Model):
-    """Contains data relevant for booths"""
-    # ID is referenced via Django object ID
-    booth_location = models.CharField(max_length=300)
-    booth_address = models.CharField(max_length=300)
-
-    booth_enabled = models.BooleanField(default=False)
-
-    booth_is_golden_ticket = models.BooleanField(default=False)
-    booth_requires_masks = models.BooleanField(default=False)
-    booth_is_outside = models.BooleanField(default=False)
-
-    booth_hours = models.ForeignKey(BoothHours, null=True, blank=True, on_delete=models.CASCADE)
-
-    booth_notes = models.CharField(max_length=100, blank=True)
-
-    class Meta:
-        verbose_name_plural = "booth locations"
-        verbose_name = "booth location"
-
-    def __str__(self):
-        return self.booth_location
-
-    def set_or_update_hours(self, new_hours):
-        # We need to create or delete booth days, or update their hours, based on new hours, and we have
-        # A few steps for this
-
-        # Delete any days outside of the new start/end date - this will cascade down to the blocks
-        BoothDay.objects.filter(Q(booth=self),
-                                Q(booth_day_date__lt=new_hours.booth_start_date) | Q(
-                                    booth_day_date__gt=new_hours.booth_end_date)).delete()
-
-        # Go through each day between the new start and end date
-        for date in self.__daterange(new_hours.booth_start_date, new_hours.booth_end_date):
-            # Figure out what day of the week it is, and either:
-            # 1. If we're closed that day, delete a day if it's present
-            if (((date.weekday() == 0) and (not new_hours.monday_open)) or
-                    ((date.weekday() == 1) and (not new_hours.tuesday_open)) or
-                    ((date.weekday() == 2) and (not new_hours.wednesday_open)) or
-                    ((date.weekday() == 3) and (not new_hours.thursday_open)) or
-                    ((date.weekday() == 4) and (not new_hours.friday_open)) or
-                    ((date.weekday() == 5) and (not new_hours.saturday_open)) or
-                    ((date.weekday() == 6) and (not new_hours.sunday_open))):
-                BoothDay.objects.filter(booth=self, booth_day_date=date).delete()
-            # 2. If we're open, add or update those hours
-            else:
-                if date.weekday() == 0:  # Monday
-                    self.add_or_update_day(date,
-                                           datetime.combine(date, new_hours.monday_open_time),
-                                           datetime.combine(new_hours.monday_close_time))
-                elif date.weekday() == 1:  # Tuesday
-                    self.add_or_update_day(date,
-                                           datetime.combine(date, new_hours.tuesday_open_time),
-                                           datetime.combine(date, new_hours.tuesday_close_time))
-                elif date.weekday() == 2:  # Wednesday
-                    self.add_or_update_day(date,
-                                           datetime.combine(date, new_hours.wendesday_open_time),
-                                           datetime.combine(date, new_hours.wednesday_close_time))
-                elif date.weekday() == 3:  # Thursday
-                    self.add_or_update_day(date,
-                                           datetime.combine(date, new_hours.thursday_open_time),
-                                           datetime.combine(date, new_hours.thursday_close_time))
-                elif date.weekday() == 4:  # Friday
-                    self.add_or_update_day(date,
-                                           datetime.combine(date, new_hours.friday_open_time),
-                                           datetime.combine(date, new_hours.friday_close_time))
-                elif date.weekday() == 5:  # Saturday
-                    self.add_or_update_day(date,
-                                           datetime.combine(date, new_hours.saturday_open_time),
-                                           datetime.combine(date, new_hours.saturday_close_time))
-                else:  # Sunday
-                    self.add_or_update_day(date,
-                                           datetime.combine(date, new_hours.sunday_open_time),
-                                           datetime.combine(date, new_hours.sunday_close_time))
-
-        # Set hour new hours
-        self.booth_hours = new_hours
-
-        return
-
-    def add_or_update_day(self, date, open_time, close_time):
-        # First see if we have a Booth_Day existing for that date. If so, grab it and update the open/close time
-        booth_day = None
-        try:
-            booth_day = BoothDay.objects.get(booth_day_date=date)
-        except BoothDay.DoesNotExist:
-            # If it doesn't exist yet, create it
-            booth_day = BoothDay.objects.create(booth=self,
-                                                booth_day_date=date,
-                                                booth_day_enabled=False,
-                                                booth_day_hours_set=False)
-
-        # Set the hours
-        booth_day.add_or_update_hours(open_time, close_time)
-        booth_day.save()
-
-        return
-
-    def __daterange(self, start_date, end_date):
-        # Need +1 to be inclusive of the end date
-        for n in range(int((end_date - start_date).days) + 1):
-            yield start_date + timedelta(n)
 
 
 class BoothDay(models.Model):
@@ -355,6 +352,19 @@ class BoothBlock(models.Model):
 
         self.save()
         return True
+
+
+@receiver(post_save, sender=BoothHours)
+def update_booth_location(sender, instance, created, **kwargs):
+    # We don't care if it was just created - only on updates that actually set real hours
+    if not created:
+        instance.booth_location.update_hours()
+
+
+@receiver(post_save, sender=BoothLocation)
+def generate_hours_if_needed(sender, instance, created, **kwargs):
+    if created:
+        BoothHours.objects.create(booth_location=instance)
 
 
 @receiver(pre_delete, sender=BoothBlock)
