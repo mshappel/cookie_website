@@ -56,7 +56,7 @@ class BoothLocation(models.Model):
 
     booth_hours = models.ForeignKey(BoothHours, null=True, blank=True, on_delete=models.CASCADE)
 
-    booth_notes = models.CharField(max_length=100)
+    booth_notes = models.CharField(max_length=100, blank=True)
 
     class Meta:
         verbose_name_plural = "booth locations"

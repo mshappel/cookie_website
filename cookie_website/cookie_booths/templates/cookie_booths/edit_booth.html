@@ -2,15 +2,15 @@
 {% load bootstrap4 %}
 
 {% block page_header %}
-  <h2>Add a new cookie booth</h2>
+  <h2>Edit cookie booth</h2>
 {% endblock page_header %}
 
 {% block content %}
-  <form action="{% url 'cookie_booths:new_location' %}" method='post' class="form">
+  <form action="{% url 'cookie_booths:edit_location' booth.id %}" method='post' class="form">
     {% csrf_token %}
     {% bootstrap_form form %}
     {% buttons %}
-    <button name="submit">Next</button>
+    <button name="submit">Update Cookie Booth</button>
     {% endbuttons %}
   </form>
 {% endblock content %}

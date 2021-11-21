@@ -1,8 +1,10 @@
 import json
 
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
-from .forms import BoothLocationForm
+from django.views.generic.edit import DeleteView
+from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from .forms import BoothLocationForm, BoothHoursForm
 from .models import BoothLocation, BoothDay
 
 
@@ -28,35 +30,71 @@ def new_location(request):
         form = BoothLocationForm(data=request.POST)
         if form.is_valid():
             form.save()
-            return redirect('cookie_booths:index')
+            return redirect('cookie_booths:new_booth_hours')
 
     # Display a blank or invalid form.
     context = {'form': form}
     return render(request, 'cookie_booths/new_booth_location.html', context)
 
 
-def load_location(request):
-    booth_location = request.GET.get('booth_location')
+def new_location_hours(request):
+    """Add a new booth location"""
+    if request.method != 'POST':
+        # No data submitted; create a blank form.
+        form = BoothHoursForm()
+    else:
+        # POST data submitted; process data.
+        form = BoothHoursForm(data=request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('cookie_booths:index')
 
-    booth = BoothLocation.objects.get(booth_location=booth_location)
-    booth_info = {
-        "booth_location": booth.booth_location,
-        "booth_address": booth.booth_address
-    }
-    response = {"booth_info": booth_info}
-    print(response)
-    return JsonResponse(response)
+    # Display a blank or invalid form.
+    context = {'form': form}
+    return render(request, 'cookie_booths/new_booth_hours.html', context)
 
 
 def edit_location(request, booth_id):
-    # Get existing Booth_ID, populate BoothLocationForm
-    return
+    """Edit an existing booth location"""
+    booth = BoothLocation.objects.get(id=booth_id)
+
+    if request.method != 'POST':
+        # Initial request; pre-fill with the current entry.
+        form = BoothLocationForm(instance=booth)
+    else:
+        # POST data submitted; process data.
+        form = BoothLocationForm(instance=booth, data=request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('cookie_booths/booths.html')
+
+    context = {'booth': booth, 'form': form}
+    return render(request, 'cookie_booths/edit_booth.html', context)
+
+
+class BoothLocationDelete(DeleteView):
+    model = BoothLocation
+    template_name = 'cookie_booths/booth_confirm_delete.html'
+    success_url = reverse_lazy('cookie_booths:booth_locations')
 
 
 def edit_location_hours(request, booth_id):
-    # Get existing hours if set, open form
-    # Read form output, call model function to add/edit existing booth days
-    return
+    """Edit an existing booth location"""
+    # TODO: Fix this when the form is changed
+    booth = BoothLocation.objects.get(id=booth_id)
+
+    if request.method != 'POST':
+        # Initial request; pre-fill with the current entry.
+        form = BoothHoursForm(instance=booth)
+    else:
+        # POST data submitted; process data.
+        form = BoothHoursForm(instance=booth, data=request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('cookie_booths/booths.html')
+
+    context = {'booth': booth, 'form': form}
+    return render(request, 'cookie_booths/edit_booth_hours.html', context)
 
 
 def enable_location(request, booth_id, date):
