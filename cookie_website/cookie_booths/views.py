@@ -5,7 +5,7 @@ from django.views.generic.edit import DeleteView
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from .forms import BoothLocationForm, BoothHoursForm
-from .models import BoothLocation, BoothDay
+from .models import BoothLocation, BoothDay, BoothHours
 
 
 def index(request):
@@ -29,29 +29,13 @@ def new_location(request):
         # POST data submitted; process data.
         form = BoothLocationForm(data=request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('cookie_booths:new_booth_hours')
+            loc = form.save()
+            print(loc.id)
+            return redirect('cookie_booths:edit_booth_hours', booth_id=loc.id)
 
     # Display a blank or invalid form.
     context = {'form': form}
     return render(request, 'cookie_booths/new_booth_location.html', context)
-
-
-def new_location_hours(request):
-    """Add a new booth location"""
-    if request.method != 'POST':
-        # No data submitted; create a blank form.
-        form = BoothHoursForm()
-    else:
-        # POST data submitted; process data.
-        form = BoothHoursForm(data=request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('cookie_booths:index')
-
-    # Display a blank or invalid form.
-    context = {'form': form}
-    return render(request, 'cookie_booths/new_booth_hours.html', context)
 
 
 def edit_location(request, booth_id):
@@ -82,13 +66,14 @@ def edit_location_hours(request, booth_id):
     """Edit an existing booth location"""
     # TODO: Fix this when the form is changed
     booth = BoothLocation.objects.get(id=booth_id)
+    hours = BoothHours.objects.get(booth_location=BoothLocation.objects.get(id=booth_id))
 
     if request.method != 'POST':
         # Initial request; pre-fill with the current entry.
-        form = BoothHoursForm(instance=booth)
+        form = BoothHoursForm(instance=hours)
     else:
         # POST data submitted; process data.
-        form = BoothHoursForm(instance=booth, data=request.POST)
+        form = BoothHoursForm(instance=hours, data=request.POST)
         if form.is_valid():
             form.save()
             return redirect('cookie_booths/booths.html')

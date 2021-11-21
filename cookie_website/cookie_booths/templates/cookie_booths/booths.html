@@ -23,7 +23,7 @@
 				<td>{{ booth.booth_location }}</td>
 				<td>{{ booth.booth_address }}</td>
 				<td><a href="{% url 'cookie_booths:edit_location' booth.id %}">Edit Booth</a></td>
-				<td><a href="#">Edit Hours</a></td>
+				<td><a href="{% url 'cookie_booths:edit_booth_hours' booth.id %}">Edit Hours</a></td>
 				<td><a href="{% url 'cookie_booths:delete_booth' booth.pk %}">Delete Booth</a></td>
 			</tr>
 		{% endfor %}
