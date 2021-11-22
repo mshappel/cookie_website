@@ -35,6 +35,7 @@ INSTALLED_APPS = [
 
     # Third Party Apps
     'bootstrap4',
+    'bootstrap_datepicker_plus',
 
     # Default Apps
     'django.contrib.admin',
@@ -116,6 +117,7 @@ USE_L10N = True
 
 USE_TZ = False
 TIME_ZONE = "US/Central"
+TIME_INPUT_FORMATS = ['%I:%M %p']
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/

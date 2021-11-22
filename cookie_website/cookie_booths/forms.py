@@ -1,7 +1,10 @@
 from django import forms
 from django.utils.translation import gettext as _
 
+from bootstrap_datepicker_plus import DatePickerInput, TimePickerInput
+
 from .models import BoothLocation, BoothHours
+
 
 # Add forms for booths here
 
@@ -54,6 +57,26 @@ class BoothHoursForm(forms.ModelForm):
                   'saturday_open',
                   'saturday_open_time',
                   'saturday_close_time']
+
+        widgets = {'booth_start_date': DatePickerInput(format='%m/%d/%Y').start_of('booth days'),
+                   'booth_end_date': DatePickerInput(format='%m/%d/%Y').end_of('booth days'),
+                   'sunday_open_time': TimePickerInput(format='%I:%M %p',
+                                                       attrs={'id': 'sunday_time'}).start_of('sunday'),
+                   'sunday_close_time': TimePickerInput(format='%I:%M %p',
+                                                        attrs={'id': 'sunday_time'}).end_of('sunday'),
+                   'monday_open_time': TimePickerInput(format='%I:%M %p').start_of('monday'),
+                   'monday_close_time': TimePickerInput(format='%I:%M %p').end_of('monday'),
+                   'tuesday_open_time': TimePickerInput(format='%I:%M %p').start_of('tuesday'),
+                   'tuesday_close_time': TimePickerInput(format='%I:%M %p').end_of('tuesday'),
+                   'wednesday_open_time': TimePickerInput(format='%I:%M %p').start_of('wednesday'),
+                   'wednesday_close_time': TimePickerInput(format='%I:%M %p').end_of('wednesday'),
+                   'thursday_open_time': TimePickerInput(format='%I:%M %p').start_of('thursday'),
+                   'thursday_close_time': TimePickerInput(format='%I:%M %p').end_of('thursday'),
+                   'friday_open_time': TimePickerInput(format='%I:%M %p').start_of('friday'),
+                   'friday_close_time': TimePickerInput(format='%I:%M %p').end_of('friday'),
+                   'saturday_open_time': TimePickerInput(format='%I:%M %p').start_of('saturday'),
+                   'saturday_close_time': TimePickerInput(format='%I:%M %p').end_of('saturday'),
+                   }
 
         labels = {'booth_start_date': _('Booth Starting Date'),
                   'booth_end_date': _('Booth Ending Date'),
