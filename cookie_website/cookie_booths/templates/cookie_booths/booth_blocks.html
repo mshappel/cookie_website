@@ -10,7 +10,7 @@
 <table id="booth_blocks" class="table table-striped table-bordered" cellspacing="0" width="100%">
 	<thead>
     	<tr>
-        	<th>Location</th>
+			<th>Location</th>
 			<th>Address</th>
 			<th>Date</th>
 			<th>Start Time</th>
@@ -23,10 +23,10 @@
 			<tr>
 				<td>{{ block.booth_day.booth.booth_location }}</td>
 				<td>{{ block.booth_day.booth.booth_address }}</td>
-                <td>{{ block.booth_day.booth_day_date }}</td>
-                <td>{{ block.booth_block_start_time|date:"TIME_FORMAT" }}</td>
-                <td>{{ block.booth_block_end_time|date:"TIME_FORMAT" }}</td>
-                <td></td>
+				<td>{{ block.booth_day.booth_day_date }}</td>
+				<td>{{ block.booth_block_start_time|date:"TIME_FORMAT" }}</td>
+				<td>{{ block.booth_block_end_time|date:"TIME_FORMAT" }}</td>
+				<td></td>
 			</tr>
 		{% endfor %}
 	</tbody>
