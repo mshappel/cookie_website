@@ -26,7 +26,7 @@
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-          <a class="nav-link" href="#">Home</a>
+          <a class="nav-link" href="{% url 'cookie_booths:index' %}">Home</a>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
@@ -34,6 +34,8 @@
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <a class="dropdown-item" href="{% url 'cookie_booths:booth_locations' %}">All Booths</a>
             <a class="dropdown-item" href="{% url 'cookie_booths:new_location' %}">New Booth Location</a>
+            <a class="dropdown-item" href="{% url 'cookie_booths:booth_blocks' %}">Make Booth Reservations</a>
+            <a class="dropdown-item" href="{% url 'cookie_booths:booth_reservations' %}">Manage Booth Reservations</a>
           </div>
         </li>
       </ul>
