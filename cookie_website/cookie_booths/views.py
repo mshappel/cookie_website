@@ -50,7 +50,7 @@ def edit_location(request, booth_id):
         form = BoothLocationForm(instance=booth, data=request.POST)
         if form.is_valid():
             form.save()
-            return redirect('cookie_booths/booths.html')
+            return HttpResponseRedirect(reverse_lazy('cookie_booths:booth_locations'))
 
     context = {'booth': booth, 'form': form}
     return render(request, 'cookie_booths/edit_booth.html', context)
@@ -64,9 +64,8 @@ class BoothLocationDelete(DeleteView):
 
 def edit_location_hours(request, booth_id):
     """Edit an existing booth location"""
-    # TODO: Fix this when the form is changed
     booth = BoothLocation.objects.get(id=booth_id)
-    hours = BoothHours.objects.get(booth_location=BoothLocation.objects.get(id=booth_id))
+    hours = BoothHours.objects.get(booth_location=booth.id)
 
     if request.method != 'POST':
         # Initial request; pre-fill with the current entry.
@@ -75,8 +74,9 @@ def edit_location_hours(request, booth_id):
         # POST data submitted; process data.
         form = BoothHoursForm(instance=hours, data=request.POST)
         if form.is_valid():
+            # TODO: We need to have dates. Does does not validate if a date exists.
             form.save()
-            return redirect('cookie_booths/booths.html')
+            return HttpResponseRedirect(reverse_lazy('cookie_booths:booth_locations'))
 
     context = {'booth': booth, 'form': form}
     return render(request, 'cookie_booths/edit_booth_hours.html', context)
