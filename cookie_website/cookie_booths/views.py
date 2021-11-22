@@ -5,7 +5,7 @@ from django.views.generic.edit import DeleteView
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from .forms import BoothLocationForm, BoothHoursForm
-from .models import BoothLocation, BoothDay, BoothHours
+from .models import BoothLocation, BoothDay, BoothHours, BoothBlock
 
 
 def index(request):
@@ -122,6 +122,21 @@ def disable_all_locations(request, date):
         booth_day.disable_freeforall()
 
     return
+
+
+def booth_blocks(request):
+    """Display all booths"""
+    booth_blocks = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
+    context = {'booth_blocks': booth_blocks}
+    return render(request, 'cookie_booths/booth_blocks.html', context)
+
+
+def booth_reservations(request):
+    """Display all blocks currently reserved by the current user"""
+    #TODO - filter by booth_block_current_troop_owner associated with the current user's troop, then order_by
+    booth_blocks = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
+    context = {'booth_blocks': booth_blocks}
+    return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
 def get_available_dates(request):

@@ -15,5 +15,9 @@ urlpatterns = [
     # Edit Booth Hours
     path('booths/edit_booth_hours/<int:booth_id>/', views.edit_location_hours, name='edit_booth_hours'),
     # Delete Booth
-    path('booths/booth_confirm_delete/<int:pk>/', views.BoothLocationDelete.as_view(), name='delete_booth')
+    path('booths/booth_confirm_delete/<int:pk>/', views.BoothLocationDelete.as_view(), name='delete_booth'),
+    # Booth Blocks Home
+    path('blocks/', views.booth_blocks, name='booth_blocks'),
+    # Booth Reservations
+    path('reservations/', views.booth_reservations, name='booth_reservations')
 ]

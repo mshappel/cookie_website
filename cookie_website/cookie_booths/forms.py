@@ -31,6 +31,15 @@ class BoothLocationForm(forms.ModelForm):
 
         help_texts = {'booth_enabled': _('Enabled means booth blocks are able to be reserved.')}
 
+    def clean(self):
+        # We want to make absolutely sure that we are not duplicating a location. We should be able to uniquely identify
+        # A location by a combination of name and address
+        if BoothLocation.objects.filter(booth_location=self.cleaned_data['booth_location'],
+                                        booth_address=self.cleaned_data['booth_address']):
+            self.add_error('booth_location', "Please add a unique location.")
+            self.add_error('booth_address', "Please add a unique address.")
+            raise forms.ValidationError('This location already exists!')
+
 
 class BoothHoursForm(forms.ModelForm):
     class Meta:
