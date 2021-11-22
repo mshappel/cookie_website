@@ -1,4 +1,5 @@
 from django import forms
+from django.forms.utils import ErrorList
 from django.utils.translation import gettext as _
 
 from bootstrap_datepicker_plus import DatePickerInput, TimePickerInput
@@ -104,3 +105,83 @@ class BoothHoursForm(forms.ModelForm):
 
         help_texts = {'booth_start_date': _('Enter the date sales will begin at this booth.'),
                       'booth_end_date': _('Enter the last date of sales for this booth.')}
+
+    def clean(self):
+        # Make sure we have valid dates - both populated or both not is fine
+        if (self.cleaned_data['booth_start_date'] is None and self.cleaned_data['booth_end_date'] is not None) or \
+           (self.cleaned_data['booth_start_date'] is not None and self.cleaned_data['booth_end_date'] is None):
+
+            if self.cleaned_data['booth_start_date'] is None:
+                self.add_error('booth_start_date', "Please specify valid start date.")
+            if self.cleaned_data['booth_end_date'] is None:
+                self.add_error('booth_end_date', "Please specify valid end date.")
+            raise forms.ValidationError('Must have valid start and ending dates!')
+
+        valid_times = True
+
+        # For each date, if it's flagged as open, we should make sure that times are set
+        if (self.cleaned_data['monday_open']) and \
+            (self.cleaned_data['monday_open_time'] is None or self.cleaned_data['monday_close_time'] is None):
+            valid_times = False
+
+            if self.cleaned_data['monday_open_time'] is None:
+                self.add_error('monday_open_time', "Please specify valid open time.")
+            if self.cleaned_data['monday_close_time'] is None:
+                self.add_error('monday_close_time', "Please specify valid close time.")
+
+        if (self.cleaned_data['tuesday_open']) and \
+            (self.cleaned_data['tuesday_open_time'] is None or self.cleaned_data['tuesday_close_time'] is None):
+            valid_times = False
+
+            if self.cleaned_data['tuesday_open_time'] is None:
+                self.add_error('tuesday_open_time', "Please specify valid open time.")
+            if self.cleaned_data['tuesday_close_time'] is None:
+                self.add_error('tuesday_close_time', "Please specify valid close time.")
+
+        if (self.cleaned_data['wednesday_open']) and \
+            (self.cleaned_data['wednesday_open_time'] is None or self.cleaned_data['wednesday_close_time'] is None):
+            valid_times = False
+
+            if self.cleaned_data['wednesday_open_time'] is None:
+                self.add_error('wednesday_open_time', "Please specify valid open time.")
+            if self.cleaned_data['wednesday_close_time'] is None:
+                self.add_error('wednesday_close_time', "Please specify valid close time.")
+
+        if (self.cleaned_data['thursday_open']) and \
+            (self.cleaned_data['thursday_open_time'] is None or self.cleaned_data['thursday_close_time'] is None):
+            valid_times = False
+
+            if self.cleaned_data['thursday_open_time'] is None:
+                self.add_error('thursday_open_time', "Please specify valid open time.")
+            if self.cleaned_data['thursday_close_time'] is None:
+                self.add_error('thursday_close_time', "Please specify valid close time.")
+
+        if (self.cleaned_data['friday_open']) and \
+            (self.cleaned_data['friday_open_time'] is None or self.cleaned_data['friday_close_time'] is None):
+            valid_times = False
+
+            if self.cleaned_data['friday_open_time'] is None:
+                self.add_error('friday_open_time', "Please specify valid open time.")
+            if self.cleaned_data['friday_close_time'] is None:
+                self.add_error('friday_close_time', "Please specify valid close time.")
+
+        if (self.cleaned_data['saturday_open']) and \
+            (self.cleaned_data['saturday_open_time'] is None or self.cleaned_data['saturday_close_time'] is None):
+            valid_times = False
+
+            if self.cleaned_data['saturday_open_time'] is None:
+                self.add_error('saturday_open_time', "Please specify valid open time.")
+            if self.cleaned_data['saturday_close_time'] is None:
+                self.add_error('saturday_close_time', "Please specify valid close time.")
+
+        if (self.cleaned_data['sunday_open']) and \
+            (self.cleaned_data['sunday_open_time'] is None or self.cleaned_data['sunday_close_time'] is None):
+            valid_times = False
+
+            if self.cleaned_data['sunday_open_time'] is None:
+                self.add_error('sunday_open_time', "Please specify valid open time.")
+            if self.cleaned_data['sunday_close_time'] is None:
+                self.add_error('sunday_close_time', "Please specify valid close time.")
+
+        if not valid_times:
+            raise forms.ValidationError('Open and close times must be specified for open days!')

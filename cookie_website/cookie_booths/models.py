@@ -35,6 +35,11 @@ class BoothLocation(models.Model):
         # A few steps for this
         hours = BoothHours.objects.get(booth_location=self)
 
+        # If no date is set for either start or end date, delete all days owned by this booth
+        if hours.booth_start_date is None or hours.booth_end_date is None:
+            BoothDay.objects.filter(booth=self).delete()
+            return
+
         # Delete any days outside of the new start/end date - this will cascade down to the blocks
         BoothDay.objects.filter(Q(booth=self),
                                 Q(booth_day_date__lt=hours.booth_start_date) | Q(
