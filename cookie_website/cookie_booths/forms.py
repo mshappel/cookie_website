@@ -36,9 +36,21 @@ class BoothLocationForm(forms.ModelForm):
         # A location by a combination of name and address
         if BoothLocation.objects.filter(booth_location=self.cleaned_data['booth_location'],
                                         booth_address=self.cleaned_data['booth_address']):
-            self.add_error('booth_location', "Please add a unique location.")
-            self.add_error('booth_address', "Please add a unique address.")
-            raise forms.ValidationError('This location already exists!')
+            cleaned_booth_id = BoothLocation.objects.get(booth_location=self.cleaned_data['booth_location'],
+                                                         booth_address=self.cleaned_data['booth_address']).id
+
+            if cleaned_booth_id != self.booth_id or self.booth_id is None:
+                self.add_error('booth_location', "Please add a unique location.")
+                self.add_error('booth_address', "Please add a unique address.")
+                raise forms.ValidationError('This location already exists!')
+
+    def __init__(self, *args, **kwargs):
+        # This is used to add booth_id to check if we're duplicating an item on edit.
+        try:
+            self.booth_id = kwargs.pop('booth_id')
+        except KeyError:
+            self.booth_id = None
+        super(BoothLocationForm, self).__init__(*args, **kwargs)
 
 
 class BoothHoursForm(forms.ModelForm):
@@ -130,7 +142,7 @@ class BoothHoursForm(forms.ModelForm):
     def clean(self):
         # Make sure we have valid dates - both populated or both not is fine
         if (self.cleaned_data['booth_start_date'] is None and self.cleaned_data['booth_end_date'] is not None) or \
-           (self.cleaned_data['booth_start_date'] is not None and self.cleaned_data['booth_end_date'] is None):
+                (self.cleaned_data['booth_start_date'] is not None and self.cleaned_data['booth_end_date'] is None):
 
             if self.cleaned_data['booth_start_date'] is None:
                 self.add_error('booth_start_date', "Please specify valid start date.")
@@ -142,7 +154,7 @@ class BoothHoursForm(forms.ModelForm):
 
         # For each date, if it's flagged as open, we should make sure that times are set
         if (self.cleaned_data['monday_open']) and \
-            (self.cleaned_data['monday_open_time'] is None or self.cleaned_data['monday_close_time'] is None):
+                (self.cleaned_data['monday_open_time'] is None or self.cleaned_data['monday_close_time'] is None):
             valid_times = False
 
             if self.cleaned_data['monday_open_time'] is None:
@@ -151,7 +163,7 @@ class BoothHoursForm(forms.ModelForm):
                 self.add_error('monday_close_time', "Please specify valid close time.")
 
         if (self.cleaned_data['tuesday_open']) and \
-            (self.cleaned_data['tuesday_open_time'] is None or self.cleaned_data['tuesday_close_time'] is None):
+                (self.cleaned_data['tuesday_open_time'] is None or self.cleaned_data['tuesday_close_time'] is None):
             valid_times = False
 
             if self.cleaned_data['tuesday_open_time'] is None:
@@ -160,7 +172,7 @@ class BoothHoursForm(forms.ModelForm):
                 self.add_error('tuesday_close_time', "Please specify valid close time.")
 
         if (self.cleaned_data['wednesday_open']) and \
-            (self.cleaned_data['wednesday_open_time'] is None or self.cleaned_data['wednesday_close_time'] is None):
+                (self.cleaned_data['wednesday_open_time'] is None or self.cleaned_data['wednesday_close_time'] is None):
             valid_times = False
 
             if self.cleaned_data['wednesday_open_time'] is None:
@@ -169,7 +181,7 @@ class BoothHoursForm(forms.ModelForm):
                 self.add_error('wednesday_close_time', "Please specify valid close time.")
 
         if (self.cleaned_data['thursday_open']) and \
-            (self.cleaned_data['thursday_open_time'] is None or self.cleaned_data['thursday_close_time'] is None):
+                (self.cleaned_data['thursday_open_time'] is None or self.cleaned_data['thursday_close_time'] is None):
             valid_times = False
 
             if self.cleaned_data['thursday_open_time'] is None:
@@ -178,7 +190,7 @@ class BoothHoursForm(forms.ModelForm):
                 self.add_error('thursday_close_time', "Please specify valid close time.")
 
         if (self.cleaned_data['friday_open']) and \
-            (self.cleaned_data['friday_open_time'] is None or self.cleaned_data['friday_close_time'] is None):
+                (self.cleaned_data['friday_open_time'] is None or self.cleaned_data['friday_close_time'] is None):
             valid_times = False
 
             if self.cleaned_data['friday_open_time'] is None:
@@ -187,7 +199,7 @@ class BoothHoursForm(forms.ModelForm):
                 self.add_error('friday_close_time', "Please specify valid close time.")
 
         if (self.cleaned_data['saturday_open']) and \
-            (self.cleaned_data['saturday_open_time'] is None or self.cleaned_data['saturday_close_time'] is None):
+                (self.cleaned_data['saturday_open_time'] is None or self.cleaned_data['saturday_close_time'] is None):
             valid_times = False
 
             if self.cleaned_data['saturday_open_time'] is None:
@@ -196,7 +208,7 @@ class BoothHoursForm(forms.ModelForm):
                 self.add_error('saturday_close_time', "Please specify valid close time.")
 
         if (self.cleaned_data['sunday_open']) and \
-            (self.cleaned_data['sunday_open_time'] is None or self.cleaned_data['sunday_close_time'] is None):
+                (self.cleaned_data['sunday_open_time'] is None or self.cleaned_data['sunday_close_time'] is None):
             valid_times = False
 
             if self.cleaned_data['sunday_open_time'] is None:

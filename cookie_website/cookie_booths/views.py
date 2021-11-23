@@ -44,10 +44,10 @@ def edit_location(request, booth_id):
 
     if request.method != 'POST':
         # Initial request; pre-fill with the current entry.
-        form = BoothLocationForm(instance=booth)
+        form = BoothLocationForm(instance=booth, booth_id=booth_id)
     else:
         # POST data submitted; process data.
-        form = BoothLocationForm(instance=booth, data=request.POST)
+        form = BoothLocationForm(instance=booth, data=request.POST, booth_id=booth_id)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse_lazy('cookie_booths:booth_locations'))
