@@ -27,6 +27,11 @@ class BoothLocation(models.Model):
         verbose_name_plural = "booth locations"
         verbose_name = "booth location"
 
+        permissions = (('booth_loc_creation', "Creates a booth location"),
+                       ('booth_loc_updates', "Updates a booth location"),
+                       ('booth_loc_deletes', "Deletes a booth location")
+                       )
+
     def __str__(self):
         return self.booth_location
 
@@ -160,6 +165,14 @@ class BoothDay(models.Model):
 
     booth_day_enabled = models.BooleanField(default=False)
     booth_day_freeforall_enabled = models.BooleanField(default=False)
+
+    class Meta:
+        permissions = (('enable_day', "Enable a day for a booth"),
+                       ('disable_day', "Disable a day for a booth"),
+                       ('add_or_update_hours', "Add or update hours for a booth day"),
+                       ('enable_freeforall', "Enable free for all"),
+                       ('disable_freeforall', "Disable free for all")
+                       )
 
     def enable_day(self):
         # If we're already enabled, nothing to do
@@ -333,6 +346,11 @@ class BoothBlock(models.Model):
 
     booth_block_enabled = models.BooleanField(default=False)
     booth_block_freeforall_enabled = models.BooleanField(default=False)
+
+    class Meta:
+        permissions = (('cancel_block', "Cancel a booth"),
+                       ('reserve_block', "Reserve a booth")
+                       )
 
     def cancel_block(self, troop_id):
         # TODO: Need to Enforce permissions to allow canceling only if the calling user either
