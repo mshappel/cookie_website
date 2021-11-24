@@ -238,6 +238,7 @@ class BoothDayTestCase(TestCase):
             self.assertFalse(block.booth_block_enabled)
             self.assertFalse(block.booth_block_freeforall_enabled)
 
+
 class BoothLocationTestCase(TestCase):
     def test_add_or_update_day(self):
         # The block creation was tested up in BoothDayTestCase.
@@ -249,7 +250,7 @@ class BoothLocationTestCase(TestCase):
                                                 booth_is_golden_ticket=False,
                                                 booth_requires_masks=True,
                                                 booth_is_outside=True,
-                                                 booth_notes="You can sell cookies here")
+                                                booth_notes="You can sell cookies here")
 
         date = datetime.datetime(2021, 10, 22)
         date_open_time = datetime.datetime(2021, 10, 22, 8, 0, 0, 0)

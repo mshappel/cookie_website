@@ -12,9 +12,7 @@
     	<tr>
         	<th>Location</th>
 			<th>Address</th>
-			<th>Edit Booth</th>
-			<th>Edit Hours</th>
-			<th>Delete Booth</th>
+			<th>Actions</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -22,9 +20,16 @@
 			<tr>
 				<td>{{ booth.booth_location }}</td>
 				<td>{{ booth.booth_address }}</td>
-				<td><a href="{% url 'cookie_booths:edit_location' booth.id %}">Edit Booth</a></td>
-				<td><a href="{% url 'cookie_booths:edit_booth_hours' booth.id %}">Edit Hours</a></td>
-				<td><a href="{% url 'cookie_booths:delete_booth' booth.pk %}">Delete Booth</a></td>
+				<td>
+                    {% if perms.cookie_booths.booth_loc_updates %}
+                        <a href="{% url 'cookie_booths:edit_location' booth.id %}">Edit Booth</a> |
+                        <a href="{% url 'cookie_booths:edit_booth_hours' booth.id %}">Edit Hours</a> |
+                    {% endif %}
+
+                    {%  if perms.cookie_booths.booth_loc_deletes %}
+                        <a href="{% url 'cookie_booths:delete_booth' booth.pk %}">Delete Booth</a>
+                    {% endif %}
+                </td>
 			</tr>
 		{% endfor %}
 	</tbody>
