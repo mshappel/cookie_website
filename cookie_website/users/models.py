@@ -26,14 +26,24 @@ class User(AbstractUser):
 
 class Troop(models.Model):
     troop_number = models.PositiveSmallIntegerField(unique=True)
+    troop_name = models.CharField(max_length=300, blank=True)
 
-    troop_cookie_coordinator = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    troop_cookie_coordinator = models.CharField(max_length=300, null=True)
 
     super_troop = models.BooleanField(default=False)
     daisy_troop = models.BooleanField(default=False)
 
     total_booth_tickets_per_week = models.PositiveSmallIntegerField(default=0)
     booth_golden_tickets_per_week = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = "troops"
+        verbose_name = "troop"
+
+        permissions = (('troop_creation', "Create a troop"),
+                       ('troop_updates', "Updates a troop"),
+                       ('troop_deletion', "Deletes a troop")
+                       )
 
     def __str__(self):
         return 'Troop ' + str(self.troop_number)

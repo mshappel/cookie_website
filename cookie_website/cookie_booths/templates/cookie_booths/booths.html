@@ -2,7 +2,7 @@
 {% load bootstrap4 %}
 
 {% block page_header %}
-  <h2>Booth Editor</h2>
+  <h2>Booth Locations</h2>
 {% endblock page_header %}
 
 
@@ -12,7 +12,9 @@
     	<tr>
         	<th>Location</th>
 			<th>Address</th>
-			<th>Actions</th>
+            {% if perms.cookie_booths.booth_loc_updates or perms.cookie_booths.booth_loc_deletes %}
+                <th>Actions</th>
+            {% endif %}
 		</tr>
 	</thead>
 	<tbody>
