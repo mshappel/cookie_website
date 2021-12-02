@@ -87,6 +87,8 @@ class Troop(models.Model):
 def default_group(sender, instance, created, **kwargs):
     if created:
         instance.groups.add(Group.objects.get(name='Troop Cookie Coordinator'))
+        instance.groups.add(Group.objects.get(name='Users'))
+
 
 
 @receiver(pre_save, sender=Troop)
