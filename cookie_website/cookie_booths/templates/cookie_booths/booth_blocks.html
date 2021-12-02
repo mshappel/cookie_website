@@ -29,7 +29,11 @@
 				<td>{{ block.booth_day.booth_day_date }}</td>
 				<td>{{ block.booth_block_start_time|date:"h:i A" }}</td>
 				<td>{{ block.booth_block_end_time|date:"h:i A" }}</td>
-				<td></td>
+				<td>
+                    {% if perms.cookie_booths.cancel_block or perms.cookie_booths.reserve_block %}
+                        <!-- TODO: need to dynamically set this value based on whether that particular block is reserved by this user -->
+                    {% endif %}
+                </td>
 			</tr>
 		{% endfor %}
 	</tbody>
