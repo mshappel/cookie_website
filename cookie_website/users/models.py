@@ -52,35 +52,37 @@ class Troop(models.Model):
         # A couple of preconditions:
         # start_date should be BEFORE end_date
         if start_date > end_date:
-            return (0, 0)
+            return 0, 0
 
         # start_date should be a Monday, end_date should be a Sunday
         if start_date.weekday() != 0 and end_date.weekday() != 6:
-            return (0, 0)
+            return 0, 0
 
         # They should be 6 days apart, so representing a week period inclusive
         delta = end_date - start_date
         if delta.days != 6:
-            return (0, 0)
+            return 0, 0
 
         # OK, we're good to check vs actual data now
         total_booth_count = 0
-        super_booth_count = 0
+        golden_ticket_booth_count = 0
         # We're filtering by Blocks that are owned by this troop, and are associated with a BoothDay which falls into
         # the range of [start_date, end_date] inclusive
         for block in BoothBlock.objects.filter(booth_block_reserved=True,
                                                booth_block_current_troop_owner=self.troop_number,
                                                booth_day__booth_day_date__gte=start_date,
                                                booth_day__booth_day_date__lte=end_date):
-            if block.booth_day.booth.booth_is_golden_ticket:
-                super_booth_count += 1
+            if block.booth_day.booth_day_is_golden:
+                golden_ticket_booth_count += 1
 
             total_booth_count += 1
 
-        rem = 0 if (total_booth_count > self.total_booth_tickets_per_week) else (self.total_booth_tickets_per_week - total_booth_count)
-        rem_super = 0 if (super_booth_count > self.booth_golden_tickets_per_week) else (self.booth_golden_tickets_per_week - super_booth_count)
+        rem = 0 if (total_booth_count > self.total_booth_tickets_per_week) else \
+            (self.total_booth_tickets_per_week - total_booth_count)
+        rem_golden_ticket = 0 if (golden_ticket_booth_count > self.booth_golden_tickets_per_week) else \
+            (self.booth_golden_tickets_per_week - golden_ticket_booth_count)
 
-        return (rem, rem_super)
+        return rem, rem_golden_ticket
 
 
 @receiver(post_save, sender=User)
@@ -88,7 +90,6 @@ def default_group(sender, instance, created, **kwargs):
     if created:
         instance.groups.add(Group.objects.get(name='Troop Cookie Coordinator'))
         instance.groups.add(Group.objects.get(name='Users'))
-
 
 
 @receiver(pre_save, sender=Troop)

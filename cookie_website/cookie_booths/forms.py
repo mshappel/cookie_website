@@ -15,7 +15,6 @@ class BoothLocationForm(forms.ModelForm):
         fields = ['booth_location',
                   'booth_address',
                   'booth_notes',
-                  'booth_is_golden_ticket',
                   'booth_requires_masks',
                   'booth_is_outside',
                   'booth_enabled']
@@ -23,7 +22,6 @@ class BoothLocationForm(forms.ModelForm):
         labels = {'booth_location': _('Location Name'),
                   'booth_address': _('Booth Address'),
                   'booth_notes': _('Additional Booth Notes'),
-                  'booth_is_golden_ticket': _('Golden Ticket Booth'),
                   'booth_requires_masks': _('Booth Requires Masks'),
                   'booth_is_outside': _('Booth Is Outside'),
                   'booth_enabled': _('Booth Is Enabled')}
@@ -58,6 +56,7 @@ class BoothHoursForm(forms.ModelForm):
         fields = ['booth_start_date',
                   'booth_end_date',
                   'sunday_open',
+                  'sunday_golden_ticket',
                   'sunday_open_time',
                   'sunday_close_time',
                   'monday_open',
@@ -76,6 +75,7 @@ class BoothHoursForm(forms.ModelForm):
                   'friday_open_time',
                   'friday_close_time',
                   'saturday_open',
+                  'saturday_golden_ticket',
                   'saturday_open_time',
                   'saturday_close_time']
 
@@ -114,6 +114,7 @@ class BoothHoursForm(forms.ModelForm):
         labels = {'booth_start_date': _('Booth Starting Date'),
                   'booth_end_date': _('Booth Ending Date'),
                   'sunday_open': _('Open Sundays'),
+                  'sunday_golden_ticket': _('Golden Ticket on Sunday'),
                   'sunday_open_time': _('Sunday Open Time'),
                   'sunday_close_time': _('Sunday Close Time'),
                   'monday_open': _('Open Mondays'),
@@ -132,6 +133,7 @@ class BoothHoursForm(forms.ModelForm):
                   'friday_open_time': _('Friday Open Time'),
                   'friday_close_time': _('Friday Close Time'),
                   'saturday_open': _('Open Saturdays'),
+                  'saturday_golden_ticket': _('Golden Ticket on Saturday'),
                   'saturday_open_time': _('Saturday Open Time'),
                   'saturday_close_time': _('Saturday Close Time')}
 
@@ -166,8 +168,7 @@ class BoothHoursForm(forms.ModelForm):
         valid_times = True
 
         if ((self.cleaned_data[day_of_week_checkbox]) and
-                (self.cleaned_data[day_of_week_open] is None or
-                 self.cleaned_data[day_of_week_close] is None)):
+                (self.cleaned_data[day_of_week_open] is None or self.cleaned_data[day_of_week_close] is None)):
             valid_times = False
             if self.cleaned_data[day_of_week_open] is None:
                 self.add_error(day_of_week_open, "Please specify valid open time.")
