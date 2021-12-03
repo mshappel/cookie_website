@@ -247,7 +247,6 @@ class BoothLocationTestCase(TestCase):
         location = BoothLocation.objects.create(booth_location="Walmart",
                                                 booth_address="123 Feels Pretty Good Kay St",
                                                 booth_enabled=False,
-                                                booth_is_golden_ticket=False,
                                                 booth_requires_masks=True,
                                                 booth_is_outside=True,
                                                 booth_notes="You can sell cookies here")
@@ -299,7 +298,6 @@ class BoothLocationTestCase(TestCase):
         location = BoothLocation.objects.create(booth_location="Walmart",
                                                 booth_address="123 Feels Pretty Good Kay St",
                                                 booth_enabled=False,
-                                                booth_is_golden_ticket=False,
                                                 booth_requires_masks=True,
                                                 booth_is_outside=True,
                                                 booth_notes="You can sell cookies here")

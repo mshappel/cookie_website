@@ -26,13 +26,14 @@ class TroopTestCase(TestCase):
                         TroopTicketParameters.SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK)
 
         # Now create a booth day to test around - First a golden ticket
-        golden_location = BoothLocation.objects.create(booth_is_golden_ticket=True)
+        golden_location = BoothLocation.objects.create()
         date = datetime.date(2021, 10, 22)
 
         golden_day = BoothDay.objects.create(booth=golden_location,
                                              booth_day_date=date,
                                              booth_day_hours_set=False,
-                                             booth_day_enabled=True)
+                                             booth_day_enabled=True,
+                                             booth_day_is_golden=True)
 
         # Going to allocate 5 blocks on this day
         open_time = datetime.datetime(2021, 10, 22, 4, 0, 0, 0)
@@ -68,10 +69,10 @@ class TroopTestCase(TestCase):
             super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 25), datetime.date(2021, 10, 31)) == (10,2))
 
         # Now let's create a day sometime in that next week, at a normal location, same hours
-        location = BoothLocation.objects.create()
+        normal_location = BoothLocation.objects.create()
         date = datetime.date(2021, 10, 28)
 
-        normal_day = BoothDay.objects.create(booth=location,
+        normal_day = BoothDay.objects.create(booth=normal_location,
                                              booth_day_date=date,
                                              booth_day_hours_set=False,
                                              booth_day_enabled=True)

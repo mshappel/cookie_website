@@ -17,7 +17,6 @@ class BoothLocation(models.Model):
 
     booth_enabled = models.BooleanField(default=False)
 
-    booth_is_golden_ticket = models.BooleanField(default=False)
     booth_requires_masks = models.BooleanField(default=False)
     booth_is_outside = models.BooleanField(default=False)
 
@@ -68,35 +67,66 @@ class BoothLocation(models.Model):
                     self.add_or_update_day(date,
                                            datetime.combine(date, hours.monday_open_time),
                                            datetime.combine(date, hours.monday_close_time))
+                    self.update_golden_day(date, hours.monday_golden_ticket)
                 elif date.weekday() == 1:  # Tuesday
                     self.add_or_update_day(date,
                                            datetime.combine(date, hours.tuesday_open_time),
                                            datetime.combine(date, hours.tuesday_close_time))
+                    self.update_golden_day(date, hours.tuesday_golden_ticket)
                 elif date.weekday() == 2:  # Wednesday
                     self.add_or_update_day(date,
                                            datetime.combine(date, hours.wendesday_open_time),
                                            datetime.combine(date, hours.wednesday_close_time))
+                    self.update_golden_day(date, hours.wednesday_golden_ticket)
                 elif date.weekday() == 3:  # Thursday
                     self.add_or_update_day(date,
                                            datetime.combine(date, hours.thursday_open_time),
                                            datetime.combine(date, hours.thursday_close_time))
+                    self.update_golden_day(date, hours.thursday_golden_ticket)
                 elif date.weekday() == 4:  # Friday
                     self.add_or_update_day(date,
                                            datetime.combine(date, hours.friday_open_time),
                                            datetime.combine(date, hours.friday_close_time))
+                    self.update_golden_day(date, hours.friday_golden_ticket)
                 elif date.weekday() == 5:  # Saturday
                     self.add_or_update_day(date,
                                            datetime.combine(date, hours.saturday_open_time),
                                            datetime.combine(date, hours.saturday_close_time))
+                    self.update_golden_day(date, hours.saturday_golden_ticket)
                 else:  # Sunday
                     self.add_or_update_day(date,
                                            datetime.combine(date, hours.sunday_open_time),
                                            datetime.combine(date, hours.sunday_close_time))
+                    self.update_golden_day(date, hours.sunday_golden_ticket)
         return
 
     def add_or_update_day(self, date, open_time, close_time):
         # First see if we have a Booth_Day existing for that date. If so, grab it and update the open/close time
-        booth_day = None
+        booth_day = self.__booth_day_exist(date=date)
+
+        # Set the hours
+        booth_day.add_or_update_hours(open_time, close_time)
+        booth_day.save()
+
+        return
+
+    def update_golden_day(self, date, is_golden_booth):
+        # First see if we have a Booth_Day existing for that date. If so, grab it and update the open/close time
+        booth_day = self.__booth_day_exist(date=date)
+
+        # Set the golden ticket
+        booth_day.change_golden_status(is_golden_booth=is_golden_booth)
+        booth_day.save()
+
+        return
+
+
+    def __daterange(self, start_date, end_date):
+        # Need +1 to be inclusive of the end date
+        for n in range(int((end_date - start_date).days) + 1):
+            yield start_date + timedelta(n)
+
+    def __booth_day_exist(self, date):
         try:
             booth_day = BoothDay.objects.get(booth_day_date=date)
         except BoothDay.DoesNotExist:
@@ -106,16 +136,7 @@ class BoothLocation(models.Model):
                                                 booth_day_enabled=False,
                                                 booth_day_hours_set=False)
 
-        # Set the hours
-        booth_day.add_or_update_hours(open_time, close_time)
-        booth_day.save()
-
-        return
-
-    def __daterange(self, start_date, end_date):
-        # Need +1 to be inclusive of the end date
-        for n in range(int((end_date - start_date).days) + 1):
-            yield start_date + timedelta(n)
+        return booth_day
 
 
 class BoothHours(models.Model):
@@ -125,30 +146,37 @@ class BoothHours(models.Model):
     booth_end_date = models.DateField(blank=True, null=True)
 
     sunday_open = models.BooleanField(default=False)
+    sunday_golden_ticket = models.BooleanField(default=False)
     sunday_open_time = models.TimeField(blank=True, null=True)
     sunday_close_time = models.TimeField(blank=True, null=True)
 
     monday_open = models.BooleanField(default=False)
+    monday_golden_ticket = models.BooleanField(default=False)
     monday_open_time = models.TimeField(blank=True, null=True)
     monday_close_time = models.TimeField(blank=True, null=True)
 
     tuesday_open = models.BooleanField(default=False)
+    tuesday_golden_ticket = models.BooleanField(default=False)
     tuesday_open_time = models.TimeField(blank=True, null=True)
     tuesday_close_time = models.TimeField(blank=True, null=True)
 
     wednesday_open = models.BooleanField(default=False)
+    wednesday_golden_ticket = models.BooleanField(default=False)
     wednesday_open_time = models.TimeField(blank=True, null=True)
     wednesday_close_time = models.TimeField(blank=True, null=True)
 
     thursday_open = models.BooleanField(default=False)
+    thursday_golden_ticket = models.BooleanField(default=False)
     thursday_open_time = models.TimeField(blank=True, null=True)
     thursday_close_time = models.TimeField(blank=True, null=True)
 
     friday_open = models.BooleanField(default=False)
+    friday_golden_ticket = models.BooleanField(default=False)
     friday_open_time = models.TimeField(blank=True, null=True)
     friday_close_time = models.TimeField(blank=True, null=True)
 
     saturday_open = models.BooleanField(default=False)
+    saturday_golden_ticket = models.BooleanField(default=False)
     saturday_open_time = models.TimeField(blank=True, null=True)
     saturday_close_time = models.TimeField(blank=True, null=True)
 
@@ -162,6 +190,7 @@ class BoothDay(models.Model):
     booth_day_hours_set = models.BooleanField(default=False)
     booth_day_open_time = models.DateTimeField(blank=True, null=True)
     booth_day_close_time = models.DateTimeField(blank=True, null=True)
+    booth_day_is_golden = models.BooleanField(default=False)
 
     booth_day_enabled = models.BooleanField(default=False)
     booth_day_freeforall_enabled = models.BooleanField(default=False)
@@ -170,6 +199,7 @@ class BoothDay(models.Model):
         permissions = (('enable_day', "Enable a day for a booth"),
                        ('disable_day', "Disable a day for a booth"),
                        ('add_or_update_hours', "Add or update hours for a booth day"),
+                       ('make_golden_booth', "Make a booth day golden"),
                        ('enable_freeforall', "Enable free for all"),
                        ('disable_freeforall', "Disable free for all")
                        )
@@ -197,7 +227,6 @@ class BoothDay(models.Model):
             block.save()
 
     def add_or_update_hours(self, open_time, close_time):
-        # TODO: Enforce permission
         # There are two main cases we need to handle here:
         # If hours have been previously set, or if they haven't
 
@@ -250,6 +279,11 @@ class BoothDay(models.Model):
         self.booth_day_hours_set = True
         self.booth_day_open_time = open_time
         self.booth_day_close_time = close_time
+
+        return
+
+    def change_golden_status(self, is_golden_booth):
+        self.booth_day_is_golden = is_golden_booth
 
         return
 
