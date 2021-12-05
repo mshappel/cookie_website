@@ -1,7 +1,9 @@
+import json
+
 from django.shortcuts import render, redirect
 from django.views.generic.edit import DeleteView
 from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 
@@ -14,6 +16,7 @@ from .models import BoothLocation, BoothDay, BoothHours, BoothBlock
 def index(request):
     """The home page for Cookie Booths"""
     return render(request, 'cookie_booths/index.html')
+
 
 # -----------------------------------------------------------------------
 # Booth Admin Functions
@@ -142,6 +145,7 @@ def disable_all_locations(request, date):
 
     return
 
+
 # -----------------------------------------------------------------------
 # Booth User Functions
 # -----------------------------------------------------------------------
@@ -151,7 +155,22 @@ def disable_all_locations(request, date):
 def booth_blocks(request):
     """Display all booths"""
     booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
-    context = {'booth_blocks': booth_blocks_}
+    available_troops = Troop.objects.order_by('troop_number')
+
+    username = None
+    if request.user.is_authenticated():
+        username = request.user.username
+
+    user_troop = Troop.objects.get(troop_cookie_coordinator=username)
+    booth_owned_by_current_user = False
+    for troop in available_troops:
+        if troop == user_troop.troop_number:
+            booth_owned_by_current_user = True
+            break
+
+    context = {'booth_blocks': booth_blocks_,
+               'available_troops': available_troops,
+               'booth_owned_by_current_user': booth_owned_by_current_user}
     return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
@@ -160,7 +179,10 @@ def booth_reservations(request):
     """Display all blocks currently reserved by the current user"""
     # TODO - filter by booth_block_current_troop_owner associated with the current user's troop, then order_by
     booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
-    context = {'booth_blocks': booth_blocks_}
+    available_troops = Troop.objects.order_by('troop_number')
+
+    context = {'booth_blocks': booth_blocks_,
+               'available_troops': available_troops}
     return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
@@ -200,15 +222,46 @@ def is_block_reserved_by_user(request, block_id):
 def reserve_block(request, block_id):
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
     # Some kind of error if it fails?
-    # TODO: Implementing all permissions related items before completing the reservation functionality
-    block_to_reserve = BoothBlock.objects.get(id=block_id)
-    if block_to_reserve.reserve_block(troop_id=''):
-        # Successfully reserved the booth
-        pass
+    username = request.user.username
+
+    if request.method == 'POST':
+        block_to_reserve = BoothBlock.objects.get(id=block_id)
+        if request.user.has_perm('cookie_booths.reserve_block_admin'):
+            # The user is a SUCM or higher; we require a troop # from them for reservation
+            troop_trying_to_reserve = request.POST['troop_number']
+            if troop_trying_to_reserve == '':
+                message_response = {
+                    'message': "Please select a troop",
+                    'is_success': False,
+                }
+                message_response = json.dumps(message_response)
+                return HttpResponse(message_response)
+        elif request.user.has_perm('cookie_booths.reserve_block'):
+            # The user is a TCC; the user's troop # is used for reservation
+            troop_trying_to_reserve = Troop.objects.get(troop_cookie_coordinator=username).troop_number
+        else:
+            # The user does not have the permissions to reserve a block
+            # This should never occur, but adding this in the case something horribly goes wrong.
+            return
+
+        if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve):
+            # Successfully reserved the booth
+            message_response = {
+                'message': "Successfully reserved booth",
+                'is_success': True,
+            }
+        else:
+            message_response = {
+                'message': "Failed to reserve booth",
+                'is_success': False,
+            }
     else:
-        # Failed to reserve the booth
-        pass
-    return
+        message_response = {
+            'message': "An unknown error occurred",
+            'is_success': False,
+        }
+    message_response = json.dumps(message_response)
+    return HttpResponse(message_response)
 
 
 @login_required

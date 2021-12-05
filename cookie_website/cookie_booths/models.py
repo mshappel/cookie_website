@@ -383,7 +383,9 @@ class BoothBlock(models.Model):
 
     class Meta:
         permissions = (('cancel_block', "Cancel a booth"),
-                       ('reserve_block', "Reserve a booth")
+                       ('reserve_block', "Reserve a booth"),
+                       ('cancel_block_admin', "Administrator cancel any booth"),
+                       ('reserve_block_admin', "Administrator reserve any booth"),
                        )
 
     def cancel_block(self, troop_id):
