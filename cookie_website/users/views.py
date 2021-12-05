@@ -53,6 +53,7 @@ def edit_troop(request, troop_number):
     context = {'troop': troop, 'form': form}
     return render(request, 'troops/edit_troop.html', context)
 
+
 class TroopDelete(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     """Delete an existing booth location"""
     permission_required = 'users.troop_deletion'
