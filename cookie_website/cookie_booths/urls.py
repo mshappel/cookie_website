@@ -16,10 +16,12 @@ urlpatterns = [
     path('booths/edit_booth/<int:booth_id>/hours/', views.edit_booth_location_hours, name='edit_booth_hours'),
     # Delete Booth
     path('booths/booth_confirm_delete/<int:pk>/', views.BoothLocationDelete.as_view(), name='delete_booth'),
-    # Booth Blocks Home
+    # Manage Booth Blocks Home
     path('booths/blocks/', views.booth_blocks, name='booth_blocks'),
-    # Booth Reservations
-    path('booths/reservations/', views.booth_reservations, name='booth_reservations'),
-    # Individual Booth Reservation
-    path('booths/reservations/<int:block_id>', views.reserve_block, name='block_reservation'),
+    # Your Booth Reservations
+    path('booths/blocks/reservations/', views.booth_reservations, name='booth_reservations'),
+    # Make Booth Reservation
+    path('booths/blocks/reservations/<int:block_id>', views.reserve_block, name='block_reservation'),
+    # Cancel Booth Reservation
+    path('booths/blocks/reservations/cancel/<int:block_id>', views.cancel_block, name='block_cancellation'),
 ]

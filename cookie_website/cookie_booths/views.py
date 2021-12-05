@@ -1,4 +1,5 @@
 import json
+from typing import List, Dict, Any
 
 from django.shortcuts import render, redirect
 from django.views.generic.edit import DeleteView
@@ -155,34 +156,66 @@ def disable_all_locations(request, date):
 def booth_blocks(request):
     """Display all booths"""
     booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
+    booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
     available_troops = Troop.objects.order_by('troop_number')
+    username = request.user.username
+    booth_information = []
 
-    username = None
-    if request.user.is_authenticated():
-        username = request.user.username
+    try:
+        user_troop = Troop.objects.get(troop_cookie_coordinator=username)
 
-    user_troop = Troop.objects.get(troop_cookie_coordinator=username)
-    booth_owned_by_current_user = False
-    for troop in available_troops:
-        if troop == user_troop.troop_number:
-            booth_owned_by_current_user = True
-            break
+    except Troop.DoesNotExist:
+        user_troop = None
 
-    context = {'booth_blocks': booth_blocks_,
+    for booth in booth_blocks_:
+        if user_troop is None:
+            booth_owned_by_current_user_ = False
+        else:
+            if booth.booth_block_current_troop_owner == user_troop.troop_number:
+                booth_owned_by_current_user_ = True
+            else:
+                booth_owned_by_current_user_ = False
+        current_booth_information = {'booth_block_information': booth,
+                                     'booth_owned_by_current_user': booth_owned_by_current_user_}
+        booth_information.append(current_booth_information)
+
+    context = {'booth_blocks': booth_information,
                'available_troops': available_troops,
-               'booth_owned_by_current_user': booth_owned_by_current_user}
+               'page_title': "Make Booth Reservations"}
     return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
 @login_required
 def booth_reservations(request):
     """Display all blocks currently reserved by the current user"""
-    # TODO - filter by booth_block_current_troop_owner associated with the current user's troop, then order_by
     booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
+    booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
     available_troops = Troop.objects.order_by('troop_number')
+    username = request.user.username
+    booth_information = []
 
-    context = {'booth_blocks': booth_blocks_,
-               'available_troops': available_troops}
+    try:
+        user_troop = Troop.objects.get(troop_cookie_coordinator=username)
+        booth_blocks_ = booth_blocks_.filter(booth_block_current_troop_owner=user_troop.troop_number)
+
+    except Troop.DoesNotExist:
+        user_troop = None
+
+    for booth in booth_blocks_:
+        if user_troop is None:
+            booth_owned_by_current_user_ = False
+        else:
+            if booth.booth_block_current_troop_owner == user_troop.troop_number:
+                booth_owned_by_current_user_ = True
+            else:
+                booth_owned_by_current_user_ = False
+        current_booth_information = {'booth_block_information': booth,
+                                     'booth_owned_by_current_user': booth_owned_by_current_user_}
+        booth_information.append(current_booth_information)
+
+    context = {'booth_blocks': booth_information,
+               'available_troops': available_troops,
+               'page_title': "Manage Your Booth Reservations"}
     return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
@@ -221,7 +254,6 @@ def is_block_reserved_by_user(request, block_id):
 @login_required
 def reserve_block(request, block_id):
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
-    # Some kind of error if it fails?
     username = request.user.username
 
     if request.method == 'POST':
@@ -266,5 +298,48 @@ def reserve_block(request, block_id):
 
 @login_required
 def cancel_block(request, block_id):
-    # Attempt to cancel a block, considering it belongs to the current user
-    return
+    username = request.user.username
+
+    if request.method == 'POST':
+        block_to_cancel = BoothBlock.objects.get(id=block_id)
+        if request.user.has_perm('cookie_booths.cancel_block_admin'):
+            # The user is a SUCM or higher they can do this unconditionally
+            pass
+        elif request.user.has_perm('cookie_booths.cancel_block'):
+            # The user is a TCC; the user's troop # is used to check if they can cancel
+            troop_trying_to_cancel = Troop.objects.get(troop_cookie_coordinator=username).troop_number
+            if troop_trying_to_cancel != block_to_cancel.booth_block_current_troop_owner:
+                message_response = {
+                    'message': "You cannot cancel a reservation for another troop",
+                    'is_success': False,
+                }
+                message_response = json.dumps(message_response)
+                return HttpResponse(message_response)
+        else:
+            # The user does not have the permissions to reserve a block
+            # This should never occur, but adding this in the case something horribly goes wrong.
+            message_response = {
+                'message': "An unknown error occurred",
+                'is_success': False,
+            }
+            message_response = json.dumps(message_response)
+            return HttpResponse(message_response)
+
+        if block_to_cancel.cancel_block():
+            # Successfully reserved the booth
+            message_response = {
+                'message': "Successfully cancelled reserved booth",
+                'is_success': True,
+            }
+        else:
+            message_response = {
+                'message': "Failed to cancel reserved booth",
+                'is_success': False,
+            }
+    else:
+        message_response = {
+            'message': "An unknown error occurred",
+            'is_success': False,
+        }
+    message_response = json.dumps(message_response)
+    return HttpResponse(message_response)
