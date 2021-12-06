@@ -3,7 +3,7 @@
 
 
 {% block page_header %}
-  <h2>Booth Reservations</h2>
+  <h2>{{ page_title }}</h2>
 {% endblock page_header %}
 
 
@@ -35,26 +35,29 @@
         <tbody>
             {% for block in booth_blocks %}
                 <tr>
-                    <td>{{ block.booth_day.booth.booth_location }}</td>
-                    <td>{{ block.booth_day.booth.booth_address }}</td>
-                    <td>{{ block.booth_day.booth_day_date }}</td>
-                    <td>{{ block.booth_block_start_time|date:"h:i A" }}</td>
-                    <td>{{ block.booth_block_end_time|date:"h:i A" }}</td>
+                    <td>{{ block.booth_block_information.booth_day.booth.booth_location }}</td>
+                    <td>{{ block.booth_block_information.booth_day.booth.booth_address }}</td>
+                    <td>{{ block.booth_block_information.booth_day.booth_day_date }}</td>
+                    <td>{{ block.booth_block_information.booth_block_start_time|date:"h:i A" }}</td>
+                    <td>{{ block.booth_block_information.booth_block_end_time|date:"h:i A" }}</td>
                     <td>
-                        {% if block.booth_block_reserved is False %}
+                        {% if block.booth_block_information.booth_block_reserved is False %}
                             {% if perms.cookie_booths.reserve_block or perms.cookie_booths.reserve_block_admin %}
                                 <input type="button" id="ReserveBooth" value="Reserve Booth"
-                                       onclick="ReserveBooth({{ block.id }})">
+                                       onclick="ReserveBooth({{ block.booth_block_information.id }})">
                             {% endif %}
+
                         {% else %}
                             {% if perms.cookie_booths.cancel_block_admin %}
-                                Reserved by {{ block.booth_block_current_troop_owner }}
+                                Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
                                 <p></p>
-                                <input type="button" id="CancelBooth" value="Cancel Booth">
-                            {% elif booth_owned_by_current_user is True %}
-                                <input type="button" id="CancelBooth" value="Cancel Booth">
+                                <input type="button" id="CancelBooth" value="Cancel Booth"
+                                        onclick="CancelBooth({{ block.booth_block_information.id }})">
+                            {% elif  block.booth_owned_by_current_user is True %}
+                                <input type="button" id="CancelBooth" value="Cancel Booth"
+                                        onclick="CancelBooth({{ block.booth_block_information.id }})">
                             {% else %}
-                                Reserved by {{ block.booth_block_current_troop_owner }}
+                                Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
                             {% endif %}
                         {% endif %}
 
@@ -79,7 +82,7 @@
     <script>
         function ReserveBooth(booth_id) {
             $.ajax({
-                url: booth_id,
+                url: location.origin + "/booths/blocks/reservations/" + booth_id,
                 type: 'POST',
                 data: {
                         csrfmiddlewaretoken: '{{ csrf_token }}',
@@ -93,6 +96,10 @@
                         if(confirm(message)) {
                             window.location.reload()
                         }
+                        // Make sure cancelling also prompts a refresh
+                        else {
+                            window.location.reload()
+                        }
                     }
                     else {
                         alert(message)
@@ -102,6 +109,40 @@
                 }
             });
 
+        }
+
+        function CancelBooth(booth_id) {
+            if(confirm("Do you want to cancel your reservation for this booth?")) {
+                $.ajax({
+                    url: location.origin + "/booths/blocks/reservations/cancel/" + booth_id,
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        troop_number: $('#TroopNumbers').val()
+                    },
+                    success: function (jsonData) {
+                        let from_response = JSON.parse(jsonData);
+                        let is_success = from_response.is_success;
+                        let message = from_response.message;
+                        if (is_success === true) {
+                            if (confirm(message)) {
+                                window.location.reload()
+                            }
+                            // Make sure cancelling also prompts a refresh
+                            else {
+                                window.location.reload()
+                            }
+                        } else {
+                            alert(message)
+                        }
+
+
+                    }
+                });
+            }
+            else {
+                alert("There has been no change to your reservation")
+                }
         }
     </script>
 

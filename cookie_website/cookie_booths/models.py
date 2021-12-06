@@ -388,11 +388,26 @@ class BoothBlock(models.Model):
                        ('reserve_block_admin', "Administrator reserve any booth"),
                        )
 
-    def cancel_block(self, troop_id):
-        # TODO: Need to Enforce permissions to allow canceling only if the calling user either
-        # 1. Is associated with the troop currently reserving this block, in which case they can do this
-        # 2. Has a superuser permission and can cancel any block here
-        return
+    def cancel_block(self):
+        # If this block is not enabled, no reservation can be made
+        if not self.booth_block_enabled:
+            return False
+
+        # If this block is not reserved, we cannot cancel the block
+        if self.booth_block_reserved:
+            pass
+        else:
+            return False
+
+        # At this point we can cancel the reservation
+        self.booth_block_reserved = False
+        self.booth_block_current_troop_owner = 0
+
+        # TODO: Send email confirmation
+
+        self.save()
+
+        return True
 
     def reserve_block(self, troop_id):
         # If this block is not enabled, no reservation can be made
@@ -407,7 +422,7 @@ class BoothBlock(models.Model):
         self.booth_block_reserved = True
         self.booth_block_current_troop_owner = troop_id
 
-        # TODO: Send email confirmation?
+        # TODO: Send email confirmation
 
         self.save()
         return True
