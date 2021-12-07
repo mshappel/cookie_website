@@ -41,10 +41,12 @@
                     <td>{{ block.booth_block_information.booth_block_start_time|date:"h:i A" }}</td>
                     <td>{{ block.booth_block_information.booth_block_end_time|date:"h:i A" }}</td>
                     <td>
+
                         {% if block.booth_block_information.booth_block_reserved is False %}
                             {% if perms.cookie_booths.reserve_block or perms.cookie_booths.reserve_block_admin %}
                                 <input type="button" id="ReserveBooth" value="Reserve Booth"
-                                       onclick="ReserveBooth({{ block.booth_block_information.id }})">
+                                       onclick="ReserveBooth({{ block.booth_block_information.id }},
+                                            '{{ block.booth_block_information.booth_day.booth.booth_requires_masks }}')">
                             {% endif %}
 
                         {% else %}
@@ -80,35 +82,43 @@
     </script>
 
     <script>
-        function ReserveBooth(booth_id) {
+        function ReserveBooth(booth_id, booth_requires_mask) {
+            if('{{ perms.cookie_booths.reserve_block_admin }}'==='True') {
+                FinishBoothReservation(booth_id)
+            } else if(booth_requires_mask==='True') {
+                if(confirm("This booth requires you to wear a mask, do you want to reserve it?")) {
+                    FinishBoothReservation(booth_id)
+                }
+            } else {
+                FinishBoothReservation(booth_id)
+            }
+        }
+
+        function FinishBoothReservation(booth_id) {
             $.ajax({
-                url: location.origin + "/booths/blocks/reservations/" + booth_id,
-                type: 'POST',
-                data: {
+                    url: location.origin + "/booths/blocks/reservations/" + booth_id,
+                    type: 'POST',
+                    data: {
                         csrfmiddlewaretoken: '{{ csrf_token }}',
                         troop_number: $('#TroopNumbers').val()
-                },
-                success: function(jsonData) {
-                    let from_response = JSON.parse(jsonData);
-                    let is_success = from_response.is_success;
-                    let message = from_response.message;
-                    if (is_success===true){
-                        if(confirm(message)) {
-                            window.location.reload()
-                        }
-                        // Make sure cancelling also prompts a refresh
-                        else {
-                            window.location.reload()
+                    },
+                    success: function (jsonData) {
+                        let from_response = JSON.parse(jsonData);
+                        let is_success = from_response.is_success;
+                        let message = from_response.message;
+                        if (is_success === true) {
+                            if (confirm(message)) {
+                                window.location.reload()
+                            }
+                            // Make sure cancelling also prompts a refresh
+                            else {
+                                window.location.reload()
+                            }
+                        } else {
+                            alert(message)
                         }
                     }
-                    else {
-                        alert(message)
-                    }
-
-
-                }
-            });
-
+                });
         }
 
         function CancelBooth(booth_id) {
@@ -140,9 +150,7 @@
                     }
                 });
             }
-            else {
-                alert("There has been no change to your reservation")
-                }
+
         }
     </script>
 
