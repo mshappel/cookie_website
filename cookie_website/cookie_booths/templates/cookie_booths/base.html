@@ -35,9 +35,12 @@
             <a class="dropdown-item" href="{% url 'cookie_booths:booth_locations' %}">Booth Locations</a>
 
             {% if perms.cookie_booths.booth_loc_creation %}
-              <a class="dropdown-item" href="{% url 'cookie_booths:new_location' %}">New Booth Location</a>
+                <a class="dropdown-item" href="{% url 'cookie_booths:new_location' %}">New Booth Location</a>
             {%  endif %}
-
+            {% if perms.cookie_booth.enable_day %}
+                <a class="dropdown-item" href="{% url 'cookie_booths:enable_location_by_block' %}">Enable Booths by Block</a>
+                <a class="dropdown-item" href="{% url 'cookie_booths:enable_day' %}">Enable Booths by Day</a>
+            {% endif %}
             <a class="dropdown-item" href="{% url 'cookie_booths:booth_blocks' %}">Make Booth Reservations</a>
             <a class="dropdown-item" href="{% url 'cookie_booths:booth_reservations' %}">Manage Your Booth Reservations</a>
           </div>

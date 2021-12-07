@@ -1,0 +1,87 @@
+{% extends "cookie_booths/base.html" %}
+{% load bootstrap4 %}
+
+
+{% block page_header %}
+    <h2>{{ page_title }}</h2>
+{% endblock page_header %}
+
+
+{% block content %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
+
+    <table id="booth_blocks" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Date</th>
+                <th>Manage</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for day in booth_days %}
+                <tr>
+                    <td>{{ day.booth.booth_location }}</td>
+                    <td>{{ day.booth_day_date }}</td>
+                    <td>
+                        {% if day.booth_day_enabled %}
+                            <input type="button" id="DisableBooth" value="Disable Day"
+                                        onclick="DisableBooth({{ day.id }})">
+                        {% else %}
+                            <input type="button" id="EnableBooth" value="Enable Day"
+                                        onclick="EnableBooth({{ day.id }})">
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $('#booth_blocks').DataTable( {
+    	    "paging":   false,
+        } );
+    } );
+    </script>
+
+    <script>
+        function EnableBooth(booth_id) {
+            $.ajax({
+
+                    url: location.origin + "/booths/blocks/enable_booth_days/enable",
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        booth_id: booth_id
+                    },
+                    success: function (){
+                        {
+                            window.location.reload()
+                        }
+                    }
+            });
+        }
+
+        function DisableBooth(booth_id) {
+            $.ajax({
+                    url: location.origin + "/booths/blocks/enable_booth_days/disable",
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        booth_id: booth_id
+                    },
+                    success: function (){
+                        {
+                            window.location.reload()
+                        }
+                    }
+            });
+        }
+    </script>
+
+
+{% endblock content %}
