@@ -98,6 +98,25 @@ class BoothLocation(models.Model):
                                            datetime.combine(date, hours.sunday_open_time),
                                            datetime.combine(date, hours.sunday_close_time))
                     self.update_golden_day(date, hours.sunday_golden_ticket)
+
+        return
+
+    def update_booth(self):
+        hours = BoothHours.objects.get(booth_location=self)
+        for date in self.__daterange(hours.booth_start_date, hours.booth_end_date):
+            if (((date.weekday() == 0) and hours.monday_open) or
+                    ((date.weekday() == 1) and hours.tuesday_open) or
+                    ((date.weekday() == 2) and hours.wednesday_open) or
+                    ((date.weekday() == 3) and hours.thursday_open) or
+                    ((date.weekday() == 4) and hours.friday_open) or
+                    ((date.weekday() == 5) and hours.saturday_open) or
+                    ((date.weekday() == 6) and hours.sunday_open)):
+                booth_day = self.__booth_day_exist(date)
+                if self.booth_enabled:
+                    booth_day.enable_day()
+                else:
+                    booth_day.disable_day()
+
         return
 
     def add_or_update_day(self, date, open_time, close_time):
@@ -120,7 +139,6 @@ class BoothLocation(models.Model):
 
         return
 
-
     def __daterange(self, start_date, end_date):
         # Need +1 to be inclusive of the end date
         for n in range(int((end_date - start_date).days) + 1):
@@ -128,7 +146,8 @@ class BoothLocation(models.Model):
 
     def __booth_day_exist(self, date):
         try:
-            booth_day = BoothDay.objects.get(booth_day_date=date)
+            booth_day = BoothDay.objects.get(booth=self, booth_day_date=date)
+
         except BoothDay.DoesNotExist:
             # If it doesn't exist yet, create it
             booth_day = BoothDay.objects.create(booth=self,
@@ -427,18 +446,39 @@ class BoothBlock(models.Model):
         self.save()
         return True
 
+    def enable_block(self):
+        # If this block is enabled return
+        if self.booth_block_enabled:
+            return True
+
+        self.booth_block_enabled = True
+        self.save()
+
+        return True
+
+    def disable_block(self):
+        # If this block is already disabled return
+        if self.booth_block_enabled:
+            self.booth_block_enabled = False
+            self.save()
+
+        return True
+
 
 @receiver(post_save, sender=BoothHours)
 def update_booth_location(sender, instance, created, **kwargs):
     # We don't care if it was just created - only on updates that actually set real hours
     if not created:
         instance.booth_location.update_hours()
+        instance.booth_location.update_booth()
 
 
 @receiver(post_save, sender=BoothLocation)
 def generate_hours_if_needed(sender, instance, created, **kwargs):
     if created:
         BoothHours.objects.create(booth_location=instance)
+    else:
+        instance.update_booth()
 
 
 @receiver(pre_delete, sender=BoothBlock)

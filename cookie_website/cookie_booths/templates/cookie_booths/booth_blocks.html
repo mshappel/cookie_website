@@ -3,14 +3,14 @@
 
 
 {% block page_header %}
-  <h2>{{ page_title }}</h2>
+    <h2>{{ page_title }}</h2>
 {% endblock page_header %}
 
 
 {% block content %}
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
 
-    {% if perms.cookie_booths.reserve_block_admin %}
+    {% if perms.cookie_booths.reserve_block_admin and reserve_or_enable_booths == "reserve" %}
         <p><div>
             <select name="TroopNumbers" id="TroopNumbers">
                 <option value="none" selected disabled hidden>Select a Troop</option>
@@ -41,29 +41,37 @@
                     <td>{{ block.booth_block_information.booth_block_start_time|date:"h:i A" }}</td>
                     <td>{{ block.booth_block_information.booth_block_end_time|date:"h:i A" }}</td>
                     <td>
+                        {% if reserve_or_enable_booths == "reserve" %}
+                            {% if block.booth_block_information.booth_block_reserved is False %}
+                                {% if perms.cookie_booths.reserve_block or perms.cookie_booths.reserve_block_admin %}
+                                    <input type="button" id="ReserveBooth" value="Reserve Booth"
+                                           onclick="ReserveBooth({{ block.booth_block_information.id }},
+                                                '{{ block.booth_block_information.booth_day.booth.booth_requires_masks }}')">
+                                {% endif %}
 
-                        {% if block.booth_block_information.booth_block_reserved is False %}
-                            {% if perms.cookie_booths.reserve_block or perms.cookie_booths.reserve_block_admin %}
-                                <input type="button" id="ReserveBooth" value="Reserve Booth"
-                                       onclick="ReserveBooth({{ block.booth_block_information.id }},
-                                            '{{ block.booth_block_information.booth_day.booth.booth_requires_masks }}')">
+                            {% else %}
+                                {% if perms.cookie_booths.cancel_block_admin %}
+                                    Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
+                                    <p></p>
+                                    <input type="button" id="CancelBooth" value="Cancel Booth"
+                                            onclick="CancelBooth({{ block.booth_block_information.id }})">
+                                {% elif  block.booth_owned_by_current_user is True %}
+                                    <input type="button" id="CancelBooth" value="Cancel Booth"
+                                            onclick="CancelBooth({{ block.booth_block_information.id }})">
+                                {% else %}
+                                    Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
+                                {% endif %}
                             {% endif %}
 
-                        {% else %}
-                            {% if perms.cookie_booths.cancel_block_admin %}
-                                Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
-                                <p></p>
-                                <input type="button" id="CancelBooth" value="Cancel Booth"
-                                        onclick="CancelBooth({{ block.booth_block_information.id }})">
-                            {% elif  block.booth_owned_by_current_user is True %}
-                                <input type="button" id="CancelBooth" value="Cancel Booth"
-                                        onclick="CancelBooth({{ block.booth_block_information.id }})">
+                        {% elif reserve_or_enable_booths == "enable" %}
+                            {% if block.booth_block_information.booth_block_enabled %}
+                                <input type="button" id="DisableBooth" value="Disable Booth"
+                                            onclick="DisableBooth({{ block.booth_block_information.id }})">
                             {% else %}
-                                Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
+                                <input type="button" id="EnableBooth" value="Enable Booth"
+                                            onclick="EnableBooth({{ block.booth_block_information.id }})">
                             {% endif %}
                         {% endif %}
-
-
                     </td>
                 </tr>
             {% endfor %}
@@ -151,6 +159,36 @@
                 });
             }
 
+        }
+
+        function EnableBooth(booth_id) {
+            $.ajax({
+                    url: location.origin + "/booths/blocks/enable_blocks/" + booth_id,
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                    },
+                    success: function (is_success){
+                        if (is_success === 'True') {
+                            window.location.reload()
+                        }
+                    }
+            });
+        }
+
+                function DisableBooth(booth_id) {
+            $.ajax({
+                    url: location.origin + "/booths/blocks/disable_blocks/" + booth_id,
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                    },
+                    success: function (is_success){
+                        if (is_success === 'True') {
+                            window.location.reload()
+                        }
+                    }
+            });
         }
     </script>
 

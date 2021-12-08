@@ -24,4 +24,18 @@ urlpatterns = [
     path('booths/blocks/reservations/<int:block_id>', views.reserve_block, name='block_reservation'),
     # Cancel Booth Reservation
     path('booths/blocks/reservations/cancel/<int:block_id>', views.cancel_block, name='block_cancellation'),
+    # User Enable Booth by Block
+    path('booths/blocks/enable_blocks', views.enable_location_by_block, name='enable_location_by_block'),
+    # AJAX Enable Booth by Block
+    path('booths/blocks/enable_blocks/<int:block_id>', views.ajax_enable_location_by_block,
+         name='ajax_enable_location_by_block'),
+    # AJAX Disable Booth by Block
+    path('booths/blocks/disable_blocks/<int:block_id>', views.ajax_disable_location_by_block,
+         name='ajax_disable_location_by_block'),
+    # User Enable Booth Day
+    path('booths/blocks/enable_booth_days', views.enable_or_disable_day, name="enable_day"),
+    # AJAX Enable Booth by Day
+    path('booths/blocks/enable_booth_days/enable', views.enable_location_by_day, name="ajax_enable_day"),
+    # AJAX Disable Booth by Day
+    path('booths/blocks/enable_booth_days/disable', views.disable_location_by_day, name="ajax_disable_day"),
 ]

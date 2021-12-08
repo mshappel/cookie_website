@@ -1,5 +1,5 @@
 import json
-from typing import List, Dict, Any
+from datetime import datetime
 
 from django.shortcuts import render, redirect
 from django.views.generic.edit import DeleteView
@@ -101,21 +101,80 @@ class BoothLocationDelete(PermissionRequiredMixin, LoginRequiredMixin, DeleteVie
 
 
 @login_required
-def enable_location(request, booth_id, date):
-    # Enable all dates for a particular booth up to and including a particular date
-    for booth_day in BoothDay.objects.filter(booth_id=booth_id, booth_day_date__lte=date):
-        booth_day.enable_day()
+@permission_required('cookie_booths.enable_day', raise_exception=True)
+def enable_location_by_block(request):
+    booth_information = []
+    booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
 
-    return
+    for booth in booth_blocks_:
+        current_booth_information = {'booth_block_information': booth,
+                                     'booth_owned_by_current_user': None}
+        booth_information.append(current_booth_information)
+
+    context = {'booth_blocks': booth_information,
+               'available_troops': None,
+               'page_title': "Enable Booths by Block",
+               'reserve_or_enable_booths': "enable"}
+
+    return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
 @login_required
-def enable_all_locations(request, date):
-    # Enable all dates for all locations up to and including a particular date
-    for booth_day in BoothDay.objects.filter(booth_day_date__lte=date):
-        booth_day.enable_day()
+def ajax_enable_location_by_block(request, block_id):
+    is_success = False
+    if request.method == 'POST':
+        block_to_enable = BoothBlock.objects.get(id=block_id)
+        if request.user.has_perm('cookie_booths.enable_day'):
+            is_success = block_to_enable.enable_block()
 
-    return
+    return HttpResponse(is_success)
+
+
+@login_required
+def ajax_disable_location_by_block(request, block_id):
+    is_success = False
+    if request.method == 'POST':
+        block_to_enable = BoothBlock.objects.get(id=block_id)
+        if request.user.has_perm('cookie_booths.enable_day'):
+            is_success = block_to_enable.disable_block()
+
+    return HttpResponse(is_success)
+
+
+@login_required
+@permission_required('cookie_booths.enable_day', raise_exception=True)
+def enable_or_disable_day(request):
+    booth_days = BoothDay.objects.order_by('booth', 'booth_day_date')
+
+    context = {'booth_days': booth_days,
+               'page_title': "Enable/Disable Booth Days",
+               }
+
+    return render(request, 'cookie_booths/enable_blocks.html', context)
+
+
+@login_required
+def enable_location_by_day(request):
+    # Enable all dates for a particular booth up to and including a particular date
+    if request.method == 'POST':
+        booth_id = request.POST['booth_id']
+        booth_day = BoothDay.objects.get(id=booth_id)
+        if request.user.has_perm('cookie_booths.enable_day'):
+            booth_day.enable_day()
+
+    return HttpResponse()
+
+
+@login_required
+def disable_location_by_day(request):
+    # Disable all dates for a particular booth up to and including a particular date
+    if request.method == 'POST':
+        booth_id = request.POST['booth_id']
+        booth_day = BoothDay.objects.get(id=booth_id)
+        if request.user.has_perm('cookie_booths.enable_day'):
+            booth_day.disable_day()
+
+    return HttpResponse()
 
 
 @login_required
@@ -134,15 +193,6 @@ def enable_all_locations_ffa(request, date):
     # Will also enable those dates if not already
     for booth_day in BoothDay.objects.filter(booth_day_date__lte=date):
         booth_day.enable_freeforall()
-
-    return
-
-
-@login_required
-def disable_all_locations(request, date):
-    # Disable all locations, including any active FFA, up to and including a particular date
-    for booth_day in BoothDay.objects.filter(booth_day_date__lte=date):
-        booth_day.disable_freeforall()
 
     return
 
@@ -181,7 +231,8 @@ def booth_blocks(request):
 
     context = {'booth_blocks': booth_information,
                'available_troops': available_troops,
-               'page_title': "Make Booth Reservations"}
+               'page_title': "Make Booth Reservations",
+               'reserve_or_enable_booths': "reserve"}
     return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
@@ -215,7 +266,8 @@ def booth_reservations(request):
 
     context = {'booth_blocks': booth_information,
                'available_troops': available_troops,
-               'page_title': "Manage Your Booth Reservations"}
+               'page_title': "Manage Your Booth Reservations",
+               'reserve_or_enable_booths': "reserve"}
     return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
