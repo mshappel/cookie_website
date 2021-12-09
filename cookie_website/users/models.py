@@ -13,6 +13,15 @@ class TroopTicketParameters:
     SUPER_TROOP_TOTAL_TICKETS_PER_WEEK = 10
     SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK = 2
 
+    GIRL_SCOUT_TROOP_LEVELS = [
+        ('DA', 'Daisies'),
+        ('BR', 'Brownies'),
+        ('JR', 'Juniors'),
+        ('CA', 'Cadettes'),
+        ('SR', 'Seniors'),
+        ('AM', 'Ambassadors')
+    ]
+
 
 # User-related Models
 class User(AbstractUser):
@@ -31,7 +40,8 @@ class Troop(models.Model):
     troop_cookie_coordinator = models.CharField(max_length=300, null=True)
 
     super_troop = models.BooleanField(default=False)
-    daisy_troop = models.BooleanField(default=False)
+    troop_level = models.CharField(max_length=2, choices=TroopTicketParameters.GIRL_SCOUT_TROOP_LEVELS,
+                                   default="Select Troop Level")
 
     total_booth_tickets_per_week = models.PositiveSmallIntegerField(default=0)
     booth_golden_tickets_per_week = models.PositiveSmallIntegerField(default=0)
@@ -104,10 +114,3 @@ def update_tickets(sender, instance, **kwargs):
         instance.total_booth_tickets_per_week = TroopTicketParameters.NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK
         instance.booth_golden_tickets_per_week = TroopTicketParameters.NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK
 
-
-# Groups
-# Administrators
-# Service Unit Cookie Coordinator
-# Service Unit Booth Coordinator
-# Service Unit Cookie Captain Coordinator
-# Troop Cookie Coordinator

@@ -11,7 +11,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 # noinspection PyUnresolvedReferences
 from users.models import User, Troop
 from .forms import BoothLocationForm, BoothHoursForm
-from .models import BoothLocation, BoothDay, BoothHours, BoothBlock
+from .models import BoothLocation, BoothDay, BoothHours, BoothBlock, GIRL_SCOUT_TROOP_LEVELS_WITH_NONE
 
 
 def index(request):
@@ -320,25 +320,56 @@ def reserve_block(request, block_id):
                 }
                 message_response = json.dumps(message_response)
                 return HttpResponse(message_response)
+            troop_trying_to_reserve_level = Troop.objects.get(troop_number=troop_trying_to_reserve).troop_level
         elif request.user.has_perm('cookie_booths.reserve_block'):
             # The user is a TCC; the user's troop # is used for reservation
             troop_trying_to_reserve = Troop.objects.get(troop_cookie_coordinator=username).troop_number
+            troop_trying_to_reserve_level = Troop.objects.get(troop_cookie_coordinator=username).troop_level
         else:
             # The user does not have the permissions to reserve a block
             # This should never occur, but adding this in the case something horribly goes wrong.
             return
 
-        if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve):
-            # Successfully reserved the booth
-            message_response = {
-                'message': "Successfully reserved booth",
-                'is_success': True,
-            }
+        # Check if the troop is a valid troop level
+        booth_restrictions_start = block_to_reserve.booth_day.booth.booth_block_level_restrictions_start
+        booth_restrictions_end = block_to_reserve.booth_day.booth.booth_block_level_restrictions_end
+        print(booth_restrictions_end + " " + booth_restrictions_start)
+        level_in_range = False
+        if booth_restrictions_start == 'NA':
+            level_in_range = True
+        else:
+            for abbr, level in GIRL_SCOUT_TROOP_LEVELS_WITH_NONE:
+
+                if booth_restrictions_start == abbr:
+                    if troop_trying_to_reserve_level == abbr:
+                        break
+                    level_in_range = True
+                elif booth_restrictions_end == abbr:
+                    if troop_trying_to_reserve_level == abbr:
+                        break
+                    level_in_range = False
+                else:
+                    if level_in_range:
+                        if troop_trying_to_reserve_level == level:
+                            break
+
+        if level_in_range:
+            if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve):
+                # Successfully reserved the booth
+                message_response = {
+                    'message': "Successfully reserved booth",
+                    'is_success': True,
+                }
+            else:
+                message_response = {
+                    'message': "Failed to reserve booth",
+                    'is_success': False,
+                }
         else:
             message_response = {
-                'message': "Failed to reserve booth",
-                'is_success': False,
-            }
+                    'message': "Booth has troop level restriction",
+                    'is_success': False,
+                }
     else:
         message_response = {
             'message': "An unknown error occurred",
