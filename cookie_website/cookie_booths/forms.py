@@ -17,6 +17,8 @@ class BoothLocationForm(forms.ModelForm):
                   'booth_notes',
                   'booth_requires_masks',
                   'booth_is_outside',
+                  'booth_block_level_restrictions_start',
+                  'booth_block_level_restrictions_end',
                   'booth_enabled']
 
         labels = {'booth_location': _('Location Name'),
@@ -24,9 +26,15 @@ class BoothLocationForm(forms.ModelForm):
                   'booth_notes': _('Additional Booth Notes'),
                   'booth_requires_masks': _('Booth Requires Masks'),
                   'booth_is_outside': _('Booth Is Outside'),
+                  'booth_block_level_restrictions_start': _('Lowest Troop Level'),
+                  'booth_block_level_restrictions_end': _('Highest Troop Level'),
                   'booth_enabled': _('Booth Is Enabled')}
 
-        help_texts = {'booth_enabled': _('Enabled means booth blocks are able to be reserved.')}
+        help_texts = {
+            'booth_block_level_restrictions_start': _('Select the lowest level troop that can use this booth, if none '
+                                                      'there are no restrictions'),
+            'booth_block_level_restrictions_end': _('Select the highest level troop that can use this booth'),
+            'booth_enabled': _('Enabled means booth blocks are able to be reserved.')}
 
     def clean(self):
         # We want to make absolutely sure that we are not duplicating a location. We should be able to uniquely identify
@@ -40,6 +48,13 @@ class BoothLocationForm(forms.ModelForm):
                 self.add_error('booth_location', "Please add a unique location.")
                 self.add_error('booth_address', "Please add a unique address.")
                 raise forms.ValidationError('This location already exists!')
+
+        # Make sure that the booth range is accurate
+        if self.cleaned_data['booth_block_level_restrictions_start'] > \
+                self.cleaned_data['booth_block_level_restrictions_end'] != 0:
+            self.add_error('booth_block_level_restrictions_start', "Restriction start must be lower than end")
+            self.add_error('booth_block_level_restrictions_end', "Restriction start must be lower than end")
+            raise forms.ValidationError('Booth levels are invalid')
 
     def __init__(self, *args, **kwargs):
         # This is used to add booth_id to check if we're duplicating an item on edit.

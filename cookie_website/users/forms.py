@@ -11,13 +11,13 @@ class TroopForm(forms.ModelForm):
         fields = ['troop_number',
                   'troop_name',
                   'troop_cookie_coordinator',
-                  'daisy_troop',
+                  'troop_level',
                   'super_troop']
 
         labels = {'troop_number': _('Troop Number'),
                   'troop_name': _('Troop Nickname'),
                   'troop_cookie_coordinator': _('Troop Cookie Coordinator E-mail Address'),
-                  'daisy_troop': _('Daisy Troop'),
+                  'troop_level': _('Troop Level'),
                   'super_troop': _('Super Troop')}
 
         help_texts = {'booth_enabled': _('Enabled means booth blocks are able to be reserved.')}

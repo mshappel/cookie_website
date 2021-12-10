@@ -4,9 +4,16 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
-from django.utils import timezone
 
-MIN_BOOTH_BLOCK_HOURS = 2
+GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
+    (0, 'None'),
+    (1, 'Daisies'),
+    (2, 'Brownies'),
+    (3, 'Juniors'),
+    (4, 'Cadettes'),
+    (5, 'Seniors'),
+    (6, 'Ambassadors'),
+]
 
 
 class BoothLocation(models.Model):
@@ -16,6 +23,11 @@ class BoothLocation(models.Model):
     booth_address = models.CharField(max_length=300)
 
     booth_enabled = models.BooleanField(default=False)
+
+    booth_block_level_restrictions_start = models.SmallIntegerField(choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
+                                                                    default=0)
+    booth_block_level_restrictions_end = models.SmallIntegerField(choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
+                                                                  default=0)
 
     booth_requires_masks = models.BooleanField(default=False)
     booth_is_outside = models.BooleanField(default=False)
