@@ -6,13 +6,13 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
-    ('NA', 'None'),
-    ('DA', 'Daisies'),
-    ('BR', 'Brownies'),
-    ('JR', 'Juniors'),
-    ('CA', 'Cadettes'),
-    ('SR', 'Seniors'),
-    ('AM', 'Ambassadors'),
+    (0, 'None'),
+    (1, 'Daisies'),
+    (2, 'Brownies'),
+    (3, 'Juniors'),
+    (4, 'Cadettes'),
+    (5, 'Seniors'),
+    (6, 'Ambassadors'),
 ]
 
 
@@ -24,12 +24,10 @@ class BoothLocation(models.Model):
 
     booth_enabled = models.BooleanField(default=False)
 
-    booth_block_level_restrictions_start = models.CharField(max_length=2,
-                                                            choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
-                                                            default="NA")
-    booth_block_level_restrictions_end = models.CharField(max_length=2,
-                                                          choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
-                                                          default="NA")
+    booth_block_level_restrictions_start = models.SmallIntegerField(choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
+                                                                    default=0)
+    booth_block_level_restrictions_end = models.SmallIntegerField(choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
+                                                                  default=0)
 
     booth_requires_masks = models.BooleanField(default=False)
     booth_is_outside = models.BooleanField(default=False)

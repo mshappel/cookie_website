@@ -333,25 +333,11 @@ def reserve_block(request, block_id):
         # Check if the troop is a valid troop level
         booth_restrictions_start = block_to_reserve.booth_day.booth.booth_block_level_restrictions_start
         booth_restrictions_end = block_to_reserve.booth_day.booth.booth_block_level_restrictions_end
-        print(booth_restrictions_end + " " + booth_restrictions_start)
-        level_in_range = False
-        if booth_restrictions_start == 'NA':
+
+        if booth_restrictions_start == 0:
             level_in_range = True
         else:
-            for abbr, level in GIRL_SCOUT_TROOP_LEVELS_WITH_NONE:
-
-                if booth_restrictions_start == abbr:
-                    if troop_trying_to_reserve_level == abbr:
-                        break
-                    level_in_range = True
-                elif booth_restrictions_end == abbr:
-                    if troop_trying_to_reserve_level == abbr:
-                        break
-                    level_in_range = False
-                else:
-                    if level_in_range:
-                        if troop_trying_to_reserve_level == level:
-                            break
+            level_in_range = troop_trying_to_reserve_level in range(booth_restrictions_start, booth_restrictions_end)
 
         if level_in_range:
             if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve):

@@ -49,6 +49,13 @@ class BoothLocationForm(forms.ModelForm):
                 self.add_error('booth_address', "Please add a unique address.")
                 raise forms.ValidationError('This location already exists!')
 
+        # Make sure that the booth range is accurate
+        if self.cleaned_data['booth_block_level_restrictions_start'] > \
+                self.cleaned_data['booth_block_level_restrictions_end'] != 0:
+            self.add_error('booth_block_level_restrictions_start', "Restriction start must be lower than end")
+            self.add_error('booth_block_level_restrictions_end', "Restriction start must be lower than end")
+            raise forms.ValidationError('Booth levels are invalid')
+
     def __init__(self, *args, **kwargs):
         # This is used to add booth_id to check if we're duplicating an item on edit.
         try:
