@@ -274,8 +274,8 @@ class BoothDay(models.Model):
             # A few easy operations - Blocks that start before the new open time
             # or end after the new close time should be cleared
             BoothBlock.objects.filter(Q(booth_day__id=self.id),
-                                      Q(booth_block_start_time__lt=open_time) | Q(
-                                          booth_block_end_time__gt=close_time)).delete()
+                                      Q(booth_block_start_time__lt=open_time) |
+                                      Q(booth_block_end_time__gt=close_time)).delete()
 
             if not BoothBlock.objects.filter(booth_day__id=self.id):
                 self.booth_day_hours_set = False
@@ -285,24 +285,23 @@ class BoothDay(models.Model):
                 # 1. If the new open time is before our previous one, see if we need to add new blocks on the front end
                 first_block = BoothBlock.objects.filter(booth_day__id=self.id).earliest('booth_block_start_time')
 
-                start_end = (
-                    first_block.booth_block_start_time.replace(hour=first_block.booth_block_start_time.hour - 2),
-                    first_block.booth_block_start_time, True)
+                start_end = (first_block.booth_block_start_time - timedelta(hours=2),
+                             first_block.booth_block_start_time, True)
                 while start_end[0].hour >= open_time.hour and start_end[2]:
+
                     start_end = self.__add_block_backwards(start_end)
 
                 # 2. If the new close time is after our previous one, see if we need to add new blocks on the back end
                 last_block = BoothBlock.objects.filter(booth_day__id=self.id).latest('booth_block_end_time')
 
                 start_end = (last_block.booth_block_end_time,
-                             last_block.booth_block_end_time.replace(hour=last_block.booth_block_end_time.hour + 2),
-                             True)
+                             last_block.booth_block_end_time + timedelta(hours=2), True)
                 while start_end[1].hour <= close_time.hour and start_end[2]:
                     start_end = self.__add_block_forwards(start_end)
 
         # If, after our pruning, we end up with an empty list, we can just generate a new one based on time
         if not self.booth_day_hours_set:
-            start_end = (open_time, open_time.replace(hour=open_time.hour + 2), True)
+            start_end = (open_time, open_time + timedelta(hours=2), True)
 
             while start_end[1].hour <= close_time.hour and start_end[2]:
                 start_end = self.__add_block_forwards(start_end)
@@ -373,6 +372,7 @@ class BoothDay(models.Model):
 
     # Add block backward in time
     def __add_block_backwards(self, start_end):
+
         # Create a new block
         BoothBlock.objects.create(booth_day=self,
                                   booth_block_start_time=start_end[0],
