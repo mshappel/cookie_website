@@ -1,9 +1,11 @@
 from datetime import timedelta, datetime
+from pytz import utc
 
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
+from django.utils.timezone import make_aware
 
 GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
     (0, 'None'),
@@ -77,38 +79,38 @@ class BoothLocation(models.Model):
             else:
                 if date.weekday() == 0:  # Monday
                     self.add_or_update_day(date,
-                                           datetime.combine(date, hours.monday_open_time),
-                                           datetime.combine(date, hours.monday_close_time))
+                                           datetime.combine(date, hours.monday_open_time, tzinfo=utc),
+                                           datetime.combine(date, hours.monday_close_time, tzinfo=utc))
                     self.update_golden_day(date, hours.monday_golden_ticket)
                 elif date.weekday() == 1:  # Tuesday
                     self.add_or_update_day(date,
-                                           datetime.combine(date, hours.tuesday_open_time),
-                                           datetime.combine(date, hours.tuesday_close_time))
+                                           datetime.combine(date, hours.tuesday_open_time, tzinfo=utc),
+                                           datetime.combine(date, hours.tuesday_close_time, tzinfo=utc))
                     self.update_golden_day(date, hours.tuesday_golden_ticket)
                 elif date.weekday() == 2:  # Wednesday
                     self.add_or_update_day(date,
-                                           datetime.combine(date, hours.wendesday_open_time),
-                                           datetime.combine(date, hours.wednesday_close_time))
+                                           datetime.combine(date, hours.wendesday_open_time, tzinfo=utc),
+                                           datetime.combine(date, hours.wednesday_close_time, tzinfo=utc))
                     self.update_golden_day(date, hours.wednesday_golden_ticket)
                 elif date.weekday() == 3:  # Thursday
                     self.add_or_update_day(date,
-                                           datetime.combine(date, hours.thursday_open_time),
-                                           datetime.combine(date, hours.thursday_close_time))
+                                           datetime.combine(date, hours.thursday_open_time, tzinfo=utc),
+                                           datetime.combine(date, hours.thursday_close_time, tzinfo=utc))
                     self.update_golden_day(date, hours.thursday_golden_ticket)
                 elif date.weekday() == 4:  # Friday
                     self.add_or_update_day(date,
-                                           datetime.combine(date, hours.friday_open_time),
-                                           datetime.combine(date, hours.friday_close_time))
+                                           datetime.combine(date, hours.friday_open_time, tzinfo=utc),
+                                           datetime.combine(date, hours.friday_close_time, tzinfo=utc))
                     self.update_golden_day(date, hours.friday_golden_ticket)
                 elif date.weekday() == 5:  # Saturday
                     self.add_or_update_day(date,
-                                           datetime.combine(date, hours.saturday_open_time),
-                                           datetime.combine(date, hours.saturday_close_time))
+                                           datetime.combine(date, hours.saturday_open_time, tzinfo=utc),
+                                           datetime.combine(date, hours.saturday_close_time, tzinfo=utc))
                     self.update_golden_day(date, hours.saturday_golden_ticket)
                 else:  # Sunday
                     self.add_or_update_day(date,
-                                           datetime.combine(date, hours.sunday_open_time),
-                                           datetime.combine(date, hours.sunday_close_time))
+                                           datetime.combine(date, hours.sunday_open_time, tzinfo=utc),
+                                           datetime.combine(date, hours.sunday_close_time, tzinfo=utc))
                     self.update_golden_day(date, hours.sunday_golden_ticket)
 
         return
