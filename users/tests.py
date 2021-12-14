@@ -1,11 +1,11 @@
-from datetime import date, datetime
+import datetime
+
 from django.test import TestCase
+from django.utils.timezone import make_aware
 
 from .models import Troop, TroopTicketParameters
 from cookie_booths.models import BoothLocation, BoothDay, BoothBlock
 
-import datetime
-import pytz
 
 # Create your tests here.
 class TroopTestCase(TestCase):
@@ -36,24 +36,24 @@ class TroopTestCase(TestCase):
                                              booth_day_is_golden=True)
 
         # Going to allocate 5 blocks on this day
-        open_time = datetime.datetime(2021, 10, 22, 4, 0, 0, 0)
-        close_time = datetime.datetime(2021, 10, 22, 14, 0, 0, 0)
+        open_time = make_aware(datetime.datetime(2021, 10, 22, 4, 0, 0, 0))
+        close_time = make_aware(datetime.datetime(2021, 10, 22, 14, 0, 0, 0))
         golden_day.add_or_update_hours(open_time, close_time)
 
         # Now add our normal troop to one block (its golden ticket max), two for the super troop
         block = BoothBlock.objects.get(booth_day=golden_day,
-                                       booth_block_start_time=datetime.datetime(2021, 10, 22, 8, 0, 0, 0),
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0))
+                                       booth_block_start_time=make_aware(datetime.datetime(2021, 10, 22, 8, 0, 0, 0)),
+                                       booth_block_end_time=make_aware(datetime.datetime(2021, 10, 22, 10, 0, 0, 0)))
         block.reserve_block(normal_troop.troop_number)
 
         block = BoothBlock.objects.get(booth_day=golden_day,
-                                       booth_block_start_time=datetime.datetime(2021, 10, 22, 10, 0, 0, 0),
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0))
+                                       booth_block_start_time=make_aware(datetime.datetime(2021, 10, 22, 10, 0, 0, 0)),
+                                       booth_block_end_time=make_aware(datetime.datetime(2021, 10, 22, 12, 0, 0, 0)))
         block.reserve_block(super_troop.troop_number)
 
         block = BoothBlock.objects.get(booth_day=golden_day,
-                                       booth_block_start_time=datetime.datetime(2021, 10, 22, 12, 0, 0, 0),
-                                       booth_block_end_time=datetime.datetime(2021, 10, 22, 14, 0, 0, 0))
+                                       booth_block_start_time=make_aware(datetime.datetime(2021, 10, 22, 12, 0, 0, 0)),
+                                       booth_block_end_time=make_aware(datetime.datetime(2021, 10, 22, 14, 0, 0, 0)))
         block.reserve_block(super_troop.troop_number)
 
         # Now confirm the adds have been reflected in our counts that week
