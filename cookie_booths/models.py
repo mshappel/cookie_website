@@ -408,7 +408,7 @@ class BoothBlock(models.Model):
     booth_block_start_time = models.DateTimeField(blank=True, null=True)
     booth_block_end_time = models.DateTimeField(blank=True, null=True)
 
-    booth_block_current_troop_owner = models.SmallIntegerField(default=0)
+    booth_block_current_troop_owner = models.IntegerField(default=0)
     booth_block_reserved = models.BooleanField(default=False)
 
     booth_block_enabled = models.BooleanField(default=False)
