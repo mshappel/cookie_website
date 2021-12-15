@@ -89,7 +89,7 @@ class BoothLocation(models.Model):
                     self.update_golden_day(date, hours.tuesday_golden_ticket)
                 elif date.weekday() == 2:  # Wednesday
                     self.add_or_update_day(date,
-                                           datetime.combine(date, hours.wendesday_open_time, tzinfo=utc),
+                                           datetime.combine(date, hours.wednesday_open_time, tzinfo=utc),
                                            datetime.combine(date, hours.wednesday_close_time, tzinfo=utc))
                     self.update_golden_day(date, hours.wednesday_golden_ticket)
                 elif date.weekday() == 3:  # Thursday

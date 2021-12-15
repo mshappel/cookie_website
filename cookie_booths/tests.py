@@ -4,8 +4,6 @@ from django.utils.timezone import make_aware
 from .models import BoothHours, BoothLocation, BoothDay, BoothBlock
 
 import datetime
-from datetime import timezone
-import pytz
 
 
 class BoothBlockTestCase(TestCase):
