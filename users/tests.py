@@ -58,15 +58,15 @@ class TroopTestCase(TestCase):
 
         # Now confirm the adds have been reflected in our counts that week
         self.assertTrue(
-            normal_troop.get_num_tickets_remaining(datetime.date(2021, 10, 18), datetime.date(2021, 10, 24)) == (4,0))
+            normal_troop.get_num_tickets_remaining(datetime.date(2021, 10, 22)) == (4, 0))
         self.assertTrue(
-            super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 18), datetime.date(2021, 10, 24)) == (8,0))
+            super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 22)) == (8, 0))
 
         # Make sure the counts are still ok for a different week
         self.assertTrue(
-            normal_troop.get_num_tickets_remaining(datetime.date(2021, 10, 25), datetime.date(2021, 10, 31)) == (5,1))
+            normal_troop.get_num_tickets_remaining(datetime.date(2021, 10, 28)) == (5, 1))
         self.assertTrue(
-            super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 25), datetime.date(2021, 10, 31)) == (10,2))
+            super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 28)) == (10, 2))
 
         # Now let's create a day sometime in that next week, at a normal location, same hours
         normal_location = BoothLocation.objects.create()
@@ -85,13 +85,12 @@ class TroopTestCase(TestCase):
 
         # Double check that the counts for the original week have not changed
         self.assertTrue(
-            normal_troop.get_num_tickets_remaining(datetime.date(2021, 10, 18), datetime.date(2021, 10, 24)) == (4, 0))
+            normal_troop.get_num_tickets_remaining(datetime.date(2021, 10, 22)) == (4, 0))
         self.assertTrue(
-            super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 18), datetime.date(2021, 10, 24)) == (8, 0))
+            super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 22)) == (8, 0))
 
         # And then make sure the counts for the new week have
         self.assertTrue(
-            normal_troop.get_num_tickets_remaining(datetime.date(2021, 10, 25), datetime.date(2021, 10, 31)) == (0, 1))
+            normal_troop.get_num_tickets_remaining(datetime.date(2021, 10, 28)) == (0, 1))
         self.assertTrue(
-            super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 25), datetime.date(2021, 10, 31)) == (10, 2))
-
+            super_troop.get_num_tickets_remaining(datetime.date(2021, 10, 28)) == (10, 2))

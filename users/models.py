@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.contrib.auth.models import AbstractUser, User, Group
 from django.db import models
 from django.db.models.signals import post_save, pre_save
@@ -33,6 +35,13 @@ class User(AbstractUser):
         return '%s %s' % (self.first_name, self.last_name)
 
 
+def get_week_start_end_from_date(date):
+    start_date = date - timedelta(days=date.weekday())
+    end_date = start_date + timedelta(days=6)
+
+    return start_date, end_date
+
+
 class Troop(models.Model):
     troop_number = models.IntegerField(unique=True)
     troop_name = models.CharField(max_length=300, blank=True)
@@ -58,22 +67,9 @@ class Troop(models.Model):
     def __str__(self):
         return 'Troop ' + str(self.troop_number)
 
-    def get_num_tickets_remaining(self, start_date, end_date):
-        # A couple of preconditions:
-        # start_date should be BEFORE end_date
-        if start_date > end_date:
-            return 0, 0
+    def get_num_tickets_remaining(self, date):
+        start_date, end_date = get_week_start_end_from_date(date)
 
-        # start_date should be a Monday, end_date should be a Sunday
-        if start_date.weekday() != 0 and end_date.weekday() != 6:
-            return 0, 0
-
-        # They should be 6 days apart, so representing a week period inclusive
-        delta = end_date - start_date
-        if delta.days != 6:
-            return 0, 0
-
-        # OK, we're good to check vs actual data now
         total_booth_count = 0
         golden_ticket_booth_count = 0
         # We're filtering by Blocks that are owned by this troop, and are associated with a BoothDay which falls into

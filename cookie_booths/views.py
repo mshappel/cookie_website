@@ -307,6 +307,7 @@ def is_block_reserved_by_user(request, block_id):
 def reserve_block(request, block_id):
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
     username = request.user.username
+    message_response = {}
 
     if request.method == 'POST':
         block_to_reserve = BoothBlock.objects.get(id=block_id)
@@ -320,15 +321,45 @@ def reserve_block(request, block_id):
                 }
                 message_response = json.dumps(message_response)
                 return HttpResponse(message_response)
+
             troop_trying_to_reserve_level = Troop.objects.get(troop_number=troop_trying_to_reserve).troop_level
+            rem_tickets, rem_golden_tickets = Troop.objects.get(
+                troop_number=troop_trying_to_reserve).get_num_tickets_remaining(
+                block_to_reserve.booth_day.booth_day_date)
+
         elif request.user.has_perm('cookie_booths.reserve_block'):
             # The user is a TCC; the user's troop # is used for reservation
             troop_trying_to_reserve = Troop.objects.get(troop_cookie_coordinator=username).troop_number
             troop_trying_to_reserve_level = Troop.objects.get(troop_cookie_coordinator=username).troop_level
+            rem_tickets, rem_golden_tickets = Troop.objects.get(
+                troop_cookie_coordinator=username).get_num_tickets_remaining(
+                block_to_reserve.booth_day.booth_day_date)
         else:
             # The user does not have the permissions to reserve a block
             # This should never occur, but adding this in the case something horribly goes wrong.
             return
+
+        # Check if the troop has remaining tickets for the week
+        tickets_remain = True
+        if rem_tickets == 0:
+            message_response = {
+                'message': "No remaining tickets for this week",
+                'is_success': False,
+            }
+            tickets_remain = False
+
+        # Tickets may remain, but check to see if they may have a golden booth.
+        if block_to_reserve.booth_day.booth_day_is_golden and rem_golden_tickets == 0:
+            message_response = {
+                'message': "No remaining golden tickets for this week",
+                'is_success': False,
+            }
+            tickets_remain = False
+
+        if not tickets_remain:
+            # We have no more remaining tickets, alert the user.
+            message_response = json.dumps(message_response)
+            return HttpResponse(message_response)
 
         # Check if the troop is a valid troop level
         booth_restrictions_start = block_to_reserve.booth_day.booth.booth_block_level_restrictions_start
@@ -353,9 +384,9 @@ def reserve_block(request, block_id):
                 }
         else:
             message_response = {
-                    'message': "Booth has troop level restriction",
-                    'is_success': False,
-                }
+                'message': "Booth has troop level restriction",
+                'is_success': False,
+            }
     else:
         message_response = {
             'message': "An unknown error occurred",
