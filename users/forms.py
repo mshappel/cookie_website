@@ -9,18 +9,14 @@ class TroopForm(forms.ModelForm):
     class Meta:
         model = Troop
         fields = ['troop_number',
-                  'troop_name',
                   'troop_cookie_coordinator',
                   'troop_level',
                   'super_troop']
 
         labels = {'troop_number': _('Troop Number'),
-                  'troop_name': _('Troop Nickname'),
-                  'troop_cookie_coordinator': _('Troop Cookie Coordinator E-mail Address'),
+                  'troop_cookie_coordinator': _('Troop Cookie Coordinator Username'),
                   'troop_level': _('Troop Level'),
                   'super_troop': _('Super Troop')}
-
-        help_texts = {'booth_enabled': _('Enabled means booth blocks are able to be reserved.')}
 
     def clean(self):
         # We want to make absolutely sure that we are not duplicating a troop. We should be able to find this uniquely

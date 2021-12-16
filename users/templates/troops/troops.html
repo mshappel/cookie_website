@@ -11,7 +11,6 @@
 	<thead>
     	<tr>
         	<th>Troop ID</th>
-			<th>Troop Nickname</th>
 			<th>Troop Coordinator</th>
             {% if perms.users.troop_updates or perms.users.troop_deletion %}
                 <th>Actions</th>
@@ -22,7 +21,6 @@
 		{% for troop in troops %}
 			<tr>
 				<td>{{ troop.troop_number }}</td>
-				<td>{{ troop.troop_name }}</td>
                 <td>{{ troop.troop_cookie_coordinator }}</td>
 				<td>
                     {% if perms.users.troop_updates %}
