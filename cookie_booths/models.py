@@ -245,8 +245,11 @@ class BoothDay(models.Model):
         self.booth_day_enabled = True
 
         for block in BoothBlock.objects.filter(booth_day__id=self.id):
-            block.booth_block_enabled = True
-            block.save()
+            block.enable_block()
+
+        self.save()
+
+        return
 
     def disable_day(self):
         # If we're already disabled, nothing to do
@@ -256,8 +259,11 @@ class BoothDay(models.Model):
         self.booth_day_enabled = False
 
         for block in BoothBlock.objects.filter(booth_day__id=self.id):
-            block.booth_block_enabled = False
-            block.save()
+            block.disable_block()
+
+        self.save()
+
+        return
 
     def add_or_update_hours(self, open_time, close_time):
         # There are two main cases we need to handle here:
