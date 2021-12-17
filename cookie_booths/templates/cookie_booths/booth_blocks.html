@@ -35,7 +35,7 @@
             {% for block in booth_blocks %}
                 <tr>
                     <td>{{ block.booth_block_information.booth_day.booth.booth_location }}</td>
-                    <td>{{ block.booth_block_information.booth_day.booth_day_date|date:"D, F jS" }}</td>
+                    <td>{{ block.booth_block_information.booth_day.booth_day_date|date:"F jS, D" }}</td>
                     <td>{{ block.booth_block_information.booth_block_start_time|date:"h:i A" }}</td>
                     <td>{{ block.booth_block_information.booth_block_end_time|date:"h:i A" }}</td>
                     <td>
