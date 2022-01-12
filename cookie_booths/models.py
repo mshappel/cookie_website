@@ -338,6 +338,8 @@ class BoothDay(models.Model):
             block.booth_block_freeforall_enabled = True
             block.save()
 
+        self.save()
+
     def disable_freeforall(self):
         # If we're already disabled, nothing to do
         if not self.booth_day_freeforall_enabled and not self.booth_day_enabled:
@@ -350,6 +352,8 @@ class BoothDay(models.Model):
             block.booth_block_enabled = False
             block.booth_block_freeforall_enabled = False
             block.save()
+
+        self.save()
 
     # Add block forward in time
     def __add_block_forwards(self, start_end):

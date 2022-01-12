@@ -191,3 +191,13 @@ class BoothHoursForm(forms.ModelForm):
                 self.add_error(day_of_week_close, "Please specify valid close time.")
 
         return valid_times
+
+
+class EnableFreeForAll(forms.Form):
+
+    start_date = forms.DateField(
+        widget=DatePickerInput(format='%m/%d/%Y').start_of('booth days')
+    )
+    end_date = forms.DateField(
+        widget=DatePickerInput(format='%m/%d/%Y').end_of('booth days')
+    )

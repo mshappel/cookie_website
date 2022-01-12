@@ -1,0 +1,20 @@
+{% extends "cookie_booths/base.html" %}
+{% load bootstrap4 %}
+{% bootstrap_javascript jquery='full' %}
+
+
+{% block page_header %}
+    <h2>Enable Free For All</h2>
+{% endblock page_header %}
+
+
+{% block content %}
+  <form action="{% url 'cookie_booths:enable_ffa' %}" method='post' class="form">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {{  form.media }}
+    {% buttons %}
+    <button name="submit">Enable Free For All</button>
+    {% endbuttons %}
+  </form>
+{% endblock content %}

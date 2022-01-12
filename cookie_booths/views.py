@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import timedelta, date, datetime
 
 from django.shortcuts import render, redirect
 from django.views.generic.edit import DeleteView
@@ -10,7 +10,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 
 # noinspection PyUnresolvedReferences
 from users.models import User, Troop
-from .forms import BoothLocationForm, BoothHoursForm
+from .forms import BoothLocationForm, BoothHoursForm, EnableFreeForAll
 from .models import BoothLocation, BoothDay, BoothHours, BoothBlock, GIRL_SCOUT_TROOP_LEVELS_WITH_NONE
 
 
@@ -187,14 +187,35 @@ def enable_location_ffa(request, booth_id, date):
     return
 
 
+def daterange(start_date, end_date):
+    for n in range(int((end_date - start_date).days) + 1):
+        yield start_date + timedelta(n)
+
+
 @login_required
-def enable_all_locations_ffa(request, date):
+def enable_all_locations_ffa(request):
     # Enable free-for-all for all locations up to and including a particular date.
     # Will also enable those dates if not already
-    for booth_day in BoothDay.objects.filter(booth_day_date__lte=date):
-        booth_day.enable_freeforall()
+    """Create a new booth location"""
+    if request.method != 'POST':
+        # No data submitted; create a blank form.
+        form = EnableFreeForAll()
+    else:
+        # POST data submitted; process data.
+        form = EnableFreeForAll(data=request.POST)
+        if form.is_valid():
+            start_date = datetime.strptime(request.POST['start_date'], '%m/%d/%Y')
+            end_date = datetime.strptime(request.POST['end_date'], '%m/%d/%Y')
+            for date_ in daterange(start_date, end_date):
+                for booth_day in BoothDay.objects.filter(booth_day_date=date_):
+                    booth_day.enable_freeforall()
 
-    return
+            return HttpResponse("Complete")
+
+    # Display a blank or invalid form.
+    context = {'form': form}
+
+    return render(request, 'cookie_booths/free_for_all.html', context)
 
 
 # -----------------------------------------------------------------------
@@ -355,6 +376,10 @@ def reserve_block(request, block_id):
                 'is_success': False,
             }
             tickets_remain = False
+
+        # I am not interested in making a real solution today. Fix this later screw it
+        if block_to_reserve.booth_day.booth_day_freeforall_enabled:
+            tickets_remain = True
 
         if not tickets_remain:
             # We have no more remaining tickets, alert the user.
