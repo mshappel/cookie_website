@@ -38,4 +38,6 @@ urlpatterns = [
     path('booths/blocks/enable_booth_days/enable', views.enable_location_by_day, name="ajax_enable_day"),
     # AJAX Disable Booth by Day
     path('booths/blocks/enable_booth_days/disable', views.disable_location_by_day, name="ajax_disable_day"),
+    #
+    path('booths/enable_ffa', views.enable_all_locations_ffa, name="enable_ffa")
 ]
