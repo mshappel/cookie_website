@@ -1,4 +1,7 @@
 from datetime import timedelta, datetime
+
+from django.conf import settings
+from django.core.mail import send_mail
 from pytz import utc
 
 from django.db import models
@@ -6,6 +9,8 @@ from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.timezone import make_aware
+
+from users.models import User, Troop
 
 GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
     (0, 'None'),
@@ -507,5 +512,30 @@ def generate_hours_if_needed(sender, instance, created, **kwargs):
 
 @receiver(pre_delete, sender=BoothBlock)
 def notify_block_deletion(sender, instance, **kwargs):
-    # TODO: email owner
+    # If this block has been reserved, notify the owner. Otherwise we have nothing to do
+    if not instance.booth_block_reserved:
+        return
+
+    # Get the troop
+    reserved_troop = Troop.objects.get(troop_number=instance.booth_block_current_troop_owner)
+    if not reserved_troop:
+        return
+
+    # Then the owner from that
+    block_owner = User.objects.get(username=reserved_troop.troop_cookie_coordinator)
+    if not block_owner:
+        return
+
+    title = "Your Reserved Booth Block Has Been Removed"
+    message = "Hello " + block_owner.first_name + ",\n" + \
+              "Due to a schedule change, the following block is no longer available for reservation:\n\n" + \
+              "Location: " + instance.booth_day.booth.booth_location + "\n" + \
+              "Address: " + instance.booth_day.booth.booth_address + "\n" + \
+              "Date: " + instance.booth_day.booth_day_date.strftime("%A, %B %d, %Y") + "\n" + \
+              "Time Block: " + instance.booth_block_start_time.strftime("%I:%M %p") + " - " + instance.booth_block_end_time.strftime("%I:%M %p") + "\n\n\n" + \
+              "NOTE: Please do not reply to this email directly, this email address is not monitored. Please reach out to an administrator with any further questions."
+
+
+    send_mail(title, message, from_email=settings.EMAIL_HOST_USER, recipient_list=[block_owner.email])
+
     return
