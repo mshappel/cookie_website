@@ -7,6 +7,8 @@ from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.conf import settings
+from django.core.mail import send_mail
 
 # noinspection PyUnresolvedReferences
 from users.models import User, Troop
@@ -324,14 +326,50 @@ def is_block_reserved_by_user(request, block_id):
     return
 
 
+def get_week_start_end_from_date(date):
+    start_date = date - timedelta(days=date.weekday())
+    end_date = start_date + timedelta(days=6)
+
+    return start_date, end_date
+
+
+def get_num_tickets_remaining(troop, date):
+    start_date, end_date = get_week_start_end_from_date(date)
+
+    total_booth_count = 0
+    golden_ticket_booth_count = 0
+    # We're filtering by Blocks that are owned by this troop, and are associated with a BoothDay which falls into
+    # the range of [start_date, end_date] inclusive
+    for block in BoothBlock.objects.filter(booth_block_reserved=True,
+                                           booth_block_current_troop_owner=troop.troop_number,
+                                           booth_day__booth_day_date__gte=start_date,
+                                           booth_day__booth_day_date__lte=end_date):
+        if block.booth_day.booth_day_is_golden:
+            golden_ticket_booth_count += 1
+
+        total_booth_count += 1
+
+    rem = 0 if (total_booth_count > troop.total_booth_tickets_per_week) else \
+        (troop.total_booth_tickets_per_week - total_booth_count)
+    rem_golden_ticket = 0 if (golden_ticket_booth_count > troop.booth_golden_tickets_per_week) else \
+        (troop.booth_golden_tickets_per_week - golden_ticket_booth_count)
+
+    return rem, rem_golden_ticket
+
+
 @login_required
 def reserve_block(request, block_id):
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
     username = request.user.username
     message_response = {}
 
+    # A few items to gather for sending an email down below - whether the cancel was successful, whether it was
+    # Cancelled by the troop that made it or by an admin, and the email address of the TCC who owns that block
+    successful = False
+    block_to_reserve = BoothBlock.objects.get(id=block_id)
+    troop = None
+
     if request.method == 'POST':
-        block_to_reserve = BoothBlock.objects.get(id=block_id)
         if request.user.has_perm('cookie_booths.reserve_block_admin'):
             # The user is a SUCM or higher; we require a troop # from them for reservation
             troop_trying_to_reserve = request.POST['troop_number']
@@ -343,17 +381,17 @@ def reserve_block(request, block_id):
                 message_response = json.dumps(message_response)
                 return HttpResponse(message_response)
 
-            troop_trying_to_reserve_level = Troop.objects.get(troop_number=troop_trying_to_reserve).troop_level
-            rem_tickets, rem_golden_tickets = Troop.objects.get(
-                troop_number=troop_trying_to_reserve).get_num_tickets_remaining(
+            troop = Troop.objects.get(troop_number=troop_trying_to_reserve)
+            troop_trying_to_reserve_level = troop.troop_level
+            rem_tickets, rem_golden_tickets = get_num_tickets_remaining(troop,
                 block_to_reserve.booth_day.booth_day_date)
 
         elif request.user.has_perm('cookie_booths.reserve_block'):
             # The user is a TCC; the user's troop # is used for reservation
-            troop_trying_to_reserve = Troop.objects.get(troop_cookie_coordinator=username).troop_number
-            troop_trying_to_reserve_level = Troop.objects.get(troop_cookie_coordinator=username).troop_level
-            rem_tickets, rem_golden_tickets = Troop.objects.get(
-                troop_cookie_coordinator=username).get_num_tickets_remaining(
+            troop = Troop.objects.get(troop_cookie_coordinator=username)
+            troop_trying_to_reserve = troop.troop_number
+            troop_trying_to_reserve_level = troop.troop_level
+            rem_tickets, rem_golden_tickets = get_num_tickets_remaining(troop,
                 block_to_reserve.booth_day.booth_day_date)
         else:
             # The user does not have the permissions to reserve a block
@@ -398,6 +436,7 @@ def reserve_block(request, block_id):
         if level_in_range:
             if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve):
                 # Successfully reserved the booth
+                successful = True
                 message_response = {
                     'message': "Successfully reserved booth",
                     'is_success': True,
@@ -417,6 +456,23 @@ def reserve_block(request, block_id):
             'message': "An unknown error occurred",
             'is_success': False,
         }
+
+    # In the case this block has been reserved for a daisy troop, the TCC needs to be notified
+    new_block_owner = User.objects.get(username=troop.troop_cookie_coordinator)
+    if successful and new_block_owner and troop.troop_level == 1:
+        # First we should see if we were actually able to get an email we're sending to.
+
+        title = "Booth Reservation Confirmed"
+        message = "Hello " + new_block_owner.first_name + ",\n" + \
+                  "The following reservation has been made for Daisy Troop #" + troop.troop_number.__str__() + ":\n\n" + \
+                  "Location: " + block_to_reserve.booth_day.booth.booth_location + "\n" + \
+                  "Address: " + block_to_reserve.booth_day.booth.booth_address + "\n" + \
+                  "Date: " + block_to_reserve.booth_day.booth_day_date.strftime("%A, %B %d, %Y") + "\n" + \
+                  "Time Block: " + block_to_reserve.booth_block_start_time.strftime("%I:%M %p") + " - " + block_to_reserve.booth_block_end_time.strftime("%I:%M %p") + "\n\n\n" + \
+                  "NOTE: Please do not reply to this email directly, this email address is not monitored. Please reach out to an administrator with any further questions."
+
+        send_mail(title, message, from_email=settings.EMAIL_HOST_USER, recipient_list=[new_block_owner.email])
+
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
 

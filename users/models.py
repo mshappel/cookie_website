@@ -5,8 +5,6 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
-from cookie_booths.models import BoothDay, BoothBlock
-
 
 class TroopTicketParameters:
     NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK = 5
@@ -66,29 +64,6 @@ class Troop(models.Model):
 
     def __str__(self):
         return 'Troop ' + str(self.troop_number)
-
-    def get_num_tickets_remaining(self, date):
-        start_date, end_date = get_week_start_end_from_date(date)
-
-        total_booth_count = 0
-        golden_ticket_booth_count = 0
-        # We're filtering by Blocks that are owned by this troop, and are associated with a BoothDay which falls into
-        # the range of [start_date, end_date] inclusive
-        for block in BoothBlock.objects.filter(booth_block_reserved=True,
-                                               booth_block_current_troop_owner=self.troop_number,
-                                               booth_day__booth_day_date__gte=start_date,
-                                               booth_day__booth_day_date__lte=end_date):
-            if block.booth_day.booth_day_is_golden:
-                golden_ticket_booth_count += 1
-
-            total_booth_count += 1
-
-        rem = 0 if (total_booth_count > self.total_booth_tickets_per_week) else \
-            (self.total_booth_tickets_per_week - total_booth_count)
-        rem_golden_ticket = 0 if (golden_ticket_booth_count > self.booth_golden_tickets_per_week) else \
-            (self.booth_golden_tickets_per_week - golden_ticket_booth_count)
-
-        return rem, rem_golden_ticket
 
 
 @receiver(post_save, sender=User)
