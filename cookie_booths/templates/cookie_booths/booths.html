@@ -12,6 +12,9 @@
     	<tr>
         	<th>Location</th>
 			<th>Address</th>
+            <th>Booth Outside</th>
+            <th>Booth Requires Masks</th>
+            <th>Booth Notes</th>
             {% if perms.cookie_booths.booth_loc_updates or perms.cookie_booths.booth_loc_deletes %}
                 <th>Actions</th>
             {% endif %}
@@ -22,6 +25,9 @@
 			<tr>
 				<td>{{ booth.booth_location }}</td>
 				<td>{{ booth.booth_address }}</td>
+                <td>{{ booth.booth_is_outside }}</td>
+                <td>{{ booth.booth_requires_masks }}</td>
+                <td>{{ booth.booth_notes }}</td>
 				<td>
                     {% if perms.cookie_booths.booth_loc_updates %}
                         <a href="{% url 'cookie_booths:edit_location' booth.id %}">Edit Booth</a> |
