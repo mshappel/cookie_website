@@ -332,14 +332,12 @@ class BoothDay(models.Model):
 
     def enable_freeforall(self):
         # If we're already enabled, nothing to do
-        if self.booth_day_freeforall_enabled and self.booth_day_enabled:
+        if self.booth_day_freeforall_enabled:
             return
 
         self.booth_day_freeforall_enabled = True
-        self.booth_day_enabled = True
 
         for block in BoothBlock.objects.filter(booth_day__id=self.id):
-            block.booth_block_enabled = True
             block.booth_block_freeforall_enabled = True
             block.save()
 
@@ -347,14 +345,12 @@ class BoothDay(models.Model):
 
     def disable_freeforall(self):
         # If we're already disabled, nothing to do
-        if not self.booth_day_freeforall_enabled and not self.booth_day_enabled:
+        if not self.booth_day_freeforall_enabled:
             return
 
         self.booth_day_freeforall_enabled = False
-        self.booth_day_enabled = False
 
         for block in BoothBlock.objects.filter(booth_day__id=self.id):
-            block.booth_block_enabled = False
             block.booth_block_freeforall_enabled = False
             block.save()
 

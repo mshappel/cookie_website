@@ -431,7 +431,8 @@ def reserve_block(request, block_id):
         if booth_restrictions_start == 0:
             level_in_range = True
         else:
-            level_in_range = troop_trying_to_reserve_level in range(booth_restrictions_start, booth_restrictions_end)
+            level_in_range = troop_trying_to_reserve_level in \
+                             range(booth_restrictions_start, booth_restrictions_end + 1)
 
         if level_in_range:
             if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve):
