@@ -1,17 +1,15 @@
 from datetime import timedelta, datetime
+from pytz import utc
 
 from django.conf import settings
 from django.core.mail import send_mail
-from pytz import utc
-
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
-from django.utils.timezone import make_aware
 
-from users.models import User, Troop
 
+# TODO: We should create a file to import this from so this isn't in multiple locations
 GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
     (0, 'None'),
     (1, 'Daisies'),
@@ -335,12 +333,11 @@ class BoothDay(models.Model):
         if self.booth_day_freeforall_enabled:
             return
 
-        self.booth_day_freeforall_enabled = True
-
         for block in BoothBlock.objects.filter(booth_day__id=self.id):
             block.booth_block_freeforall_enabled = True
             block.save()
 
+        self.booth_day_freeforall_enabled = True
         self.save()
 
     def disable_freeforall(self):

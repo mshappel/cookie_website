@@ -26,7 +26,7 @@
     <div class="collapse navbar-collapse" id="navbarCollapse">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'cookie_booths:index' %}">Home</a>
+          <a class="nav-link" href="{% url 'home' %}">Home</a>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
@@ -46,7 +46,7 @@
           </div>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'users:troops' %}">Troops</a>
+          <a class="nav-link" href="{% url 'troops:troops' %}">Troops</a>
         </li>
       </ul>
 
@@ -56,14 +56,14 @@
           <span class="nav-text">Hello, {{ user.username }}.</span>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'users:logout' %}">Log out</a>
+          <a class="nav-link" href="{% url 'logout' %}">Log out</a>
         </li>
         {% else %}
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'users:register' %}">Register</a>
+          <a class="nav-link" href="{% url 'register' %}">Register</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'users:login' %}">Log in</a>
+          <a class="nav-link" href="{% url 'login' %}">Log in</a>
         </li>
         {% endif %}
       </ul>
