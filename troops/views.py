@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.views.generic import DeleteView
+from django.views.generic import DeleteView, ListView
 
 from .forms import TroopForm
 from .models import Troop
@@ -62,9 +62,6 @@ class TroopDelete(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
 # -----------------------------------------------------------------------
 # Troop User Functions
 # -----------------------------------------------------------------------
-@login_required
-def troops(request):
-    """Display all booths for admins to edit"""
-    troops = Troop.objects.order_by('troop_number')
-    context = {'troops': troops}
-    return render(request, 'troops.html', context)
+class TroopListView(LoginRequiredMixin, ListView):
+    model = Troop
+    template_name = 'troops.html'

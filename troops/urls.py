@@ -8,7 +8,7 @@ from . import views
 app_name = 'troops'
 urlpatterns = [
     # Troops Home
-    path('', views.troops, name='troops'),
+    path('', views.TroopListView.as_view(), name='troops'),
     # Create New Troop
     path('new/', views.create_troop, name='create_troop'),
     # Edit Troop Page
