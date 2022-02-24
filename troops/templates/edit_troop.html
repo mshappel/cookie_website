@@ -6,7 +6,7 @@
 {% endblock page_header %}
 
 {% block content %}
-  <form action="{% url 'troops:edit_troop' troop.troop_number %}" method='post' class="form">
+  <form action="{% url 'troops:edit_troop' troop.pk %}" method='post' class="form">
     {% csrf_token %}
     {% bootstrap_form form %}
     {% buttons %}

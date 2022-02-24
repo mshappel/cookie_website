@@ -12,7 +12,7 @@
     	<tr>
         	<th>Troop ID</th>
 			<th>Troop Coordinator</th>
-            {% if perms.users.troop_updates or perms.users.troop_deletion %}
+            {% if perms.troops.change_troop or perms.troops.delete_troop %}
                 <th>Actions</th>
             {% endif %}
 		</tr>
@@ -23,19 +23,19 @@
 				<td>{{ troop.troop_number }}</td>
                 <td>{{ troop.troop_cookie_coordinator }}</td>
 				<td>
-                    {% if perms.users.troop_updates %}
-                        <a href="{% url 'troops:edit_troop' troop.troop_number %}">Edit Troop</a> |
+                    {% if perms.troops.change_troop %}
+                        <a href="{% url 'troops:edit_troop' troop.pk %}">Edit Troop</a> |
                     {% endif %}
 
-                    {%  if perms.users.troop_deletion %}
+                    {%  if perms.troops.delete_troop %}
                         <a href="{% url 'troops:delete_troop' troop.pk %}">Delete Troop</a>
                     {% endif %}
                 </td>
 			</tr>
 		{% endfor %}
-        {% if perms.users.troop_creation %}
+        {% if perms.troops.add_troop %}
             <tr>
-                {% if perms.users.troop_updates or perms.users.troop_deletion %}
+                {% if perms.troops.add_troop or perms.troop.troops_deletion %}
                     <td colspan="4"><a href="{% url 'troops:create_troop' %}">Add New Troop</a></td>
                 {% else %}
                     <td colspan="3"><a href="{% url 'troops:create_troop' %}">Add New Troop</a></td>
