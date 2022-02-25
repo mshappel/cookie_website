@@ -1,24 +1,18 @@
+from datetime import timedelta, datetime
 import json
-from datetime import timedelta, date, datetime
 
-from django.shortcuts import render, redirect
-from django.views.generic.edit import DeleteView
-from django.urls import reverse_lazy
-from django.http import HttpResponseRedirect, HttpResponse
+from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
-from django.conf import settings
 from django.core.mail import send_mail
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from django.views.generic.edit import DeleteView
 
-# noinspection PyUnresolvedReferences
-from users.models import User, Troop
 from .forms import BoothLocationForm, BoothHoursForm, EnableFreeForAll
-from .models import BoothLocation, BoothDay, BoothHours, BoothBlock, GIRL_SCOUT_TROOP_LEVELS_WITH_NONE
-
-
-def index(request):
-    """The home page for Cookie Booths"""
-    return render(request, 'cookie_booths/index.html')
+from .models import BoothLocation, BoothDay, BoothHours, BoothBlock
+from troops.models import Troop
 
 
 # -----------------------------------------------------------------------
@@ -236,7 +230,6 @@ def booth_blocks(request):
 
     try:
         user_troop = Troop.objects.get(troop_cookie_coordinator=username)
-
     except Troop.DoesNotExist:
         user_troop = None
 
@@ -271,7 +264,6 @@ def booth_reservations(request):
     try:
         user_troop = Troop.objects.get(troop_cookie_coordinator=username)
         booth_blocks_ = booth_blocks_.filter(booth_block_current_troop_owner=user_troop.troop_number)
-
     except Troop.DoesNotExist:
         user_troop = None
 
@@ -384,7 +376,7 @@ def reserve_block(request, block_id):
             troop = Troop.objects.get(troop_number=troop_trying_to_reserve)
             troop_trying_to_reserve_level = troop.troop_level
             rem_tickets, rem_golden_tickets = get_num_tickets_remaining(troop,
-                block_to_reserve.booth_day.booth_day_date)
+                                                                        block_to_reserve.booth_day.booth_day_date)
 
         elif request.user.has_perm('cookie_booths.reserve_block'):
             # The user is a TCC; the user's troop # is used for reservation
@@ -392,7 +384,7 @@ def reserve_block(request, block_id):
             troop_trying_to_reserve = troop.troop_number
             troop_trying_to_reserve_level = troop.troop_level
             rem_tickets, rem_golden_tickets = get_num_tickets_remaining(troop,
-                block_to_reserve.booth_day.booth_day_date)
+                                                                        block_to_reserve.booth_day.booth_day_date)
         else:
             # The user does not have the permissions to reserve a block
             # This should never occur, but adding this in the case something horribly goes wrong.
@@ -459,18 +451,20 @@ def reserve_block(request, block_id):
         }
 
     # In the case this block has been reserved for a daisy troop, the TCC needs to be notified
-    new_block_owner = User.objects.get(username=troop.troop_cookie_coordinator)
+    new_block_owner = 'test@test.com'
     if successful and new_block_owner and troop.troop_level == 1:
         # First we should see if we were actually able to get an email we're sending to.
-
+        # TODO: This should be a template
         title = "Booth Reservation Confirmed"
-        message = "Hello " + new_block_owner.first_name + ",\n" + \
+        message = "Hello " + new_block_owner + ",\n" + \
                   "The following reservation has been made for Daisy Troop #" + troop.troop_number.__str__() + ":\n\n" + \
                   "Location: " + block_to_reserve.booth_day.booth.booth_location + "\n" + \
                   "Address: " + block_to_reserve.booth_day.booth.booth_address + "\n" + \
                   "Date: " + block_to_reserve.booth_day.booth_day_date.strftime("%A, %B %d, %Y") + "\n" + \
-                  "Time Block: " + block_to_reserve.booth_block_start_time.strftime("%I:%M %p") + " - " + block_to_reserve.booth_block_end_time.strftime("%I:%M %p") + "\n\n\n" + \
-                  "NOTE: Please do not reply to this email directly, this email address is not monitored. Please reach out to an administrator with any further questions."
+                  "Time Block: " + block_to_reserve.booth_block_start_time.strftime( "%I:%M %p") + \
+                  " - " + block_to_reserve.booth_block_end_time.strftime("%I:%M %p") + "\n\n\n" + \
+                  "NOTE: Please do not reply to this email directly, this email address is not monitored. Please " \
+                  "reach out to an administrator with any further questions. "
 
         send_mail(title, message, from_email=settings.EMAIL_HOST_USER, recipient_list=[new_block_owner.email])
 
@@ -489,7 +483,7 @@ def cancel_block(request, block_id):
             pass
         elif request.user.has_perm('cookie_booths.cancel_block'):
             # The user is a TCC; the user's troop # is used to check if they can cancel
-            troop_trying_to_cancel = Troop.objects.get(troop_cookie_coordinator=username).troop_number
+            troop_trying_to_cancel = None  # Troop.objects.get(troop_cookie_coordinator=username).troop_number
             if troop_trying_to_cancel != block_to_cancel.booth_block_current_troop_owner:
                 message_response = {
                     'message': "You cannot cancel a reservation for another troop",

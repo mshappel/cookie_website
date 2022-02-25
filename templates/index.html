@@ -1,4 +1,4 @@
-{% extends "cookie_booths/base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
     <div class="jumbotron">
@@ -6,7 +6,7 @@
 
         <p class="lead">I like cookies</p>
         {% if not user.is_authenticated %}
-            <a class="btn btn-lg btn-primary" href="{% url 'users:register' %}" role="button">Register &raquo;</a>
+            <a class="btn btn-lg btn-primary" href="{% url 'register' %}" role="button">Register &raquo;</a>
         {% endif %}
     </div>
 {% endblock content %}

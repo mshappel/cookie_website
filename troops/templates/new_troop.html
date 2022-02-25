@@ -1,16 +1,16 @@
-{% extends "cookie_booths/base.html" %}
+{% extends "base.html" %}
 {% load bootstrap4 %}
 
 {% block page_header %}
-  <h2>Edit troop</h2>
+  <h2>Add a new troop</h2>
 {% endblock page_header %}
 
 {% block content %}
-  <form action="{% url 'users:edit_troop' troop.troop_number %}" method='post' class="form">
+  <form action="{% url 'troops:create_troop' %}" method='post' class="form">
     {% csrf_token %}
     {% bootstrap_form form %}
     {% buttons %}
-    <button name="submit">Update Troop</button>
+    <button name="submit">Submit</button>
     {% endbuttons %}
   </form>
 {% endblock content %}

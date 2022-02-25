@@ -1,4 +1,4 @@
-{% extends "cookie_booths/base.html" %}
+{% extends "base.html" %}
 {% load bootstrap4 %}
 
 {% block page_header %}
@@ -7,7 +7,7 @@
 
 
 {% block content %}
-<table id="troops" class="table table-striped table-bordered" cellspacing="0" width="100%">
+<table id="troops" class="table table-striped table-bordered">
 	<thead>
     	<tr>
         	<th>Troop ID</th>
@@ -24,11 +24,11 @@
                 <td>{{ troop.troop_cookie_coordinator }}</td>
 				<td>
                     {% if perms.users.troop_updates %}
-                        <a href="{% url 'users:edit_troop' troop.troop_number %}">Edit Troop</a> |
+                        <a href="{% url 'troops:edit_troop' troop.troop_number %}">Edit Troop</a> |
                     {% endif %}
 
                     {%  if perms.users.troop_deletion %}
-                        <a href="{% url 'users:delete_troop' troop.pk %}">Delete Troop</a>
+                        <a href="{% url 'troops:delete_troop' troop.pk %}">Delete Troop</a>
                     {% endif %}
                 </td>
 			</tr>
@@ -36,9 +36,9 @@
         {% if perms.users.troop_creation %}
             <tr>
                 {% if perms.users.troop_updates or perms.users.troop_deletion %}
-                    <td colspan="4"><a href="{% url 'users:create_troop' %}">Add New Troop</a></td>
+                    <td colspan="4"><a href="{% url 'troops:create_troop' %}">Add New Troop</a></td>
                 {% else %}
-                    <td colspan="3"><a href="{% url 'users:create_troop' %}">Add New Troop</a></td>
+                    <td colspan="3"><a href="{% url 'troops:create_troop' %}">Add New Troop</a></td>
                 {% endif %}
             </tr>
         {% endif %}

@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from django.utils.translation import gettext as _
 
 from .models import User, Troop
@@ -35,19 +34,3 @@ class TroopForm(forms.ModelForm):
         except KeyError:
             self.troop_number = None
         super(TroopForm, self).__init__(*args, **kwargs)
-
-
-class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    # TODO: Add Troops
-
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'password1', 'password2')
-
-    def save(self, commit=True):
-        user = super(CustomUserCreationForm, self).save(commit=False)
-        user.email = self.cleaned_data["email"]
-        if commit:
-            user.save()
-        return user

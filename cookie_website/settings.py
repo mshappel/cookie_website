@@ -32,8 +32,10 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # Cookie Apps
-    'cookie_booths',
-    'users',
+    'cookie_booths.apps.CookieBoothsConfig',
+    'accounts.apps.AccountsConfig',
+    'pages.apps.PagesConfig',
+    'troops.apps.TroopsConfig',
 
     # Third Party Apps
     'bootstrap4',
@@ -63,7 +65,7 @@ ROOT_URLCONF = 'cookie_website.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [str(BASE_DIR.joinpath('templates')), str(BASE_DIR.joinpath('troops/templates'))],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -132,10 +134,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, "/static/")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
-# Cookie Settings
-LOGIN_URL = 'users:login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
 
 # Heroku settings
 django_heroku.settings(locals())
