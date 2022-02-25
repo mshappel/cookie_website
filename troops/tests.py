@@ -304,3 +304,4 @@ class TroopTestCase(TestCase):
         permission = Permission.objects.get(name=permission_name)
         self.normal_user.user_permissions.add(permission)
         self.normal_user.save()
+

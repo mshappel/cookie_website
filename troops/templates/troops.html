@@ -22,24 +22,29 @@
 		</tr>
 	</thead>
 	<tbody>
+
 		{% for troop in troop_list %}
 			<tr>
 				<td>{{ troop.troop_number }}</td>
                 <td>{{ troop.troop_cookie_coordinator }}</td>
 				<td>
+
                     {% if perms.troops.change_troop %}
                         <a href="{% url 'troops:edit_troop' troop.pk %}">Edit Troop</a> |
                     {% endif %}
 
                     {%  if perms.troops.delete_troop %}
+
                         <a href="{% url 'troops:delete_troop' troop.pk %}">Delete Troop</a>
                     {% endif %}
                 </td>
 			</tr>
 		{% endfor %}
+
         {% if perms.troops.add_troop %}
             <tr>
                 {% if perms.troops.add_troop or perms.troop.troops_deletion %}
+
                     <td colspan="4"><a href="{% url 'troops:create_troop' %}">Add New Troop</a></td>
                 {% else %}
                     <td colspan="3"><a href="{% url 'troops:create_troop' %}">Add New Troop</a></td>

@@ -1,7 +1,7 @@
+
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView
-from django.views.generic.edit import DeleteView, CreateView, UpdateView
 
 from .forms import TroopForm
 from .models import Troop
@@ -39,6 +39,3 @@ class TroopDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     model = Troop
     template_name = 'troop_confirm_delete.html'
     success_url = reverse_lazy('troops:troops')
-
-
-
