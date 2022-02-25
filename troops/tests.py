@@ -58,65 +58,31 @@ class TroopTestCase(TestCase):
                                                troop_level=cls.SUPER_TROOP['level'],
                                                super_troop=cls.SUPER_TROOP['super_troop'])
 
+    # -----------------------------------------------------------------------
+    # Troop Model Tests
+    # -----------------------------------------------------------------------
     def test_troop_model(self):
         # Validate the database contains the expected data
+
         # Normal
         self.assertEqual(self.normal_troop.troop_number, self.NORMAL_TROOP['number'])
         self.assertEqual(self.normal_troop.troop_cookie_coordinator, self.NORMAL_TROOP['tcc'])
         self.assertEqual(self.normal_troop.troop_level, self.NORMAL_TROOP['level'])
         self.assertFalse(self.normal_troop.super_troop)
+        self.assertEqual(self.normal_troop.total_booth_tickets_per_week, NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK)
+        self.assertEqual(self.normal_troop.booth_golden_tickets_per_week, NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK)
 
         # Super
         self.assertEqual(self.super_troop.troop_number, self.SUPER_TROOP['number'])
         self.assertEqual(self.super_troop.troop_cookie_coordinator, self.SUPER_TROOP['tcc'])
         self.assertEqual(self.super_troop.troop_level, self.SUPER_TROOP['level'])
         self.assertTrue(self.super_troop.super_troop)
-
-    def test_ticket_allocation(self):
-        # Validate the ticket allocation of both super and regular troops
-        self.assertEqual(self.normal_troop.total_booth_tickets_per_week, NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK)
-        self.assertEqual(self.normal_troop.booth_golden_tickets_per_week, NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK)
-
         self.assertEqual(self.super_troop.total_booth_tickets_per_week, SUPER_TROOP_TOTAL_TICKETS_PER_WEEK)
         self.assertEqual(self.super_troop.booth_golden_tickets_per_week, SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK)
 
-    def test_url_exists_at_correct_location_troops(self):
-        # Validate that we can access the troops page. We only test log-in case, since django handles the non-login
-        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.get('/troops/')
-        self.assertEqual(response.status_code, 200)
-
-    def test_troops_view_displays_correctly(self):
-        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.get(reverse('troops:troops'))
-
-        # Is the correct data displayed?
-        # - Is the correct template being used?
-        # - Does the response contain TCCs?
-        # - Does the response contain Troop IDs?
-        self.assertTemplateUsed(response, 'troops.html')
-        self.assertContains(response, self.SUPER_TROOP['tcc'])
-        self.assertContains(response, self.NORMAL_TROOP['number'])
-
-    def test_troops_create_without_permissions(self):
-        # Test if users without correct permissions get denied
-        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.get(reverse('troops:create_troop'))
-        self.assertEqual(response.status_code, 403)
-
-    def test_troops_create_displays_correctly(self):
-        # This will also test create with permissions
-        # Add permission to user
-        permission = Permission.objects.get(name='Can add troop')
-        self.normal_user.user_permissions.add(permission)
-        self.normal_user.save()
-
-        # Test if user successfully accesses the page
-        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.get(reverse('troops:create_troop'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'new_troop.html')
-
+    # -----------------------------------------------------------------------
+    # Troop Form Tests
+    # -----------------------------------------------------------------------
     def test_troops_form_with_valid_data(self):
         # Provide valid data and check if the form declares it is valid
         form_data = {
@@ -140,6 +106,48 @@ class TroopTestCase(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['troop_number'],
                          ["Troop number is already taken. Please choose a unique troop number."])
+
+    # -----------------------------------------------------------------------
+    # Troop View Tests
+    # -----------------------------------------------------------------------
+    # # # TroopListView # # #
+    def test_url_exists_at_correct_location_troops(self):
+        # Validate that we can access the troops page. We only test log-in case, since django handles the non-login
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.get('/troops/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_troops_view_displays_correctly(self):
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.get(reverse('troops:troops'))
+
+        # Is the correct data displayed?
+        # - Is the correct template being used?
+        # - Does the response contain TCCs?
+        # - Does the response contain Troop IDs?
+        self.assertTemplateUsed(response, 'troops.html')
+        self.assertContains(response, self.SUPER_TROOP['tcc'])
+        self.assertContains(response, self.NORMAL_TROOP['number'])
+
+    # # # TroopCreateView # # #
+    def test_troops_create_without_permissions(self):
+        # Test if users without correct permissions get denied
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.get(reverse('troops:create_troop'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_troops_create_displays_correctly(self):
+        # This will also test create with permissions
+        # Add permission to user
+        permission = Permission.objects.get(name='Can add troop')
+        self.normal_user.user_permissions.add(permission)
+        self.normal_user.save()
+
+        # Test if user successfully accesses the page
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.get(reverse('troops:create_troop'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'new_troop.html')
 
     def test_troops_form_data_submission(self):
         # This will also test create with permissions
@@ -167,6 +175,7 @@ class TroopTestCase(TestCase):
         self.assertEqual(Troop.objects.last().troop_level, self.ADDITIONAL_TROOP['level'])
         self.assertEqual(Troop.objects.last().super_troop, self.ADDITIONAL_TROOP['super_troop'])
 
+    # # # TroopUpdateView # # #
     def test_troops_update_without_permissions(self):
         # Test if users without correct permissions get denied
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
@@ -199,12 +208,13 @@ class TroopTestCase(TestCase):
     def test_troops_update_updates_data(self):
         # Test if users with permissions are able to correctly access the page
         # Also ensure that the page displays correctly
+
         # Give the user permissions
         permission = Permission.objects.get(name='Can change troop')
         self.normal_user.user_permissions.add(permission)
         self.normal_user.save()
 
-        # Do we successfully access the page?
+        # Provide valid data, see if it redirects correctly after posting?
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
         form_data = {
             'troop_number': self.SUPER_TROOP['number'],
@@ -216,6 +226,7 @@ class TroopTestCase(TestCase):
         response = self.client.post('/troops/edit/' + str(self.super_troop.pk) + '/', form_data)
         self.assertRedirects(response, reverse('troops:troops'), status_code=302, target_status_code=200)
 
+        # Check that the data has been added to the DB
         self.assertEqual(Troop.objects.last().troop_number, self.SUPER_TROOP['number'])
         self.assertEqual(Troop.objects.last().troop_cookie_coordinator, self.ADDITIONAL_TROOP['tcc'])
         self.assertEqual(Troop.objects.last().troop_level, self.SUPER_TROOP['level'])
@@ -232,5 +243,43 @@ class TroopTestCase(TestCase):
         response = self.client.get('/troops/edit/5000/')
         self.assertEqual(response.status_code, 404)
 
+    # # # TroopDeleteView # # #
+    def test_troops_delete_without_permissions(self):
+        # Test if users without correct permissions get denied
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.get('/troops/confirm_delete/' + str(self.normal_troop.pk) + '/')
+        self.assertEqual(response.status_code, 403)
 
+    def test_troops_delete_view_get(self):
+        # Test if users with permissions are able to correctly access the page
+        # Also ensure that the page displays correctly
 
+        # Give the user permissions
+        permission = Permission.objects.get(name='Can delete troop')
+        self.normal_user.user_permissions.add(permission)
+        self.normal_user.save()
+
+        # Get the page and ensure that we use the correct template, it contains the information it should and it
+        # is accessible.
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.get('/troops/confirm_delete/' + str(self.super_troop.pk) + '/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed('troop_confirm_delete.html')
+        self.assertContains(response, 'Are you sure you want to delete')
+
+    def test_troops_delete_view_post(self):
+        # Test if the user with permissions can delete troops
+
+        # Give the user permissions
+        permission = Permission.objects.get(name='Can delete troop')
+        self.normal_user.user_permissions.add(permission)
+        self.normal_user.save()
+
+        # Follow-through with the deletion, and check if it redirects correctly
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.post('/troops/confirm_delete/' + str(self.super_troop.pk) + '/')
+        self.assertRedirects(response, reverse('troops:troops'), status_code=302, target_status_code=200)
+
+        # Check to see if the data has been deleted
+        null_response = self.client.get('/troops/confirm_delete/' + str(self.super_troop.pk) + '/')
+        self.assertEqual(null_response.status_code, 404)
