@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
+import django.contrib.postgres.fields
 import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -85,8 +86,12 @@ WSGI_APPLICATION = 'cookie_website.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'DATABASE NAME',
+        'USER': 'USER NAME',
+        'PASSWORD': 'USER PASSWORD',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
