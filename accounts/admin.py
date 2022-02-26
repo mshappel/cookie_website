@@ -15,7 +15,7 @@ class CustomUserAdmin(UserAdmin):
     ]
     list_filter = ['groups']
     fieldsets = UserAdmin.fieldsets
-    add_fieldsets = UserAdmin.add_fieldsets
 
+    add_fieldsets = UserAdmin.add_fieldsets + ((None, {'fields': ('email',)}),)
 
 admin.site.register(CustomUser, CustomUserAdmin)

@@ -28,8 +28,6 @@ class Levels:
 
 class Troop(models.Model):
     troop_number = models.IntegerField(unique=True)
-    troop_name = models.CharField(max_length=300, blank=True)
-
     troop_cookie_coordinator = models.CharField(max_length=300, null=True)
 
     super_troop = models.BooleanField(default=False)
