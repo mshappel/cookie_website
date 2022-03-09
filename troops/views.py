@@ -28,7 +28,7 @@ class TroopCreateView(PermissionRequiredMixin, LoginRequiredMixin, CreateView):
 class TroopUpdateView(PermissionRequiredMixin, LoginRequiredMixin, UpdateView):
     permission_required = 'troops.change_troop'
     model = Troop
-    fields = ['troop_number', 'troop_cookie_coordinator', 'troop_level', 'super_troop']
+    fields = ['troop_number', 'troop_cookie_coordinator', 'troop_level', 'troop_size']
     success_url = reverse_lazy('troops:troops')
     template_name = 'edit_troop.html'
 
