@@ -7,11 +7,14 @@ from django.dispatch import receiver
 
 
 class TicketParameters:
-    NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK = 5
-    NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK = 1
+    SMALL_TROOP_TOTAL_TICKETS_PER_WEEK = 5
+    SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK = 1
 
-    SUPER_TROOP_TOTAL_TICKETS_PER_WEEK = 10
-    SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK = 2
+    MEDIUM_TROOP_TOTAL_TICKETS_PER_WEEK = SMALL_TROOP_TOTAL_TICKETS_PER_WEEK * 2
+    MEDIUM_TROOP_GOLDEN_TICKETS_PER_WEEK = SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK * 2
+
+    LARGE_TROOP_TOTAL_TICKETS_PER_WEEK = SMALL_TROOP_TOTAL_TICKETS_PER_WEEK * 3
+    LARGE_TROOP_GOLDEN_TICKETS_PER_WEEK = SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK * 3
 
 
 class Levels:
@@ -26,11 +29,16 @@ class Levels:
     ]
 
 
+class TroopSize:
+    MEDIUM_TROOP = 10
+    LARGE_TROOP = 15
+
+
 class Troop(models.Model):
     troop_number = models.IntegerField(unique=True)
     troop_cookie_coordinator = models.CharField(max_length=300, null=True)
 
-    super_troop = models.BooleanField(default=False)
+    troop_size = models.SmallIntegerField(default=0)
     troop_level = models.SmallIntegerField(choices=Levels.GIRL_SCOUT_TROOP_LEVELS, default=0)
 
     total_booth_tickets_per_week = models.PositiveSmallIntegerField(default=0)
@@ -49,9 +57,15 @@ def update_tickets(sender, instance, **kwargs):
     # This really should only care about setting/updating these after creation, but there is always the chance
     # A troop could be updated after the fact. In that case, if they've booked more blocks than they should've,
     # oh well.
-    if instance.super_troop:
-        instance.total_booth_tickets_per_week = TicketParameters.SUPER_TROOP_TOTAL_TICKETS_PER_WEEK
-        instance.booth_golden_tickets_per_week = TicketParameters.SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK
-    else:
-        instance.total_booth_tickets_per_week = TicketParameters.NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK
-        instance.booth_golden_tickets_per_week = TicketParameters.NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK
+    if instance.troop_size >= TroopSize.LARGE_TROOP:
+        instance.total_booth_tickets_per_week = TicketParameters.LARGE_TROOP_TOTAL_TICKETS_PER_WEEK
+        instance.booth_golden_tickets_per_week = TicketParameters.LARGE_TROOP_GOLDEN_TICKETS_PER_WEEK
+        return
+
+    if instance.troop_size >= TroopSize.MEDIUM_TROOP:
+        instance.total_booth_tickets_per_week = TicketParameters.MEDIUM_TROOP_TOTAL_TICKETS_PER_WEEK
+        instance.booth_golden_tickets_per_week = TicketParameters.MEDIUM_TROOP_GOLDEN_TICKETS_PER_WEEK
+        return
+
+    instance.total_booth_tickets_per_week = TicketParameters.SMALL_TROOP_TOTAL_TICKETS_PER_WEEK
+    instance.booth_golden_tickets_per_week = TicketParameters.SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK

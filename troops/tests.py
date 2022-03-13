@@ -6,10 +6,13 @@ from django.urls import reverse
 from .forms import TroopForm
 from .models import Troop, TicketParameters
 
-NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK = TicketParameters.NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK
-SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK = TicketParameters.SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK
-NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK = TicketParameters.NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK
-SUPER_TROOP_TOTAL_TICKETS_PER_WEEK = TicketParameters.SUPER_TROOP_TOTAL_TICKETS_PER_WEEK
+SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK = TicketParameters.SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK
+MEDIUM_TROOP_GOLDEN_TICKETS_PER_WEEK = TicketParameters.MEDIUM_TROOP_GOLDEN_TICKETS_PER_WEEK
+LARGE_TROOP_GOLDEN_TICKETS_PER_WEEK = TicketParameters.LARGE_TROOP_GOLDEN_TICKETS_PER_WEEK
+
+SMALL_TROOP_TOTAL_TICKETS_PER_WEEK = TicketParameters.SMALL_TROOP_TOTAL_TICKETS_PER_WEEK
+MEDIUM_TROOP_TOTAL_TICKETS_PER_WEEK = TicketParameters.MEDIUM_TROOP_TOTAL_TICKETS_PER_WEEK
+LARGE_TROOP_TOTAL_TICKETS_PER_WEEK = TicketParameters.LARGE_TROOP_TOTAL_TICKETS_PER_WEEK
 
 PERMISSION_NAME_ADD = 'Can add troop'
 PERMISSION_NAME_DELETE = 'Can delete troop'
@@ -17,31 +20,30 @@ PERMISSION_NAME_UPDATE = 'Can change troop'
 
 
 class TroopTestCase(TestCase):
-
-    NORMAL_TROOP = {
+    SMALL_TROOP = {
         'number': 300,
         'tcc': 'test@test.com',
         'level': 2,
-        'super_troop': False,
+        'troop_size': 3,
     }
 
-    SUPER_TROOP = {
+    MEDIUM_TROOP = {
         'number': 400,
         'tcc': 'example@example.com',
         'level': 1,
-        'super_troop': True,
+        'troop_size': 12
     }
 
-    ADDITIONAL_TROOP = {
+    LARGE_TROOP = {
         'number': 450,
         'tcc': 'nevergonna@giveyou.up',
         'level': 4,
-        'super_troop': False,
+        'troop_size': 16,
     }
 
     NORMAL_USER = {
-        'username': NORMAL_TROOP['tcc'],
-        'email': NORMAL_TROOP['tcc'],
+        'username': SMALL_TROOP['tcc'],
+        'email': SMALL_TROOP['tcc'],
         'password': 'secret',
     }
 
@@ -53,14 +55,15 @@ class TroopTestCase(TestCase):
             password=cls.NORMAL_USER['password']
         )
 
-        cls.normal_troop = Troop.objects.create(troop_number=cls.NORMAL_TROOP['number'],
-                                                troop_cookie_coordinator=cls.NORMAL_TROOP['tcc'],
-                                                troop_level=cls.NORMAL_TROOP['level'])
+        cls.small_troop = Troop.objects.create(troop_number=cls.SMALL_TROOP['number'],
+                                               troop_cookie_coordinator=cls.SMALL_TROOP['tcc'],
+                                               troop_level=cls.SMALL_TROOP['level'],
+                                               troop_size=cls.SMALL_TROOP['troop_size'])
 
-        cls.super_troop = Troop.objects.create(troop_number=cls.SUPER_TROOP['number'],
-                                               troop_cookie_coordinator=cls.SUPER_TROOP['tcc'],
-                                               troop_level=cls.SUPER_TROOP['level'],
-                                               super_troop=cls.SUPER_TROOP['super_troop'])
+        cls.medium_troop = Troop.objects.create(troop_number=cls.MEDIUM_TROOP['number'],
+                                                troop_cookie_coordinator=cls.MEDIUM_TROOP['tcc'],
+                                                troop_level=cls.MEDIUM_TROOP['level'],
+                                                troop_size=cls.MEDIUM_TROOP['troop_size'])
 
     # -----------------------------------------------------------------------
     # Troop Model Tests
@@ -69,20 +72,20 @@ class TroopTestCase(TestCase):
         # Validate the database contains the expected data
 
         # Normal
-        self.assertEqual(self.normal_troop.troop_number, self.NORMAL_TROOP['number'])
-        self.assertEqual(self.normal_troop.troop_cookie_coordinator, self.NORMAL_TROOP['tcc'])
-        self.assertEqual(self.normal_troop.troop_level, self.NORMAL_TROOP['level'])
-        self.assertFalse(self.normal_troop.super_troop)
-        self.assertEqual(self.normal_troop.total_booth_tickets_per_week, NORMAL_TROOP_TOTAL_TICKETS_PER_WEEK)
-        self.assertEqual(self.normal_troop.booth_golden_tickets_per_week, NORMAL_TROOP_GOLDEN_TICKETS_PER_WEEK)
+        self.assertEqual(self.small_troop.troop_number, self.SMALL_TROOP['number'])
+        self.assertEqual(self.small_troop.troop_cookie_coordinator, self.SMALL_TROOP['tcc'])
+        self.assertEqual(self.small_troop.troop_level, self.SMALL_TROOP['level'])
+        self.assertEqual(self.small_troop.troop_size, self.SMALL_TROOP['troop_size'])
+        self.assertEqual(self.small_troop.total_booth_tickets_per_week, SMALL_TROOP_TOTAL_TICKETS_PER_WEEK)
+        self.assertEqual(self.small_troop.booth_golden_tickets_per_week, SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK)
 
         # Super
-        self.assertEqual(self.super_troop.troop_number, self.SUPER_TROOP['number'])
-        self.assertEqual(self.super_troop.troop_cookie_coordinator, self.SUPER_TROOP['tcc'])
-        self.assertEqual(self.super_troop.troop_level, self.SUPER_TROOP['level'])
-        self.assertTrue(self.super_troop.super_troop)
-        self.assertEqual(self.super_troop.total_booth_tickets_per_week, SUPER_TROOP_TOTAL_TICKETS_PER_WEEK)
-        self.assertEqual(self.super_troop.booth_golden_tickets_per_week, SUPER_TROOP_GOLDEN_TICKETS_PER_WEEK)
+        self.assertEqual(self.medium_troop.troop_number, self.MEDIUM_TROOP['number'])
+        self.assertEqual(self.medium_troop.troop_cookie_coordinator, self.MEDIUM_TROOP['tcc'])
+        self.assertEqual(self.medium_troop.troop_level, self.MEDIUM_TROOP['level'])
+        self.assertEqual(self.medium_troop.troop_size, self.MEDIUM_TROOP['troop_size'])
+        self.assertEqual(self.medium_troop.total_booth_tickets_per_week, MEDIUM_TROOP_TOTAL_TICKETS_PER_WEEK)
+        self.assertEqual(self.medium_troop.booth_golden_tickets_per_week, MEDIUM_TROOP_GOLDEN_TICKETS_PER_WEEK)
 
     # -----------------------------------------------------------------------
     # Troop Form Tests
@@ -90,10 +93,10 @@ class TroopTestCase(TestCase):
     def test_troops_form_with_valid_data(self):
         # Provide valid data and check if the form declares it is valid
         form_data = {
-            'troop_number': self.ADDITIONAL_TROOP['number'],
-            'troop_cookie_coordinator': self.ADDITIONAL_TROOP['tcc'],
-            'troop_level': self.ADDITIONAL_TROOP['level'],
-            'super_troop': self.ADDITIONAL_TROOP['super_troop'],
+            'troop_number': self.LARGE_TROOP['number'],
+            'troop_cookie_coordinator': self.LARGE_TROOP['tcc'],
+            'troop_level': self.LARGE_TROOP['level'],
+            'troop_size': self.LARGE_TROOP['troop_size'],
         }
         form = TroopForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -101,10 +104,10 @@ class TroopTestCase(TestCase):
     def test_troops_form_with_invalid_data(self):
         # Test to be sure that troop numbers are unique; check if the user receives the correct error message
         form_data = {
-            'troop_number': self.NORMAL_TROOP['number'],
-            'troop_cookie_coordinator': self.ADDITIONAL_TROOP['tcc'],
-            'troop_level': self.ADDITIONAL_TROOP['level'],
-            'super_troop': self.ADDITIONAL_TROOP['super_troop'],
+            'troop_number': self.SMALL_TROOP['number'],
+            'troop_cookie_coordinator': self.LARGE_TROOP['tcc'],
+            'troop_level': self.LARGE_TROOP['level'],
+            'troop_size': self.LARGE_TROOP['troop_size'],
         }
         form = TroopForm(data=form_data)
         self.assertFalse(form.is_valid())
@@ -131,8 +134,8 @@ class TroopTestCase(TestCase):
         # - Does the response contain Troop IDs?
         # - Since we do not have permissions, we should not see add, edit or delete
         self.assertTemplateUsed(response, 'troops.html')
-        self.assertContains(response, self.SUPER_TROOP['tcc'])
-        self.assertContains(response, self.NORMAL_TROOP['number'])
+        self.assertContains(response, self.MEDIUM_TROOP['tcc'])
+        self.assertContains(response, self.SMALL_TROOP['number'])
         self.assertNotContains(response, "Add New Troop")
         self.assertNotContains(response, "Edit Troop")
         self.assertNotContains(response, "Delete Troop")
@@ -151,8 +154,8 @@ class TroopTestCase(TestCase):
         # - Does the response contain Troop IDs?
         # - Since we do not have permissions, we should see add, edit and delete
         self.assertTemplateUsed(response, 'troops.html')
-        self.assertContains(response, self.NORMAL_TROOP['tcc'])
-        self.assertContains(response, self.SUPER_TROOP['number'])
+        self.assertContains(response, self.SMALL_TROOP['tcc'])
+        self.assertContains(response, self.MEDIUM_TROOP['number'])
         self.assertContains(response, "Add New Troop")
         self.assertContains(response, "Edit Troop")
         self.assertContains(response, "Delete Troop")
@@ -183,10 +186,10 @@ class TroopTestCase(TestCase):
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
         # Provide valid data
         form_data = {
-            'troop_number': self.ADDITIONAL_TROOP['number'],
-            'troop_cookie_coordinator': self.ADDITIONAL_TROOP['tcc'],
-            'troop_level': self.ADDITIONAL_TROOP['level'],
-            'super_troop': self.ADDITIONAL_TROOP['super_troop'],
+            'troop_number': self.LARGE_TROOP['number'],
+            'troop_cookie_coordinator': self.LARGE_TROOP['tcc'],
+            'troop_level': self.LARGE_TROOP['level'],
+            'troop_size': self.LARGE_TROOP['troop_size'],
         }
 
         # We expect that this data should be valid, and we should be re-directed back to troops/
@@ -194,16 +197,16 @@ class TroopTestCase(TestCase):
         self.assertRedirects(response, reverse('troops:troops'), status_code=302, target_status_code=200)
 
         # It should also have posted this data to the troop table
-        self.assertEqual(Troop.objects.last().troop_number, self.ADDITIONAL_TROOP['number'])
-        self.assertEqual(Troop.objects.last().troop_cookie_coordinator, self.ADDITIONAL_TROOP['tcc'])
-        self.assertEqual(Troop.objects.last().troop_level, self.ADDITIONAL_TROOP['level'])
-        self.assertEqual(Troop.objects.last().super_troop, self.ADDITIONAL_TROOP['super_troop'])
+        self.assertEqual(Troop.objects.last().troop_number, self.LARGE_TROOP['number'])
+        self.assertEqual(Troop.objects.last().troop_cookie_coordinator, self.LARGE_TROOP['tcc'])
+        self.assertEqual(Troop.objects.last().troop_level, self.LARGE_TROOP['level'])
+        self.assertEqual(Troop.objects.last().troop_size, self.LARGE_TROOP['troop_size'])
 
     # # # TroopUpdateView # # #
     def test_troops_update_without_permissions(self):
         # Test if users without correct permissions get denied
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.get('/troops/edit/' + str(self.normal_troop.pk) + '/')
+        response = self.client.get('/troops/edit/' + str(self.small_troop.pk) + '/')
         self.assertEqual(response.status_code, 403)
 
     def test_troops_update_displays_correctly(self):
@@ -213,18 +216,19 @@ class TroopTestCase(TestCase):
         self._add_permissions(PERMISSION_NAME_UPDATE)
 
         # Do we successfully access the page?
+        print(str(self.medium_troop.pk))
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.get('/troops/edit/' + str(self.super_troop.pk) + '/')
+        response = self.client.get('/troops/edit/' + str(self.medium_troop.pk) + '/')
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed('edit_troop.html')
 
         # Check if all the data we expect exists on the page; for the super troop item we check to see if the item
         # is checked. Additionally, make sure parts of the model that should not be exposed are not.
-        self.assertContains(response, self.SUPER_TROOP['number'])
-        self.assertContains(response, self.SUPER_TROOP['tcc'])
-        self.assertContains(response, self.SUPER_TROOP['level'])
-        self.assertContains(response, 'checked')
+        self.assertContains(response, self.MEDIUM_TROOP['number'])
+        self.assertContains(response, self.MEDIUM_TROOP['tcc'])
+        self.assertContains(response, self.MEDIUM_TROOP['level'])
+        self.assertContains(response, self.MEDIUM_TROOP['troop_size'])
         self.assertNotContains(response, 'total_booth_tickets_per_week')
 
     def test_troops_update_updates_data(self):
@@ -237,20 +241,20 @@ class TroopTestCase(TestCase):
         # Provide valid data, see if it redirects correctly after posting?
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
         form_data = {
-            'troop_number': self.SUPER_TROOP['number'],
-            'troop_cookie_coordinator': self.ADDITIONAL_TROOP['tcc'],
-            'troop_level': self.SUPER_TROOP['level'],
-            'super_troop': self.SUPER_TROOP['super_troop'],
+            'troop_number': self.MEDIUM_TROOP['number'],
+            'troop_cookie_coordinator': self.LARGE_TROOP['tcc'],
+            'troop_level': self.MEDIUM_TROOP['level'],
+            'troop_size': self.MEDIUM_TROOP['troop_size'],
         }
 
-        response = self.client.post('/troops/edit/' + str(self.super_troop.pk) + '/', form_data)
+        response = self.client.post('/troops/edit/' + str(self.medium_troop.pk) + '/', form_data)
         self.assertRedirects(response, reverse('troops:troops'), status_code=302, target_status_code=200)
 
         # Check that the data has been added to the DB
-        self.assertEqual(Troop.objects.last().troop_number, self.SUPER_TROOP['number'])
-        self.assertEqual(Troop.objects.last().troop_cookie_coordinator, self.ADDITIONAL_TROOP['tcc'])
-        self.assertEqual(Troop.objects.last().troop_level, self.SUPER_TROOP['level'])
-        self.assertEqual(Troop.objects.last().super_troop, self.SUPER_TROOP['super_troop'])
+        self.assertEqual(Troop.objects.last().troop_number, self.MEDIUM_TROOP['number'])
+        self.assertEqual(Troop.objects.last().troop_cookie_coordinator, self.LARGE_TROOP['tcc'])
+        self.assertEqual(Troop.objects.last().troop_level, self.MEDIUM_TROOP['level'])
+        self.assertEqual(Troop.objects.last().troop_size, self.MEDIUM_TROOP['troop_size'])
 
     def test_troops_update_gives_404(self):
         # Test if users with permissions that provide incorrect pk get a 404 error
@@ -265,7 +269,7 @@ class TroopTestCase(TestCase):
     def test_troops_delete_without_permissions(self):
         # Test if users without correct permissions get denied
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.get('/troops/confirm_delete/' + str(self.normal_troop.pk) + '/')
+        response = self.client.get('/troops/confirm_delete/' + str(self.small_troop.pk) + '/')
         self.assertEqual(response.status_code, 403)
 
     def test_troops_delete_view_get(self):
@@ -277,7 +281,7 @@ class TroopTestCase(TestCase):
         # Get the page and ensure that we use the correct template, it contains the information it should and it
         # is accessible.
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.get('/troops/confirm_delete/' + str(self.super_troop.pk) + '/')
+        response = self.client.get('/troops/confirm_delete/' + str(self.medium_troop.pk) + '/')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed('troop_confirm_delete.html')
         self.assertContains(response, 'Are you sure you want to delete')
@@ -289,11 +293,11 @@ class TroopTestCase(TestCase):
 
         # Follow-through with the deletion, and check if it redirects correctly
         self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
-        response = self.client.post('/troops/confirm_delete/' + str(self.super_troop.pk) + '/')
+        response = self.client.post('/troops/confirm_delete/' + str(self.medium_troop.pk) + '/')
         self.assertRedirects(response, reverse('troops:troops'), status_code=302, target_status_code=200)
 
         # Check to see if the data has been deleted
-        null_response = self.client.get('/troops/confirm_delete/' + str(self.super_troop.pk) + '/')
+        null_response = self.client.get('/troops/confirm_delete/' + str(self.medium_troop.pk) + '/')
         self.assertEqual(null_response.status_code, 404)
 
     # -----------------------------------------------------------------------
@@ -304,4 +308,3 @@ class TroopTestCase(TestCase):
         permission = Permission.objects.get(name=permission_name)
         self.normal_user.user_permissions.add(permission)
         self.normal_user.save()
-

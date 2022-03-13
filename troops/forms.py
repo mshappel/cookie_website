@@ -10,12 +10,12 @@ class TroopForm(forms.ModelForm):
         fields = ['troop_number',
                   'troop_cookie_coordinator',
                   'troop_level',
-                  'super_troop']
+                  'troop_size']
 
         labels = {'troop_number': _('Troop Number'),
                   'troop_cookie_coordinator': _('Troop Cookie Coordinator Username'),
                   'troop_level': _('Troop Level'),
-                  'super_troop': _('Super Troop')}
+                  'troop_size': _('Troop Size')}
 
     def clean(self):
         # We want to make absolutely sure that we are not duplicating a troop. We should be able to find this uniquely
