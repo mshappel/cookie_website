@@ -154,4 +154,4 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'cfsu.cookiewebsite@gmail.com'
-# EMAIL_HOST_PASSWORD = 'rchpyvkhxzxdvnqf'
+# EMAIL_HOST_PASSWORD = env.str("GMAIL_PASSWORD")
