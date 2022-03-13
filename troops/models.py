@@ -30,7 +30,6 @@ class Levels:
 
 
 class TroopSize:
-    SMALL_TROOP = 5
     MEDIUM_TROOP = 10
     LARGE_TROOP = 15
 
