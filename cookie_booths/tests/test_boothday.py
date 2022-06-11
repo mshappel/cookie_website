@@ -1,10 +1,10 @@
-from email.policy import default
+# Runs pytest on the BoothDay model
+import datetime
+
 from django.test import TestCase
 from django.utils.timezone import make_aware
 
 from cookie_booths.models import BoothLocation, BoothDay, BoothBlock
-
-import datetime
 
 
 TEST_DATE = datetime.date(2021, 10, 22)
@@ -267,7 +267,7 @@ class EnableAndDisableFFA(TestCase):
         _init_booth_hours(self.day_2)
 
 
-def _init_booth_hours(day):
+def _init_booth_hours(day: BoothDay):
     open_time = DEFAULT_OPEN_TIME
     close_time = DEFAULT_CLOSE_TIME
 

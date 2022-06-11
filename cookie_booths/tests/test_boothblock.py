@@ -42,7 +42,7 @@ class BoothBlockTestCase(TestCase):
         self.assertEqual(self.block.booth_block_current_troop_owner, TROOP_NUM_1)
         self.assertTrue(self.block.booth_block_reserved)
 
-    def _enable_and_reserve_booth_block(self, TROOP_NUM):
+    def _enable_and_reserve_booth_block(self, TROOP_NUM: int) -> None:
         self.block.booth_block_enabled = True
         self.block.reserve_block(TROOP_NUM)
 
