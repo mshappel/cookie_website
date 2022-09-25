@@ -9,18 +9,6 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 
-# TODO: We should create a file to import this from so this isn't in multiple locations
-GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
-    (0, 'None'),
-    (1, 'Daisies'),
-    (2, 'Brownies'),
-    (3, 'Juniors'),
-    (4, 'Cadettes'),
-    (5, 'Seniors'),
-    (6, 'Ambassadors'),
-]
-
-
 class BoothLocation(models.Model):
     """Contains data relevant for booths"""
     # ID is referenced via Django object ID
@@ -29,10 +17,12 @@ class BoothLocation(models.Model):
 
     booth_enabled = models.BooleanField(default=False)
 
-    booth_block_level_restrictions_start = models.SmallIntegerField(choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
-                                                                    default=0)
-    booth_block_level_restrictions_end = models.SmallIntegerField(choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
-                                                                  default=0)
+    booth_block_level_restrictions_start = \
+                        models.SmallIntegerField(choices=settings.GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
+                                                    default=0)
+    booth_block_level_restrictions_end = \
+                        models.SmallIntegerField(choices=settings.GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
+                                                    default=0)
 
     booth_requires_masks = models.BooleanField(default=False)
     booth_is_outside = models.BooleanField(default=False)
@@ -43,17 +33,12 @@ class BoothLocation(models.Model):
         verbose_name_plural = "booth locations"
         verbose_name = "booth location"
 
-        permissions = (('booth_loc_creation', "Creates a booth location"),
-                       ('booth_loc_updates', "Updates a booth location"),
-                       ('booth_loc_deletes', "Deletes a booth location")
-                       )
-
     def __str__(self):
         return self.booth_location
 
     def update_hours(self):
-        # We need to create or delete booth days, or update their hours, based on new hours, and we have
-        # A few steps for this
+        # We need to create or delete booth days, or update their hours, based on new hours, and 
+        # we have a few steps for this
         hours = BoothHours.objects.get(booth_location=self)
 
         # If no date is set for either start or end date, delete all days owned by this booth
@@ -503,6 +488,7 @@ def generate_hours_if_needed(sender, instance, created, **kwargs):
         instance.update_booth()
 
 
+# TODO: This is broken and our testing does not cover this
 @receiver(pre_delete, sender=BoothBlock)
 def notify_block_deletion(sender, instance, **kwargs):
     # If this block has been reserved, notify the owner. Otherwise we have nothing to do

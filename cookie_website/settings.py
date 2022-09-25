@@ -155,3 +155,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'cfsu.cookiewebsite@gmail.com'
 # EMAIL_HOST_PASSWORD = env.str("GMAIL_PASSWORD")
+
+# Project Level Constants
+GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
+    (0, 'None'),
+    (1, 'Daisies'),
+    (2, 'Brownies'),
+    (3, 'Juniors'),
+    (4, 'Cadettes'),
+    (5, 'Seniors'),
+    (6, 'Ambassadors'),
+]
