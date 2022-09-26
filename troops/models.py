@@ -1,8 +1,6 @@
-from datetime import datetime, timedelta
-
-from django.contrib.auth.models import AbstractUser, User, Group
+from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 
@@ -16,19 +14,6 @@ class TicketParameters:
     LARGE_TROOP_TOTAL_TICKETS_PER_WEEK = SMALL_TROOP_TOTAL_TICKETS_PER_WEEK * 3
     LARGE_TROOP_GOLDEN_TICKETS_PER_WEEK = SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK * 3
 
-
-class Levels:
-    GIRL_SCOUT_TROOP_LEVELS = [
-        (0, 'None'),
-        (1, 'Daisies'),
-        (2, 'Brownies'),
-        (3, 'Juniors'),
-        (4, 'Cadettes'),
-        (5, 'Seniors'),
-        (6, 'Ambassadors')
-    ]
-
-
 class TroopSize:
     MEDIUM_TROOP = 10
     LARGE_TROOP = 15
@@ -39,7 +24,8 @@ class Troop(models.Model):
     troop_cookie_coordinator = models.CharField(max_length=300, null=True)
 
     troop_size = models.SmallIntegerField(default=0)
-    troop_level = models.SmallIntegerField(choices=Levels.GIRL_SCOUT_TROOP_LEVELS, default=0)
+    troop_level = models.SmallIntegerField(choices=settings.GIRL_SCOUT_TROOP_LEVELS_WITH_NONE, 
+                                            default=0)
 
     total_booth_tickets_per_week = models.PositiveSmallIntegerField(default=0)
     booth_golden_tickets_per_week = models.PositiveSmallIntegerField(default=0)
