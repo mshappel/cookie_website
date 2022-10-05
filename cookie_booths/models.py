@@ -402,6 +402,7 @@ class BoothBlock(models.Model):
     booth_block_end_time = models.DateTimeField(blank=True, null=True)
 
     booth_block_current_troop_owner = models.IntegerField(default=0)
+    booth_block_current_cookiecaptain_owner = models.IntegerField(default=0)
     booth_block_reserved = models.BooleanField(default=False)
 
     booth_block_enabled = models.BooleanField(default=False)
@@ -410,6 +411,7 @@ class BoothBlock(models.Model):
     class Meta:
         permissions = (('cancel_block', "Cancel a booth"),
                        ('reserve_block', "Reserve a booth"),
+                       ('cookie_captain_reserve_block', "Reserve a block for a daisy scout"),
                        ('cancel_block_admin', "Administrator cancel any booth"),
                        ('reserve_block_admin', "Administrator reserve any booth"),
                        )
@@ -435,7 +437,7 @@ class BoothBlock(models.Model):
 
         return True
 
-    def reserve_block(self, troop_id):
+    def reserve_block(self, troop_id, cookie_cap_id):
         # If this block is not enabled, no reservation can be made
         if not self.booth_block_enabled:
             return False
@@ -447,6 +449,7 @@ class BoothBlock(models.Model):
         # At this point we're good to go reserving it.
         self.booth_block_reserved = True
         self.booth_block_current_troop_owner = troop_id
+        self.booth_block_current_cookiecaptain_owner = cookie_cap_id
 
         # TODO: Send email confirmation
 
