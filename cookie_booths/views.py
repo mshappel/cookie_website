@@ -426,8 +426,14 @@ def reserve_block(request, block_id):
             level_in_range = troop_trying_to_reserve_level in \
                              range(booth_restrictions_start, booth_restrictions_end + 1)
 
+        # Check to see if the user is a cookie captain
+        cookie_captain_id = settings.NO_COOKIE_CAPTAIN_ID
+        if request.user.has_perm('cookie_booths.cookie_captain_reserve_block'):
+            cookie_captain_id = request.user.id
+
         if level_in_range:
-            if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve):
+            if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve,
+                                              cookie_cap_id=cookie_captain_id):
                 # Successfully reserved the booth
                 successful = True
                 message_response = {

@@ -2,7 +2,7 @@ from django import forms
 from django.forms.utils import ErrorList
 from django.utils.translation import gettext as _
 
-from bootstrap_datepicker_plus import DatePickerInput, TimePickerInput
+from bootstrap_datepicker_plus.widgets import DatePickerInput, TimePickerInput
 
 from .models import BoothLocation, BoothHours
 

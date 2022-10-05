@@ -166,3 +166,5 @@ GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
     (5, 'Seniors'),
     (6, 'Ambassadors'),
 ]
+
+NO_COOKIE_CAPTAIN_ID = 0
