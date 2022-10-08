@@ -402,7 +402,7 @@ class BoothBlock(models.Model):
     booth_block_end_time = models.DateTimeField(blank=True, null=True)
 
     booth_block_current_troop_owner = models.IntegerField(default=0)
-    booth_block_current_cookiecaptain_owner = models.IntegerField(default=0)
+    booth_block_current_cookie_captain_owner = models.IntegerField(default=0)
     booth_block_reserved = models.BooleanField(default=False)
 
     booth_block_enabled = models.BooleanField(default=False)
@@ -449,7 +449,7 @@ class BoothBlock(models.Model):
         # At this point we're good to go reserving it.
         self.booth_block_reserved = True
         self.booth_block_current_troop_owner = troop_id
-        self.booth_block_current_cookiecaptain_owner = cookie_cap_id
+        self.booth_block_current_cookie_captain_owner = cookie_cap_id
 
         # TODO: Send email confirmation
 

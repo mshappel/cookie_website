@@ -28,7 +28,7 @@ class BoothBlockTestCase(TestCase):
         # as part of the model
         self.block.reserve_block(TROOP_NUM_1, TROOP_NUM_1_COOKIE_CAP_ID)
         self.assertNotEqual(self.block.booth_block_current_troop_owner, TROOP_NUM_1)
-        self.assertNotEqual(self.block.booth_block_current_cookiecaptain_owner, TROOP_NUM_1_COOKIE_CAP_ID)
+        self.assertNotEqual(self.block.booth_block_current_cookie_captain_owner, TROOP_NUM_1_COOKIE_CAP_ID)
         self.assertFalse(self.block.booth_block_reserved)
 
     def test_block_enabled_attempt_reserve(self):
@@ -36,7 +36,7 @@ class BoothBlockTestCase(TestCase):
         # Observe that the block is reserved
         self._enable_and_reserve_booth_block(TROOP_NUM_1, settings.NO_COOKIE_CAPTAIN_ID)
         self.assertEqual(self.block.booth_block_current_troop_owner, TROOP_NUM_1)
-        self.assertEqual(self.block.booth_block_current_cookiecaptain_owner, settings.NO_COOKIE_CAPTAIN_ID)
+        self.assertEqual(self.block.booth_block_current_cookie_captain_owner, settings.NO_COOKIE_CAPTAIN_ID)
         self.assertTrue(self.block.booth_block_reserved)
 
     def test_block_enabled_already_reserved_attempt_reserve(self):
@@ -45,7 +45,7 @@ class BoothBlockTestCase(TestCase):
         self._enable_and_reserve_booth_block(TROOP_NUM_1, TROOP_NUM_1_COOKIE_CAP_ID)
         self.block.reserve_block(TROOP_NUM_2, TROOP_NUM_2_COOKIE_CAP_ID)
         self.assertEqual(self.block.booth_block_current_troop_owner, TROOP_NUM_1)
-        self.assertEqual(self.block.booth_block_current_cookiecaptain_owner, TROOP_NUM_1_COOKIE_CAP_ID)
+        self.assertEqual(self.block.booth_block_current_cookie_captain_owner, TROOP_NUM_1_COOKIE_CAP_ID)
         self.assertTrue(self.block.booth_block_reserved)
 
     def _enable_and_reserve_booth_block(self, TROOP_NUM: int, COOKIE_CAP_ID: int) -> None:
