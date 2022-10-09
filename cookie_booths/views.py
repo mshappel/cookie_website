@@ -97,7 +97,7 @@ class BoothLocationDelete(PermissionRequiredMixin, LoginRequiredMixin, DeleteVie
 
 
 @login_required
-@permission_required('cookie_booths.enable_day', raise_exception=True)
+@permission_required('cookie_booths.toggle_day', raise_exception=True)
 def enable_location_by_block(request):
     booth_information = []
     booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
@@ -120,7 +120,7 @@ def ajax_enable_location_by_block(request, block_id):
     is_success = False
     if request.method == 'POST':
         block_to_enable = BoothBlock.objects.get(id=block_id)
-        if request.user.has_perm('cookie_booths.enable_day'):
+        if request.user.has_perm('cookie_booths.toggle_day'):
             is_success = block_to_enable.enable_block()
 
     return HttpResponse(is_success)
@@ -131,14 +131,14 @@ def ajax_disable_location_by_block(request, block_id):
     is_success = False
     if request.method == 'POST':
         block_to_enable = BoothBlock.objects.get(id=block_id)
-        if request.user.has_perm('cookie_booths.enable_day'):
+        if request.user.has_perm('cookie_booths.toggle_day'):
             is_success = block_to_enable.disable_block()
 
     return HttpResponse(is_success)
 
 
 @login_required
-@permission_required('cookie_booths.enable_day', raise_exception=True)
+@permission_required('cookie_booths.toggle_day', raise_exception=True)
 def enable_or_disable_day(request):
     booth_days = BoothDay.objects.order_by('booth', 'booth_day_date')
 
@@ -155,7 +155,7 @@ def enable_location_by_day(request):
     if request.method == 'POST':
         booth_id = request.POST['booth_id']
         booth_day = BoothDay.objects.get(id=booth_id)
-        if request.user.has_perm('cookie_booths.enable_day'):
+        if request.user.has_perm('cookie_booths.toggle_day'):
             booth_day.enable_day()
 
     return HttpResponse()
@@ -167,7 +167,7 @@ def disable_location_by_day(request):
     if request.method == 'POST':
         booth_id = request.POST['booth_id']
         booth_day = BoothDay.objects.get(id=booth_id)
-        if request.user.has_perm('cookie_booths.enable_day'):
+        if request.user.has_perm('cookie_booths.toggle_day'):
             booth_day.disable_day()
 
     return HttpResponse()
@@ -362,7 +362,7 @@ def reserve_block(request, block_id):
     troop = None
 
     if request.method == 'POST':
-        if request.user.has_perm('cookie_booths.reserve_block_admin'):
+        if request.user.has_perm('cookie_booths.block_reservation_admin'):
             # The user is a SUCM or higher; we require a troop # from them for reservation
             troop_trying_to_reserve = request.POST['troop_number']
             if troop_trying_to_reserve == '':
@@ -378,7 +378,7 @@ def reserve_block(request, block_id):
             rem_tickets, rem_golden_tickets = get_num_tickets_remaining(troop,
                                                                         block_to_reserve.booth_day.booth_day_date)
 
-        elif request.user.has_perm('cookie_booths.reserve_block'):
+        elif request.user.has_perm('cookie_booths.block_reservation'):
             # The user is a TCC; the user's troop # is used for reservation
             troop = Troop.objects.get(troop_cookie_coordinator=username)
             troop_trying_to_reserve = troop.troop_number
@@ -484,10 +484,10 @@ def cancel_block(request, block_id):
 
     if request.method == 'POST':
         block_to_cancel = BoothBlock.objects.get(id=block_id)
-        if request.user.has_perm('cookie_booths.cancel_block_admin'):
+        if request.user.has_perm('cookie_booths.block_reservation_admin'):
             # The user is a SUCM or higher they can do this unconditionally
             pass
-        elif request.user.has_perm('cookie_booths.cancel_block'):
+        elif request.user.has_perm('cookie_booths.block_reservation'):
             # The user is a TCC; the user's troop # is used to check if they can cancel
             troop_trying_to_cancel = None  # Troop.objects.get(troop_cookie_coordinator=username).troop_number
             if troop_trying_to_cancel != block_to_cancel.booth_block_current_troop_owner:

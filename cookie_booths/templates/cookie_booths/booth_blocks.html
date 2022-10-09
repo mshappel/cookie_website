@@ -10,7 +10,7 @@
 {% block content %}
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
 
-    {% if perms.cookie_booths.reserve_block_admin and reserve_or_enable_booths == "reserve" %}
+    {% if perms.cookie_booths.block_reservation_admin and reserve_or_enable_booths == "reserve" %}
         <p><div>
             <select name="TroopNumbers" id="TroopNumbers">
                 <option value="none" selected disabled hidden>Select a Troop</option>
@@ -41,14 +41,14 @@
                     <td>
                         {% if reserve_or_enable_booths == "reserve" %}
                             {% if block.booth_block_information.booth_block_reserved is False %}
-                                {% if perms.cookie_booths.reserve_block or perms.cookie_booths.reserve_block_admin %}
+                                {% if perms.cookie_booths.block_reservation or perms.cookie_booths.block_reservation_admin %}
                                     <input type="button" id="ReserveBooth" value="Reserve Booth"
                                            onclick="ReserveBooth({{ block.booth_block_information.id }},
                                                 '{{ block.booth_block_information.booth_day.booth.booth_requires_masks }}')">
                                 {% endif %}
 
                             {% else %}
-                                {% if perms.cookie_booths.cancel_block_admin %}
+                                {% if perms.cookie_booths.block_reservation_admin %}
                                     Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
                                     <p></p>
                                     <input type="button" id="CancelBooth" value="Cancel Booth"
@@ -100,7 +100,7 @@
 
     <script>
         function ReserveBooth(booth_id, booth_requires_mask) {
-            if('{{ perms.cookie_booths.reserve_block_admin }}'==='True') {
+            if('{{ perms.cookie_booths.block_reservation_admin }}'==='True') {
                 FinishBoothReservation(booth_id)
             } else if(booth_requires_mask==='True') {
                 if(confirm("This booth requires you to wear a mask, do you want to reserve it?")) {
