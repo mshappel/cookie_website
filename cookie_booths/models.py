@@ -217,12 +217,10 @@ class BoothDay(models.Model):
     booth_day_freeforall_enabled = models.BooleanField(default=False)
 
     class Meta:
-        permissions = (('enable_day', "Enable a day for a booth"),
-                       ('disable_day', "Disable a day for a booth"),
+        permissions = (('toggle_day', "Enable/Disable a day for a booth"),
                        ('add_or_update_hours', "Add or update hours for a booth day"),
                        ('make_golden_booth', "Make a booth day golden"),
-                       ('enable_freeforall', "Enable free for all"),
-                       ('disable_freeforall', "Disable free for all")
+                       ('toggle_freeforall', "Enable/Disable free for all")
                        )
 
     def enable_day(self):
@@ -401,6 +399,8 @@ class BoothBlock(models.Model):
     booth_block_start_time = models.DateTimeField(blank=True, null=True)
     booth_block_end_time = models.DateTimeField(blank=True, null=True)
 
+    booth_block_held_for_cookie_captains = models.BooleanField(default=False)
+
     booth_block_current_troop_owner = models.IntegerField(default=0)
     booth_block_current_cookie_captain_owner = models.IntegerField(default=0)
     booth_block_reserved = models.BooleanField(default=False)
@@ -409,11 +409,11 @@ class BoothBlock(models.Model):
     booth_block_freeforall_enabled = models.BooleanField(default=False)
 
     class Meta:
-        permissions = (('cancel_block', "Cancel a booth"),
+        permissions = (('block_reservation', "Reserve/Cancel a booth"),
                        ('reserve_block', "Reserve a booth"),
                        ('cookie_captain_reserve_block', "Reserve a block for a daisy scout"),
-                       ('cancel_block_admin', "Administrator cancel any booth"),
-                       ('reserve_block_admin', "Administrator reserve any booth"),
+                       ('block_reservation_admin', "Administrator reserve/cancel any booth"),
+                       ('admin_hold_block_for_cookie_captains', "Administrator hold blocks for cookie captains to reserve"),
                        )
 
     def cancel_block(self):
