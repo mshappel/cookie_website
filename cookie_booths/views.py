@@ -107,8 +107,15 @@ def enable_location_by_block(request):
                                      'booth_owned_by_current_user': None}
         booth_information.append(current_booth_information)
 
+    permission_level = "none"
+    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+        permission_level = "admin"
+    elif request.user.has_perm('cookie_booths.block_reservation'):
+        permission_level = "tcc"
+
     context = {'booth_blocks': booth_information,
                'available_troops': None,
+               'permission_level': permission_level,
                'page_title': "Enable Booths by Block",
                'reserve_or_enable_booths': "enable"}
 
@@ -245,10 +252,18 @@ def booth_blocks(request):
                                      'booth_owned_by_current_user': booth_owned_by_current_user_}
         booth_information.append(current_booth_information)
 
+    permission_level = "none"
+    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+        permission_level = "admin"
+    elif request.user.has_perm('cookie_booths.block_reservation'):
+        permission_level = "tcc"
+
     context = {'booth_blocks': booth_information,
                'available_troops': available_troops,
+               'permission_level': permission_level,
                'page_title': "Make Booth Reservations",
                'reserve_or_enable_booths': "reserve"}
+               
     return render(request, 'cookie_booths/booth_blocks.html', context)
 
 
@@ -279,10 +294,18 @@ def booth_reservations(request):
                                      'booth_owned_by_current_user': booth_owned_by_current_user_}
         booth_information.append(current_booth_information)
 
+    permission_level = "none"
+    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+        permission_level = "admin"
+    elif request.user.has_perm('cookie_booths.block_reservation'):
+        permission_level = "tcc"
+
     context = {'booth_blocks': booth_information,
                'available_troops': available_troops,
+               'permission_level': permission_level,
                'page_title': "Manage Your Booth Reservations",
                'reserve_or_enable_booths': "reserve"}
+
     return render(request, 'cookie_booths/booth_blocks.html', context)
 
 

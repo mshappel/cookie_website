@@ -412,8 +412,7 @@ class BoothBlock(models.Model):
         permissions = (('block_reservation', "Reserve/Cancel a booth"),
                        ('reserve_block', "Reserve a booth"),
                        ('cookie_captain_reserve_block', "Reserve a block for a daisy scout"),
-                       ('block_reservation_admin', "Administrator reserve/cancel any booth"),
-                       ('admin_hold_block_for_cookie_captains', "Administrator hold blocks for cookie captains to reserve"),
+                       ('block_reservation_admin', "Administrator reserve/cancel any booth, or hold booths for cookie captains to reserve")
                        )
 
     def cancel_block(self):
