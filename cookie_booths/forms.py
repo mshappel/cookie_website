@@ -155,42 +155,38 @@ class BoothHoursForm(forms.ModelForm):
         help_texts = {'booth_start_date': _('Enter the date sales will begin at this booth.'),
                       'booth_end_date': _('Enter the last date of sales for this booth.')}
 
+    def clean_booth_start_date(self):
+        data = self.cleaned_data['booth_start_date']
+        if data is None:
+            raise forms.ValidationError("Please specify valid start date")
+        
+        return data
+
+    def clean_booth_end_date(self):
+        data = self.cleaned_data['booth_end_date']
+        if data is None:
+            raise forms.ValidationError("Please specify valid end date")
+        
+        return data
+    
     def clean(self):
-        # Make sure we have valid dates - both populated or both not is fine
-        if (self.cleaned_data['booth_start_date'] is None and self.cleaned_data['booth_end_date'] is not None) or \
-                (self.cleaned_data['booth_start_date'] is not None and self.cleaned_data['booth_end_date'] is None):
-
-            if self.cleaned_data['booth_start_date'] is None:
-                self.add_error('booth_start_date', "Please specify valid start date.")
-            if self.cleaned_data['booth_end_date'] is None:
-                self.add_error('booth_end_date', "Please specify valid end date.")
-            raise forms.ValidationError('Must have valid start and ending dates!')
-
         # Make sure we have valid times - both populated is needed if the checkbox is checked
-        valid_times = True
         for day in DAYS_OF_WEEK:
-            day_is_valid = self.__check_times_set_correctly(day_of_week=day)
-            valid_times = valid_times and day_is_valid
+            self.__check_times_set_correctly(day_of_week=day)
 
-        if not valid_times:
-            raise forms.ValidationError('Open and close times must be specified for open days!')
 
     def __check_times_set_correctly(self, day_of_week):
         """Checks to see if the times in the forms are properly set"""
         day_of_week_close = day_of_week + "_close_time"
         day_of_week_open = day_of_week + "_open_time"
         day_of_week_checkbox = day_of_week + "_open"
-        valid_times = True
 
         if ((self.cleaned_data[day_of_week_checkbox]) and
                 (self.cleaned_data[day_of_week_open] is None or self.cleaned_data[day_of_week_close] is None)):
-            valid_times = False
             if self.cleaned_data[day_of_week_open] is None:
-                self.add_error(day_of_week_open, "Please specify valid open time.")
+                self.add_error(day_of_week_open, f"Please specify valid open time for {str.title(day_of_week)}.")
             if self.cleaned_data[day_of_week_close] is None:
-                self.add_error(day_of_week_close, "Please specify valid close time.")
-
-        return valid_times
+                self.add_error(day_of_week_close, f"Please specify valid close time for {str.title(day_of_week)}.")
 
 
 class EnableFreeForAll(forms.Form):
