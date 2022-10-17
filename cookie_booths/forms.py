@@ -170,6 +170,8 @@ class BoothHoursForm(forms.ModelForm):
         return data
     
     def clean(self):
+        super().clean()
+        
         # Make sure we have valid times - both populated is needed if the checkbox is checked
         for day in DAYS_OF_WEEK:
             self.__check_times_set_correctly(day_of_week=day)
