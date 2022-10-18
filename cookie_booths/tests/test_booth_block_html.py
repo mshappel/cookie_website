@@ -12,6 +12,7 @@ from troops.models import Troop
 
 PERMISSION_RESERVE_BOOTH = 'Reserve/Cancel a booth'
 PERMISSION_ADMIN_RESERVE_BOOTH = 'Administrator reserve/cancel any booth, or hold booths for cookie captains to reserve'
+PERMISSION_COOKIE_CAPTAIN_RESERVE_BOOTH = 'Reserve a block for a daisy scout'
 
 class BoothBlockHtmlTestCase(TestCase):
 
@@ -194,6 +195,57 @@ class BoothBlockHtmlTestCase(TestCase):
         self.assertContains(response, self.BOOTH_DETAILS['booth_close_time'])
         self.assertContains(response, "Reserved by 301")
         self.assertContains(response, "Cancel Booth")
+
+    def test_booth_blocks_html_block_held_for_cc(self):
+        self._add_permissions(PERMISSION_ADMIN_RESERVE_BOOTH)
+        self._add_permissions(PERMISSION_COOKIE_CAPTAIN_RESERVE_BOOTH)
+
+        # Flag the one booth available as only selectable by cookie captains
+        self.block.booth_block_held_for_cookie_captains = True
+        self.block.save()
+
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.get(reverse('cookie_booths:booth_blocks'))
+
+        # Is the correct data displayed?
+        # - We should have a block listed
+        # - We should have the option to reserve, with a drop down to select a troop
+        # - We should see the block details (location, date, times)
+        # - We should see a button to cancel holding the booth for cookie captains
+        self.assertTemplateUsed(response, 'cookie_booths/booth_blocks.html')
+        self.assertContains(response, "Select a Troop")
+        self.assertContains(response, self.BOOTH_DETAILS['booth_location'])
+        self.assertContains(response, self.BOOTH_DETAILS['booth_open_date'])
+        self.assertContains(response, self.BOOTH_DETAILS['booth_open_time'])
+        self.assertContains(response, self.BOOTH_DETAILS['booth_close_time'])
+        self.assertContains(response, "Cancel Hold for Cookie Captains")
+
+    def test_booth_blocks_html_block_held_for_cc_and_reserved(self):
+        self._add_permissions(PERMISSION_ADMIN_RESERVE_BOOTH)
+        self._add_permissions(PERMISSION_COOKIE_CAPTAIN_RESERVE_BOOTH)
+
+        # Flag the one booth available as held for cookie captains, and also reserved
+        self.block.booth_block_held_for_cookie_captains = True
+        self.block.save()
+        self.block.reserve_block(self.diff_troop.troop_number, self.diff_troop.troop_number)
+
+        self.client.login(username=self.NORMAL_USER['username'], password=self.NORMAL_USER['password'])
+        response = self.client.get(reverse('cookie_booths:booth_blocks'))
+
+        # Is the correct data displayed?
+        # - We should have a block listed
+        # - We should have the option to reserve, with a drop down to select a troop
+        # - We should see the block details (location, date, times)
+        # - We should see a button to cancel holding the booth for cookie captains
+        # - We should see a button to cancel the active reservation for the booth
+        self.assertTemplateUsed(response, 'cookie_booths/booth_blocks.html')
+        self.assertContains(response, "Select a Troop")
+        self.assertContains(response, self.BOOTH_DETAILS['booth_location'])
+        self.assertContains(response, self.BOOTH_DETAILS['booth_open_date'])
+        self.assertContains(response, self.BOOTH_DETAILS['booth_open_time'])
+        self.assertContains(response, self.BOOTH_DETAILS['booth_close_time'])
+        self.assertContains(response, "Cancel Booth")
+        self.assertContains(response, "Cancel Booth And Cancel Hold for Cookie Captains")
 
     # -----------------------------------------------------------------------
     # Internal

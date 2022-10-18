@@ -22,6 +22,10 @@ urlpatterns = [
     path('blocks/reservations/<int:block_id>', views.reserve_block, name='block_reservation'),
     # Cancel Booth Reservation
     path('blocks/reservations/cancel/<int:block_id>', views.cancel_block, name='block_cancellation'),
+    # Hold Booth For Cookie Captains
+    path('blocks/cchold/<int:block_id>', views.hold_block_for_cookie_captain, name='hold_block_for_cookie_captain'),
+    # Cancel Holding Booth For Cookie Captains
+    path('blocks/cchold/cancel/<int:block_id>', views.cancel_hold_for_cookie_captain, name='cancel_hold_for_cookie_captain'),
     # User Enable Booth by Block
     path('blocks/enable_blocks', views.enable_location_by_block, name='enable_location_by_block'),
     # AJAX Enable Booth by Block

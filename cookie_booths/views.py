@@ -548,3 +548,62 @@ def cancel_block(request, block_id):
         }
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
+
+@login_required
+def hold_block_for_cookie_captain(request, block_id):
+    # Only admins have the ability to do this
+    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+        block_to_hold = BoothBlock.objects.get(id=block_id)
+
+        # A few things to validate in regards to the booth itself:
+        # 1. It should not have an existing reservation on it
+        # 2. It should not already be held by another cookie captain
+        if not block_to_hold.booth_block_held_for_cookie_captains and \
+           not block_to_hold.booth_block_reserved:
+
+            block_to_hold.hold_for_cookie_captains()
+            message_response = {
+                'message': "Successfully held booth for cookie captains",
+                'is_success': True,
+            }
+        else:
+            message_response = {
+                'message': "Block is already reserved or being held for cookie captains",
+                'is_success': False,
+            }
+    else:
+        message_response = {
+            'message': "You do not have permissions to hold booths",
+            'is_success': False,
+        }
+
+    message_response = json.dumps(message_response)
+    return HttpResponse(message_response)
+
+@login_required
+def cancel_hold_for_cookie_captain(request, block_id):
+    # Only admins have the ability to do this
+    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+        block_to_unhold = BoothBlock.objects.get(id=block_id)
+
+        # We should validate that the booth is not currently being held
+        if block_to_unhold.booth_block_held_for_cookie_captains:
+
+            block_to_unhold.unhold_for_cookie_captains()
+            message_response = {
+                'message': "Successfully unheld booth for cookie captains",
+                'is_success': True,
+            }
+        else:
+            message_response = {
+                'message': "Block is not currently held for cookie captains",
+                'is_success': False,
+            }
+    else:
+        message_response = {
+            'message': "You do not have permissions to unhold booths",
+            'is_success': False,
+        }
+
+    message_response = json.dumps(message_response)
+    return HttpResponse(message_response)

@@ -48,6 +48,32 @@ class BoothBlockTestCase(TestCase):
         self.assertEqual(self.block.booth_block_current_cookie_captain_owner, TROOP_NUM_1_COOKIE_CAP_ID)
         self.assertTrue(self.block.booth_block_reserved)
 
+    def test_block_hold_for_cookie_captains_unreserved(self):
+        # Verify that a block is held correctly for cookie captains when not reserved
+        self.block.hold_for_cookie_captains()
+        self.assertTrue(self.block.booth_block_held_for_cookie_captains)
+
+    def test_block_hold_for_cookie_captains_reserved(self):
+        # Verify that a block will not be held for cookie captains when it has previously been reserved
+        self._enable_and_reserve_booth_block(TROOP_NUM_1, settings.NO_COOKIE_CAPTAIN_ID)
+        self.assertFalse(self.block.hold_for_cookie_captains())
+
+    def test_block_unhold_for_cookie_captains_unreserved(self):
+        # Verify that a block will be unheld correctly for cookie captains when it has been held previously
+        self.block.hold_for_cookie_captains()
+        self.block.unhold_for_cookie_captains()
+        self.assertFalse(self.block.booth_block_held_for_cookie_captains)
+
+    def test_block_unhold_for_cookie_captains_reserved(self):
+        # Verify that when unholding a block that has been reserved will also cause any active reservation to be cancelled
+        self.block.hold_for_cookie_captains()
+        self._enable_and_reserve_booth_block(TROOP_NUM_1, TROOP_NUM_1_COOKIE_CAP_ID)
+        self.block.unhold_for_cookie_captains()
+        self.assertFalse(self.block.booth_block_held_for_cookie_captains)
+        self.assertEqual(self.block.booth_block_current_troop_owner, 0)
+        self.assertEqual(self.block.booth_block_current_cookie_captain_owner, 0)
+        self.assertFalse(self.block.booth_block_reserved)
+
     def _enable_and_reserve_booth_block(self, TROOP_NUM: int, COOKIE_CAP_ID: int) -> None:
         self.block.booth_block_enabled = True
         self.block.reserve_block(TROOP_NUM, COOKIE_CAP_ID)
