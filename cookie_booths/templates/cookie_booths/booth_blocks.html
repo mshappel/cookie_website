@@ -50,7 +50,8 @@
                                     <input type="button" id="ReserveBooth" value="Reserve Booth"
                                         onclick="ReserveBooth({{ block.booth_block_information.id }},
                                             '{{ block.booth_block_information.booth_day.booth.booth_requires_masks }}')">
-                                    <input type="button" id="HoldForCC" value="Hold for Cookie Captains">
+                                    <input type="button" id="HoldForCC" value="Hold for Cookie Captains"
+                                        onclick="HoldBoothForCookieCaptains({{ block.booth_block_information.id }})">
                                 <!-- 2. If a block is reserved but not flagged for cookie captains, we can only cancel -->
                                 {% elif block.booth_block_information.booth_block_reserved is True and block.booth_block_information.booth_block_held_for_cookie_captains is False %}
                                     Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
@@ -59,14 +60,16 @@
                                         onclick="CancelBooth({{ block.booth_block_information.id }})">
                                 <!-- 3. If a block is not reserved but flagged for cookie captains, we can only unflag -->
                                 {% elif block.booth_block_information.booth_block_reserved is False and block.booth_block_information.booth_block_held_for_cookie_captains is True %}
-                                    <input type="button" id="UnholdForCC" value="Cancel Hold for Cookie Captains">
+                                    <input type="button" id="UnholdForCC" value="Cancel Hold for Cookie Captains"
+                                        onclick="UnholdBoothForCookieCaptains({{ block.booth_block_information.id }})">
                                 <!-- 4. If a block is reserved and flagged, we can unreserve or unflag (which will also result in unreserving the daisy troop) -->
                                 {% else %}
                                     Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
                                     <p></p>
                                     <input type="button" id="CancelBooth" value="Cancel Booth"
                                         onclick="CancelBooth({{ block.booth_block_information.id }})">
-                                    <input type="button" id="HoldForCC" value="Cancel Booth And Cancel Hold for Cookie Captains">
+                                    <input type="button" id="UnholdForCC" value="Cancel Booth And Cancel Hold for Cookie Captains"
+                                        onclick="UnholdBoothForCookieCaptains({{ block.booth_block_information.id }})">
                                 {% endif %}
                             {% elif permission_level == "tcc" %}
                                 <!-- For TCCs, they can reserve or cancel booths for their troop only -->
@@ -190,6 +193,58 @@
 
         }
 
+        function HoldBoothForCookieCaptains(booth_id) {
+            $.ajax({
+                url: location.origin + "/booths/blocks/cchold/" + booth_id,
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (jsonData) {
+                    let from_response = JSON.parse(jsonData);
+                    let is_success = from_response.is_success;
+                    let message = from_response.message;
+                    if (is_success === true) {
+                        if (confirm(message)) {
+                            window.location.reload()
+                        }
+                        // Make sure cancelling also prompts a refresh
+                        else {
+                            window.location.reload()
+                        }
+                    } else {
+                        alert(message)
+                    }
+                }
+            });
+        }
+
+        function UnholdBoothForCookieCaptains(booth_id) {
+            $.ajax({
+                url: location.origin + "/booths/blocks/cchold/cancel/" + booth_id,
+                type: 'POST',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (jsonData) {
+                    let from_response = JSON.parse(jsonData);
+                    let is_success = from_response.is_success;
+                    let message = from_response.message;
+                    if (is_success === true) {
+                        if (confirm(message)) {
+                            window.location.reload()
+                        }
+                        // Make sure cancelling also prompts a refresh
+                        else {
+                            window.location.reload()
+                        }
+                    } else {
+                        alert(message)
+                    }
+                }
+            });
+        }
+
         function EnableBooth(booth_id) {
             $.ajax({
                     url: location.origin + "/booths/blocks/enable_blocks/" + booth_id,
@@ -205,7 +260,7 @@
             });
         }
 
-                function DisableBooth(booth_id) {
+        function DisableBooth(booth_id) {
             $.ajax({
                     url: location.origin + "/booths/blocks/disable_blocks/" + booth_id,
                     type: 'POST',

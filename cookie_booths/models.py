@@ -429,6 +429,7 @@ class BoothBlock(models.Model):
         # At this point we can cancel the reservation
         self.booth_block_reserved = False
         self.booth_block_current_troop_owner = 0
+        self.booth_block_current_cookie_captain_owner = 0
 
         # TODO: Send email confirmation
 
@@ -453,6 +454,33 @@ class BoothBlock(models.Model):
         # TODO: Send email confirmation
 
         self.save()
+        return True
+
+    def hold_for_cookie_captains(self):
+        # If already held, return
+        if self.booth_block_held_for_cookie_captains:
+            return True
+
+        # If this block is already reserved, we can't hold it
+        if self.booth_block_reserved:
+            return False
+
+        self.booth_block_held_for_cookie_captains = True
+        self.save()
+
+        return True
+
+    def unhold_for_cookie_captains(self):
+        # If already unheld, return
+        if not self.booth_block_held_for_cookie_captains:
+            return True
+
+        # If reserved, we should also unreserve the block
+        self.cancel_block()
+
+        self.booth_block_held_for_cookie_captains = False
+        self.save()
+
         return True
 
     def enable_block(self):
