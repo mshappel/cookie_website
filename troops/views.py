@@ -12,30 +12,31 @@ from .models import Troop
 # -----------------------------------------------------------------------
 class TroopListView(LoginRequiredMixin, ListView):
     model = Troop
-    template_name = 'troops.html'
+    template_name = "troops.html"
 
 
 # -----------------------------------------------------------------------
 # Troop Admin Functions
 # -----------------------------------------------------------------------
 class TroopCreateView(PermissionRequiredMixin, LoginRequiredMixin, CreateView):
-    permission_required = 'troops.add_troop'
+    permission_required = "troops.add_troop"
     form_class = TroopForm
-    success_url = reverse_lazy('troops:troops')
-    template_name = 'new_troop.html'
+    success_url = reverse_lazy("troops:troops")
+    template_name = "new_troop.html"
 
 
 class TroopUpdateView(PermissionRequiredMixin, LoginRequiredMixin, UpdateView):
-    permission_required = 'troops.change_troop'
+    permission_required = "troops.change_troop"
     model = Troop
-    fields = ['troop_number', 'troop_cookie_coordinator', 'troop_level', 'troop_size']
-    success_url = reverse_lazy('troops:troops')
-    template_name = 'edit_troop.html'
+    fields = ["troop_number", "troop_cookie_coordinator", "troop_level", "troop_size"]
+    success_url = reverse_lazy("troops:troops")
+    template_name = "edit_troop.html"
 
 
 class TroopDeleteView(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     """Delete an existing booth location"""
-    permission_required = 'troops.delete_troop'
+
+    permission_required = "troops.delete_troop"
     model = Troop
-    template_name = 'troop_confirm_delete.html'
-    success_url = reverse_lazy('troops:troops')
+    template_name = "troop_confirm_delete.html"
+    success_url = reverse_lazy("troops:troops")

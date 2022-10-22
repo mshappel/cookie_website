@@ -23,16 +23,16 @@ from troops.models import Troop
 @login_required
 def booth_editor(request):
     """Display all booths for admins to edit"""
-    booths = BoothLocation.objects.order_by('booth_location')
-    context = {'booths': booths}
-    return render(request, 'cookie_booths/booths.html', context)
+    booths = BoothLocation.objects.order_by("booth_location")
+    context = {"booths": booths}
+    return render(request, "cookie_booths/booths.html", context)
 
 
 @login_required
-@permission_required('cookie_booths.booth_loc_creation', raise_exception=True)
+@permission_required("cookie_booths.booth_loc_creation", raise_exception=True)
 def create_new_booth_location(request):
     """Create a new booth location"""
-    if request.method != 'POST':
+    if request.method != "POST":
         # No data submitted; create a blank form.
         form = BoothLocationForm()
     else:
@@ -40,20 +40,20 @@ def create_new_booth_location(request):
         form = BoothLocationForm(data=request.POST)
         if form.is_valid():
             loc = form.save()
-            return redirect('cookie_booths:edit_booth_hours', booth_id=loc.id)
+            return redirect("cookie_booths:edit_booth_hours", booth_id=loc.id)
 
     # Display a blank or invalid form.
-    context = {'form': form}
-    return render(request, 'cookie_booths/new_booth_location.html', context)
+    context = {"form": form}
+    return render(request, "cookie_booths/new_booth_location.html", context)
 
 
 @login_required
-@permission_required('cookie_booths.booth_loc_updates', raise_exception=True)
+@permission_required("cookie_booths.booth_loc_updates", raise_exception=True)
 def edit_booth_location(request, booth_id):
     """Edit an existing booth location"""
     booth = BoothLocation.objects.get(id=booth_id)
 
-    if request.method != 'POST':
+    if request.method != "POST":
         # Initial request; pre-fill with the current entry.
         form = BoothLocationForm(instance=booth, booth_id=booth_id)
     else:
@@ -61,20 +61,20 @@ def edit_booth_location(request, booth_id):
         form = BoothLocationForm(instance=booth, data=request.POST, booth_id=booth_id)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(reverse_lazy('cookie_booths:booth_locations'))
+            return HttpResponseRedirect(reverse_lazy("cookie_booths:booth_locations"))
 
-    context = {'booth': booth, 'form': form}
-    return render(request, 'cookie_booths/edit_booth.html', context)
+    context = {"booth": booth, "form": form}
+    return render(request, "cookie_booths/edit_booth.html", context)
 
 
 @login_required
-@permission_required('cookie_booths.booth_loc_updates', raise_exception=True)
+@permission_required("cookie_booths.booth_loc_updates", raise_exception=True)
 def edit_booth_location_hours(request, booth_id):
     """Edit an existing booth location"""
     booth = BoothLocation.objects.get(id=booth_id)
     hours = BoothHours.objects.get(booth_location=booth.id)
 
-    if request.method != 'POST':
+    if request.method != "POST":
         # Initial request; pre-fill with the current entry.
         form = BoothHoursForm(instance=hours)
     else:
@@ -82,52 +82,59 @@ def edit_booth_location_hours(request, booth_id):
         form = BoothHoursForm(instance=hours, data=request.POST)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect(reverse_lazy('cookie_booths:booth_locations'))
+            return HttpResponseRedirect(reverse_lazy("cookie_booths:booth_locations"))
 
-    context = {'booth': booth, 'form': form}
-    return render(request, 'cookie_booths/edit_booth_hours.html', context)
+    context = {"booth": booth, "form": form}
+    return render(request, "cookie_booths/edit_booth_hours.html", context)
 
 
 class BoothLocationDelete(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     """Delete an existing booth location"""
-    permission_required = 'cookie_booths.booth_loc_deletes'
+
+    permission_required = "cookie_booths.booth_loc_deletes"
     model = BoothLocation
-    template_name = 'cookie_booths/booth_confirm_delete.html'
-    success_url = reverse_lazy('cookie_booths:booth_locations')
+    template_name = "cookie_booths/booth_confirm_delete.html"
+    success_url = reverse_lazy("cookie_booths:booth_locations")
 
 
 @login_required
-@permission_required('cookie_booths.toggle_day', raise_exception=True)
+@permission_required("cookie_booths.toggle_day", raise_exception=True)
 def enable_location_by_block(request):
     booth_information = []
-    booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
+    booth_blocks_ = BoothBlock.objects.order_by(
+        "booth_day__booth", "booth_day", "booth_block_start_time"
+    )
 
     for booth in booth_blocks_:
-        current_booth_information = {'booth_block_information': booth,
-                                     'booth_owned_by_current_user': None}
+        current_booth_information = {
+            "booth_block_information": booth,
+            "booth_owned_by_current_user": None,
+        }
         booth_information.append(current_booth_information)
 
     permission_level = "none"
-    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+    if request.user.has_perm("cookie_booths.block_reservation_admin"):
         permission_level = "admin"
-    elif request.user.has_perm('cookie_booths.block_reservation'):
+    elif request.user.has_perm("cookie_booths.block_reservation"):
         permission_level = "tcc"
 
-    context = {'booth_blocks': booth_information,
-               'available_troops': None,
-               'permission_level': permission_level,
-               'page_title': "Enable Booths by Block",
-               'reserve_or_enable_booths': "enable"}
+    context = {
+        "booth_blocks": booth_information,
+        "available_troops": None,
+        "permission_level": permission_level,
+        "page_title": "Enable Booths by Block",
+        "reserve_or_enable_booths": "enable",
+    }
 
-    return render(request, 'cookie_booths/booth_blocks.html', context)
+    return render(request, "cookie_booths/booth_blocks.html", context)
 
 
 @login_required
 def ajax_enable_location_by_block(request, block_id):
     is_success = False
-    if request.method == 'POST':
+    if request.method == "POST":
         block_to_enable = BoothBlock.objects.get(id=block_id)
-        if request.user.has_perm('cookie_booths.toggle_day'):
+        if request.user.has_perm("cookie_booths.toggle_day"):
             is_success = block_to_enable.enable_block()
 
     return HttpResponse(is_success)
@@ -136,33 +143,34 @@ def ajax_enable_location_by_block(request, block_id):
 @login_required
 def ajax_disable_location_by_block(request, block_id):
     is_success = False
-    if request.method == 'POST':
+    if request.method == "POST":
         block_to_enable = BoothBlock.objects.get(id=block_id)
-        if request.user.has_perm('cookie_booths.toggle_day'):
+        if request.user.has_perm("cookie_booths.toggle_day"):
             is_success = block_to_enable.disable_block()
 
     return HttpResponse(is_success)
 
 
 @login_required
-@permission_required('cookie_booths.toggle_day', raise_exception=True)
+@permission_required("cookie_booths.toggle_day", raise_exception=True)
 def enable_or_disable_day(request):
-    booth_days = BoothDay.objects.order_by('booth', 'booth_day_date')
+    booth_days = BoothDay.objects.order_by("booth", "booth_day_date")
 
-    context = {'booth_days': booth_days,
-               'page_title': "Enable/Disable Booth Days",
-               }
+    context = {
+        "booth_days": booth_days,
+        "page_title": "Enable/Disable Booth Days",
+    }
 
-    return render(request, 'cookie_booths/enable_blocks.html', context)
+    return render(request, "cookie_booths/enable_blocks.html", context)
 
 
 @login_required
 def enable_location_by_day(request):
     # Enable all dates for a particular booth up to and including a particular date
-    if request.method == 'POST':
-        booth_id = request.POST['booth_id']
+    if request.method == "POST":
+        booth_id = request.POST["booth_id"]
         booth_day = BoothDay.objects.get(id=booth_id)
-        if request.user.has_perm('cookie_booths.toggle_day'):
+        if request.user.has_perm("cookie_booths.toggle_day"):
             booth_day.enable_day()
 
     return HttpResponse()
@@ -171,10 +179,10 @@ def enable_location_by_day(request):
 @login_required
 def disable_location_by_day(request):
     # Disable all dates for a particular booth up to and including a particular date
-    if request.method == 'POST':
-        booth_id = request.POST['booth_id']
+    if request.method == "POST":
+        booth_id = request.POST["booth_id"]
         booth_day = BoothDay.objects.get(id=booth_id)
-        if request.user.has_perm('cookie_booths.toggle_day'):
+        if request.user.has_perm("cookie_booths.toggle_day"):
             booth_day.disable_day()
 
     return HttpResponse()
@@ -184,7 +192,9 @@ def disable_location_by_day(request):
 def enable_location_ffa(request, booth_id, date):
     # Enable free-for-all for a particular booth up to and including a particular date.
     # Will also enable dates up until that day if not already
-    for booth_day in BoothDay.objects.filter(booth_id=booth_id, booth_day_date__lte=date):
+    for booth_day in BoothDay.objects.filter(
+        booth_id=booth_id, booth_day_date__lte=date
+    ):
         booth_day.enable_freeforall()
 
     return
@@ -200,15 +210,15 @@ def enable_all_locations_ffa(request):
     # Enable free-for-all for all locations up to and including a particular date.
     # Will also enable those dates if not already
     """Create a new booth location"""
-    if request.method != 'POST':
+    if request.method != "POST":
         # No data submitted; create a blank form.
         form = EnableFreeForAll()
     else:
         # POST data submitted; process data.
         form = EnableFreeForAll(data=request.POST)
         if form.is_valid():
-            start_date = datetime.strptime(request.POST['start_date'], '%m/%d/%Y')
-            end_date = datetime.strptime(request.POST['end_date'], '%m/%d/%Y')
+            start_date = datetime.strptime(request.POST["start_date"], "%m/%d/%Y")
+            end_date = datetime.strptime(request.POST["end_date"], "%m/%d/%Y")
             for date_ in daterange(start_date, end_date):
                 for booth_day in BoothDay.objects.filter(booth_day_date=date_):
                     booth_day.enable_freeforall()
@@ -216,9 +226,9 @@ def enable_all_locations_ffa(request):
             return HttpResponse("Complete")
 
     # Display a blank or invalid form.
-    context = {'form': form}
+    context = {"form": form}
 
-    return render(request, 'cookie_booths/free_for_all.html', context)
+    return render(request, "cookie_booths/free_for_all.html", context)
 
 
 # -----------------------------------------------------------------------
@@ -229,9 +239,11 @@ def enable_all_locations_ffa(request):
 @login_required
 def booth_blocks(request):
     """Display all booths"""
-    booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
+    booth_blocks_ = BoothBlock.objects.order_by(
+        "booth_day__booth", "booth_day", "booth_block_start_time"
+    )
     booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
-    available_troops = Troop.objects.order_by('troop_number')
+    available_troops = Troop.objects.order_by("troop_number")
     username = request.user.username
     booth_information = []
 
@@ -248,37 +260,45 @@ def booth_blocks(request):
                 booth_owned_by_current_user_ = True
             else:
                 booth_owned_by_current_user_ = False
-        current_booth_information = {'booth_block_information': booth,
-                                     'booth_owned_by_current_user': booth_owned_by_current_user_}
+        current_booth_information = {
+            "booth_block_information": booth,
+            "booth_owned_by_current_user": booth_owned_by_current_user_,
+        }
         booth_information.append(current_booth_information)
 
     permission_level = "none"
-    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+    if request.user.has_perm("cookie_booths.block_reservation_admin"):
         permission_level = "admin"
-    elif request.user.has_perm('cookie_booths.block_reservation'):
+    elif request.user.has_perm("cookie_booths.block_reservation"):
         permission_level = "tcc"
 
-    context = {'booth_blocks': booth_information,
-               'available_troops': available_troops,
-               'permission_level': permission_level,
-               'page_title': "Make Booth Reservations",
-               'reserve_or_enable_booths': "reserve"}
-               
-    return render(request, 'cookie_booths/booth_blocks.html', context)
+    context = {
+        "booth_blocks": booth_information,
+        "available_troops": available_troops,
+        "permission_level": permission_level,
+        "page_title": "Make Booth Reservations",
+        "reserve_or_enable_booths": "reserve",
+    }
+
+    return render(request, "cookie_booths/booth_blocks.html", context)
 
 
 @login_required
 def booth_reservations(request):
     """Display all blocks currently reserved by the current user"""
-    booth_blocks_ = BoothBlock.objects.order_by('booth_day__booth', 'booth_day', 'booth_block_start_time')
+    booth_blocks_ = BoothBlock.objects.order_by(
+        "booth_day__booth", "booth_day", "booth_block_start_time"
+    )
     booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
-    available_troops = Troop.objects.order_by('troop_number')
+    available_troops = Troop.objects.order_by("troop_number")
     username = request.user.username
     booth_information = []
 
     try:
         user_troop = Troop.objects.get(troop_cookie_coordinator=username)
-        booth_blocks_ = booth_blocks_.filter(booth_block_current_troop_owner=user_troop.troop_number)
+        booth_blocks_ = booth_blocks_.filter(
+            booth_block_current_troop_owner=user_troop.troop_number
+        )
     except Troop.DoesNotExist:
         user_troop = None
 
@@ -290,23 +310,27 @@ def booth_reservations(request):
                 booth_owned_by_current_user_ = True
             else:
                 booth_owned_by_current_user_ = False
-        current_booth_information = {'booth_block_information': booth,
-                                     'booth_owned_by_current_user': booth_owned_by_current_user_}
+        current_booth_information = {
+            "booth_block_information": booth,
+            "booth_owned_by_current_user": booth_owned_by_current_user_,
+        }
         booth_information.append(current_booth_information)
 
     permission_level = "none"
-    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+    if request.user.has_perm("cookie_booths.block_reservation_admin"):
         permission_level = "admin"
-    elif request.user.has_perm('cookie_booths.block_reservation'):
+    elif request.user.has_perm("cookie_booths.block_reservation"):
         permission_level = "tcc"
 
-    context = {'booth_blocks': booth_information,
-               'available_troops': available_troops,
-               'permission_level': permission_level,
-               'page_title': "Manage Your Booth Reservations",
-               'reserve_or_enable_booths': "reserve"}
+    context = {
+        "booth_blocks": booth_information,
+        "available_troops": available_troops,
+        "permission_level": permission_level,
+        "page_title": "Manage Your Booth Reservations",
+        "reserve_or_enable_booths": "reserve",
+    }
 
-    return render(request, 'cookie_booths/booth_blocks.html', context)
+    return render(request, "cookie_booths/booth_blocks.html", context)
 
 
 @login_required
@@ -355,19 +379,27 @@ def get_num_tickets_remaining(troop, date):
     golden_ticket_booth_count = 0
     # We're filtering by Blocks that are owned by this troop, and are associated with a BoothDay which falls into
     # the range of [start_date, end_date] inclusive
-    for block in BoothBlock.objects.filter(booth_block_reserved=True,
-                                           booth_block_current_troop_owner=troop.troop_number,
-                                           booth_day__booth_day_date__gte=start_date,
-                                           booth_day__booth_day_date__lte=end_date):
+    for block in BoothBlock.objects.filter(
+        booth_block_reserved=True,
+        booth_block_current_troop_owner=troop.troop_number,
+        booth_day__booth_day_date__gte=start_date,
+        booth_day__booth_day_date__lte=end_date,
+    ):
         if block.booth_day.booth_day_is_golden:
             golden_ticket_booth_count += 1
 
         total_booth_count += 1
 
-    rem = 0 if (total_booth_count > troop.total_booth_tickets_per_week) else \
-        (troop.total_booth_tickets_per_week - total_booth_count)
-    rem_golden_ticket = 0 if (golden_ticket_booth_count > troop.booth_golden_tickets_per_week) else \
-        (troop.booth_golden_tickets_per_week - golden_ticket_booth_count)
+    rem = (
+        0
+        if (total_booth_count > troop.total_booth_tickets_per_week)
+        else (troop.total_booth_tickets_per_week - total_booth_count)
+    )
+    rem_golden_ticket = (
+        0
+        if (golden_ticket_booth_count > troop.booth_golden_tickets_per_week)
+        else (troop.booth_golden_tickets_per_week - golden_ticket_booth_count)
+    )
 
     return rem, rem_golden_ticket
 
@@ -384,30 +416,32 @@ def reserve_block(request, block_id):
     block_to_reserve = BoothBlock.objects.get(id=block_id)
     troop = None
 
-    if request.method == 'POST':
-        if request.user.has_perm('cookie_booths.block_reservation_admin'):
+    if request.method == "POST":
+        if request.user.has_perm("cookie_booths.block_reservation_admin"):
             # The user is a SUCM or higher; we require a troop # from them for reservation
-            troop_trying_to_reserve = request.POST['troop_number']
-            if troop_trying_to_reserve == '':
+            troop_trying_to_reserve = request.POST["troop_number"]
+            if troop_trying_to_reserve == "":
                 message_response = {
-                    'message': "Please select a troop",
-                    'is_success': False,
+                    "message": "Please select a troop",
+                    "is_success": False,
                 }
                 message_response = json.dumps(message_response)
                 return HttpResponse(message_response)
 
             troop = Troop.objects.get(troop_number=troop_trying_to_reserve)
             troop_trying_to_reserve_level = troop.troop_level
-            rem_tickets, rem_golden_tickets = get_num_tickets_remaining(troop,
-                                                                        block_to_reserve.booth_day.booth_day_date)
+            rem_tickets, rem_golden_tickets = get_num_tickets_remaining(
+                troop, block_to_reserve.booth_day.booth_day_date
+            )
 
-        elif request.user.has_perm('cookie_booths.block_reservation'):
+        elif request.user.has_perm("cookie_booths.block_reservation"):
             # The user is a TCC; the user's troop # is used for reservation
             troop = Troop.objects.get(troop_cookie_coordinator=username)
             troop_trying_to_reserve = troop.troop_number
             troop_trying_to_reserve_level = troop.troop_level
-            rem_tickets, rem_golden_tickets = get_num_tickets_remaining(troop,
-                                                                        block_to_reserve.booth_day.booth_day_date)
+            rem_tickets, rem_golden_tickets = get_num_tickets_remaining(
+                troop, block_to_reserve.booth_day.booth_day_date
+            )
         else:
             # The user does not have the permissions to reserve a block
             # This should never occur, but adding this in the case something horribly goes wrong.
@@ -417,16 +451,16 @@ def reserve_block(request, block_id):
         tickets_remain = True
         if rem_tickets == 0:
             message_response = {
-                'message': "No remaining tickets for this week",
-                'is_success': False,
+                "message": "No remaining tickets for this week",
+                "is_success": False,
             }
             tickets_remain = False
 
         # Tickets may remain, but check to see if they may have a golden booth.
         if block_to_reserve.booth_day.booth_day_is_golden and rem_golden_tickets == 0:
             message_response = {
-                'message': "No remaining golden tickets for this week",
-                'is_success': False,
+                "message": "No remaining golden tickets for this week",
+                "is_success": False,
             }
             tickets_remain = False
 
@@ -440,62 +474,88 @@ def reserve_block(request, block_id):
             return HttpResponse(message_response)
 
         # Check if the troop is a valid troop level
-        booth_restrictions_start = block_to_reserve.booth_day.booth.booth_block_level_restrictions_start
-        booth_restrictions_end = block_to_reserve.booth_day.booth.booth_block_level_restrictions_end
+        booth_restrictions_start = (
+            block_to_reserve.booth_day.booth.booth_block_level_restrictions_start
+        )
+        booth_restrictions_end = (
+            block_to_reserve.booth_day.booth.booth_block_level_restrictions_end
+        )
 
         if booth_restrictions_start == 0:
             level_in_range = True
         else:
-            level_in_range = troop_trying_to_reserve_level in \
-                             range(booth_restrictions_start, booth_restrictions_end + 1)
+            level_in_range = troop_trying_to_reserve_level in range(
+                booth_restrictions_start, booth_restrictions_end + 1
+            )
 
         # Check to see if the user is a cookie captain
         cookie_captain_id = settings.NO_COOKIE_CAPTAIN_ID
-        if request.user.has_perm('cookie_booths.cookie_captain_reserve_block'):
+        if request.user.has_perm("cookie_booths.cookie_captain_reserve_block"):
             cookie_captain_id = request.user.id
 
         if level_in_range:
-            if block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve,
-                                              cookie_cap_id=cookie_captain_id):
+            if block_to_reserve.reserve_block(
+                troop_id=troop_trying_to_reserve, cookie_cap_id=cookie_captain_id
+            ):
                 # Successfully reserved the booth
                 successful = True
                 message_response = {
-                    'message': "Successfully reserved booth",
-                    'is_success': True,
+                    "message": "Successfully reserved booth",
+                    "is_success": True,
                 }
             else:
                 message_response = {
-                    'message': "Failed to reserve booth",
-                    'is_success': False,
+                    "message": "Failed to reserve booth",
+                    "is_success": False,
                 }
         else:
             message_response = {
-                'message': "Booth has troop level restriction",
-                'is_success': False,
+                "message": "Booth has troop level restriction",
+                "is_success": False,
             }
     else:
         message_response = {
-            'message': "An unknown error occurred",
-            'is_success': False,
+            "message": "An unknown error occurred",
+            "is_success": False,
         }
 
     # In the case this block has been reserved for a daisy troop, the TCC needs to be notified
-    new_block_owner = 'test@test.com'
+    new_block_owner = "test@test.com"
     if successful and new_block_owner and troop.troop_level == 1:
         # First we should see if we were actually able to get an email we're sending to.
         # TODO: This should be a template
         title = "Booth Reservation Confirmed"
-        message = "Hello " + new_block_owner + ",\n" + \
-                  "The following reservation has been made for Daisy Troop #" + troop.troop_number.__str__() + ":\n\n" + \
-                  "Location: " + block_to_reserve.booth_day.booth.booth_location + "\n" + \
-                  "Address: " + block_to_reserve.booth_day.booth.booth_address + "\n" + \
-                  "Date: " + block_to_reserve.booth_day.booth_day_date.strftime("%A, %B %d, %Y") + "\n" + \
-                  "Time Block: " + block_to_reserve.booth_block_start_time.strftime( "%I:%M %p") + \
-                  " - " + block_to_reserve.booth_block_end_time.strftime("%I:%M %p") + "\n\n\n" + \
-                  "NOTE: Please do not reply to this email directly, this email address is not monitored. Please " \
-                  "reach out to an administrator with any further questions. "
+        message = (
+            "Hello "
+            + new_block_owner
+            + ",\n"
+            + "The following reservation has been made for Daisy Troop #"
+            + troop.troop_number.__str__()
+            + ":\n\n"
+            + "Location: "
+            + block_to_reserve.booth_day.booth.booth_location
+            + "\n"
+            + "Address: "
+            + block_to_reserve.booth_day.booth.booth_address
+            + "\n"
+            + "Date: "
+            + block_to_reserve.booth_day.booth_day_date.strftime("%A, %B %d, %Y")
+            + "\n"
+            + "Time Block: "
+            + block_to_reserve.booth_block_start_time.strftime("%I:%M %p")
+            + " - "
+            + block_to_reserve.booth_block_end_time.strftime("%I:%M %p")
+            + "\n\n\n"
+            + "NOTE: Please do not reply to this email directly, this email address is not monitored. Please "
+            "reach out to an administrator with any further questions. "
+        )
 
-        send_mail(title, message, from_email=settings.EMAIL_HOST_USER, recipient_list=[new_block_owner.email])
+        send_mail(
+            title,
+            message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[new_block_owner.email],
+        )
 
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
@@ -505,18 +565,21 @@ def reserve_block(request, block_id):
 def cancel_block(request, block_id):
     username = request.user.username
 
-    if request.method == 'POST':
+    if request.method == "POST":
         block_to_cancel = BoothBlock.objects.get(id=block_id)
-        if request.user.has_perm('cookie_booths.block_reservation_admin'):
+        if request.user.has_perm("cookie_booths.block_reservation_admin"):
             # The user is a SUCM or higher they can do this unconditionally
             pass
-        elif request.user.has_perm('cookie_booths.block_reservation'):
+        elif request.user.has_perm("cookie_booths.block_reservation"):
             # The user is a TCC; the user's troop # is used to check if they can cancel
             troop_trying_to_cancel = None  # Troop.objects.get(troop_cookie_coordinator=username).troop_number
-            if troop_trying_to_cancel != block_to_cancel.booth_block_current_troop_owner:
+            if (
+                troop_trying_to_cancel
+                != block_to_cancel.booth_block_current_troop_owner
+            ):
                 message_response = {
-                    'message': "You cannot cancel a reservation for another troop",
-                    'is_success': False,
+                    "message": "You cannot cancel a reservation for another troop",
+                    "is_success": False,
                 }
                 message_response = json.dumps(message_response)
                 return HttpResponse(message_response)
@@ -524,8 +587,8 @@ def cancel_block(request, block_id):
             # The user does not have the permissions to reserve a block
             # This should never occur, but adding this in the case something horribly goes wrong.
             message_response = {
-                'message': "An unknown error occurred",
-                'is_success': False,
+                "message": "An unknown error occurred",
+                "is_success": False,
             }
             message_response = json.dumps(message_response)
             return HttpResponse(message_response)
@@ -533,57 +596,61 @@ def cancel_block(request, block_id):
         if block_to_cancel.cancel_block():
             # Successfully reserved the booth
             message_response = {
-                'message': "Successfully cancelled reserved booth",
-                'is_success': True,
+                "message": "Successfully cancelled reserved booth",
+                "is_success": True,
             }
         else:
             message_response = {
-                'message': "Failed to cancel reserved booth",
-                'is_success': False,
+                "message": "Failed to cancel reserved booth",
+                "is_success": False,
             }
     else:
         message_response = {
-            'message': "An unknown error occurred",
-            'is_success': False,
+            "message": "An unknown error occurred",
+            "is_success": False,
         }
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
 
+
 @login_required
 def hold_block_for_cookie_captain(request, block_id):
     # Only admins have the ability to do this
-    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+    if request.user.has_perm("cookie_booths.block_reservation_admin"):
         block_to_hold = BoothBlock.objects.get(id=block_id)
 
         # A few things to validate in regards to the booth itself:
         # 1. It should not have an existing reservation on it
         # 2. It should not already be held by another cookie captain
-        if not block_to_hold.booth_block_held_for_cookie_captains and \
-           not block_to_hold.booth_block_reserved:
+        if (
+            not block_to_hold.booth_block_held_for_cookie_captains
+            and not block_to_hold.booth_block_reserved
+        ):
 
             block_to_hold.hold_for_cookie_captains()
             message_response = {
-                'message': "Successfully held booth for cookie captains",
-                'is_success': True,
+                "message": "Successfully held booth for cookie captains",
+                "is_success": True,
             }
         else:
             message_response = {
-                'message': "Block is already reserved or being held for cookie captains",
-                'is_success': False,
+                "message": "Block is already reserved or being held for cookie captains",
+                "is_success": False,
             }
     else:
         message_response = {
-            'message': "You do not have permissions to hold booths",
-            'is_success': False,
+            "message": "You do not have permissions to hold booths",
+            "is_success": False,
         }
 
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
 
+
 @login_required
 def cancel_hold_for_cookie_captain(request, block_id):
     # Only admins have the ability to do this
-    if request.user.has_perm('cookie_booths.block_reservation_admin'):
+    if request.user.has_perm("cookie_booths.block_reservation_admin"):
         block_to_unhold = BoothBlock.objects.get(id=block_id)
 
         # We should validate that the booth is not currently being held
@@ -591,18 +658,18 @@ def cancel_hold_for_cookie_captain(request, block_id):
 
             block_to_unhold.unhold_for_cookie_captains()
             message_response = {
-                'message': "Successfully unheld booth for cookie captains",
-                'is_success': True,
+                "message": "Successfully unheld booth for cookie captains",
+                "is_success": True,
             }
         else:
             message_response = {
-                'message': "Block is not currently held for cookie captains",
-                'is_success': False,
+                "message": "Block is not currently held for cookie captains",
+                "is_success": False,
             }
     else:
         message_response = {
-            'message': "You do not have permissions to unhold booths",
-            'is_success': False,
+            "message": "You do not have permissions to unhold booths",
+            "is_success": False,
         }
 
     message_response = json.dumps(message_response)
