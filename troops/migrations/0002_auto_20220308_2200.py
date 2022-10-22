@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('troops', '0001_initial'),
+        ("troops", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='troop',
-            name='super_troop',
+            model_name="troop",
+            name="super_troop",
         ),
         migrations.AddField(
-            model_name='troop',
-            name='troop_size',
+            model_name="troop",
+            name="troop_size",
             field=models.SmallIntegerField(default=0),
         ),
     ]

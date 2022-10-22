@@ -6,21 +6,35 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('cookie_booths', '0002_alter_boothblock_booth_block_current_troop_owner'),
+        ("cookie_booths", "0002_alter_boothblock_booth_block_current_troop_owner"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='boothblock',
-            options={'permissions': (('cancel_block', 'Cancel a booth'), ('reserve_block', 'Reserve a booth'), ('cookie_captain_reserve_block', 'Reserve a block for a daisy scout'), ('cancel_block_admin', 'Administrator cancel any booth'), ('reserve_block_admin', 'Administrator reserve any booth'))},
+            name="boothblock",
+            options={
+                "permissions": (
+                    ("cancel_block", "Cancel a booth"),
+                    ("reserve_block", "Reserve a booth"),
+                    (
+                        "cookie_captain_reserve_block",
+                        "Reserve a block for a daisy scout",
+                    ),
+                    ("cancel_block_admin", "Administrator cancel any booth"),
+                    ("reserve_block_admin", "Administrator reserve any booth"),
+                )
+            },
         ),
         migrations.AlterModelOptions(
-            name='boothlocation',
-            options={'verbose_name': 'booth location', 'verbose_name_plural': 'booth locations'},
+            name="boothlocation",
+            options={
+                "verbose_name": "booth location",
+                "verbose_name_plural": "booth locations",
+            },
         ),
         migrations.AddField(
-            model_name='boothblock',
-            name='booth_block_current_cookie_captain_owner',
+            model_name="boothblock",
+            name="booth_block_current_cookie_captain_owner",
             field=models.IntegerField(default=0),
         ),
     ]
