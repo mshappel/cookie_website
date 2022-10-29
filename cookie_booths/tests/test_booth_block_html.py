@@ -27,6 +27,12 @@ class BoothBlockHtmlTestCase(TestCase):
         "password": "secret",
     }
 
+    DAISY_USER = {
+        "username": "nevergonna@run.around",
+        "email": "nevergonna@run.around",
+        "password": "secret",
+    }
+
     SAME_TROOP_DETAILS = {
         "number": 300,
         "same_tcc": "nevergonna@giveyou.up",
@@ -38,6 +44,13 @@ class BoothBlockHtmlTestCase(TestCase):
         "number": 301,
         "diff_tcc": "nevergonna@letyou.down",
         "level": 2,
+        "troop_size": 3,
+    }
+
+    DAISY_TROOP_DETAILS = {
+        "number": 302,
+        "daisy_tcc": "nevergonna@run.around",
+        "level": 1,
         "troop_size": 3,
     }
 
@@ -56,6 +69,12 @@ class BoothBlockHtmlTestCase(TestCase):
             password=cls.NORMAL_USER["password"],
         )
 
+        cls.daisy_user = get_user_model().objects.create_user(
+            username=cls.DAISY_USER["username"],
+            email=cls.DAISY_USER["email"],
+            password=cls.DAISY_USER["password"]
+        )
+
         cls.same_troop = Troop.objects.create(
             troop_number=cls.SAME_TROOP_DETAILS["number"],
             troop_cookie_coordinator=cls.SAME_TROOP_DETAILS["same_tcc"],
@@ -68,6 +87,13 @@ class BoothBlockHtmlTestCase(TestCase):
             troop_cookie_coordinator=cls.DIFF_TROOP_DETAILS["diff_tcc"],
             troop_level=cls.DIFF_TROOP_DETAILS["level"],
             troop_size=cls.DIFF_TROOP_DETAILS["troop_size"],
+        )
+
+        cls.daisy_troop = Troop.objects.create(
+            troop_number=cls.DAISY_TROOP_DETAILS["number"],
+            troop_cookie_coordinator=cls.DAISY_TROOP_DETAILS["daisy_tcc"],
+            troop_level=cls.DAISY_TROOP_DETAILS["level"],
+            troop_size=cls.DAISY_TROOP_DETAILS["troop_size"]
         )
 
         cls.location = BoothLocation.objects.create(
@@ -276,6 +302,115 @@ class BoothBlockHtmlTestCase(TestCase):
         self.assertContains(
             response, "Cancel Booth And Cancel Hold for Cookie Captains"
         )
+
+    def test_booth_blocks_html_cc_see_normal_blocks(self):
+        # Testing that a Cookie Captain will still be able to see/select booths not specifically being held
+        # for them
+        self._add_permissions(PERMISSION_RESERVE_BOOTH)
+        self._add_permissions(PERMISSION_COOKIE_CAPTAIN_RESERVE_BOOTH)
+
+        self.client.login(
+            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+        )
+        response = self.client.get(reverse("cookie_booths:booth_blocks"))
+
+        # Is the correct data displayed?
+        # - We should have a block listed
+        # - We should see the block details (location, date, times)
+        # - We should see a reservation button
+        self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
+        self.assertContains(response, self.BOOTH_DETAILS["booth_location"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_date"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_time"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
+        self.assertContains(response, "Reserve Booth")
+
+    def test_booth_blocks_html_cc_see_blocks_held_for_cc(self):
+        # Testing that a Cookie Captain will be able to see blocks held just for them to reserve
+        self._add_permissions(PERMISSION_RESERVE_BOOTH)
+        self._add_permissions(PERMISSION_COOKIE_CAPTAIN_RESERVE_BOOTH)
+
+        # Flag the one booth available as held for cookie captains
+        self.block.booth_block_held_for_cookie_captains = True
+        self.block.save()
+
+        self.client.login(
+            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+        )
+        response = self.client.get(reverse("cookie_booths:booth_blocks"))
+
+        # Is the correct data displayed?
+        # - We should have a block listed
+        # - We should see the block details (location, date, times)
+        # - We should see a reservation button
+        self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
+        self.assertContains(response, self.BOOTH_DETAILS["booth_location"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_date"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_time"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
+        self.assertContains(response, "Reserve Booth")
+
+    def test_booth_blocks_html_user_blocks_held_for_cc_not_visible(self):
+        # Testing that a normal user will not see booths that are held for CCs in their list of blocks
+        self._add_permissions(PERMISSION_RESERVE_BOOTH)
+
+        # Flag the one booth available as held for cookie captains
+        self.block.booth_block_held_for_cookie_captains = True
+        self.block.save()
+
+        self.client.login(
+            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+        )
+        response = self.client.get(reverse("cookie_booths:booth_blocks"))
+
+        # Is the correct data displayed?
+        # - We should see no blocks available for reservation
+        self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_location"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_open_date"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_open_time"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_close_time"])
+
+    def test_booth_blocks_html_daisy_troop_no_booths_available(self):
+        self._add_permissions(PERMISSION_RESERVE_BOOTH)
+
+        self.client.login(
+            username=self.DAISY_USER["username"], password=self.DAISY_USER["password"]
+        )
+        response = self.client.get(reverse("cookie_booths:booth_blocks"))
+
+        # Is the correct data displayed?
+        # - We should see no blocks available for reservation
+        self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_location"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_open_date"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_open_time"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_close_time"])
+
+    def test_booth_blocks_html_daisy_troop_booth_available(self):
+        self._add_permissions(PERMISSION_RESERVE_BOOTH)
+
+        # Flag the one booth available as held for cookie captains, and also reserved by a cookie captain
+        self.block.booth_block_held_for_cookie_captains = True
+        self.block.save()
+        self.block.reserve_block(
+            self.diff_troop.troop_number, self.diff_troop.troop_number
+        )
+
+        self.client.login(
+            username=self.DAISY_USER["username"], password=self.DAISY_USER["password"]
+        )
+        response = self.client.get(reverse("cookie_booths:booth_blocks"))
+
+        # Is the correct data displayed?
+        # - We should have a block listed
+        # - We should see the block details (location, date, times)
+        # - TODO: we should see a button for the daisy troop to reserve the block
+        self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
+        self.assertContains(response, self.BOOTH_DETAILS["booth_location"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_date"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_time"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
 
     # -----------------------------------------------------------------------
     # Internal
