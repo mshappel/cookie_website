@@ -10,6 +10,8 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic.edit import DeleteView
 
+from cookie_website.settings import NO_COOKIE_CAPTAIN_ID
+
 from .forms import BoothLocationForm, BoothHoursForm, EnableFreeForAll
 from .models import BoothLocation, BoothDay, BoothHours, BoothBlock
 from troops.models import Troop
@@ -242,7 +244,6 @@ def booth_blocks(request):
     booth_blocks_ = BoothBlock.objects.order_by(
         "booth_day__booth", "booth_day", "booth_block_start_time"
     )
-    booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
     available_troops = Troop.objects.order_by("troop_number")
     username = request.user.username
     booth_information = []
@@ -251,6 +252,21 @@ def booth_blocks(request):
         user_troop = Troop.objects.get(troop_cookie_coordinator=username)
     except Troop.DoesNotExist:
         user_troop = None
+        
+
+    # Booth filtering step
+    # 1. Disabled Booths should be excluded for everyone
+    booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
+    # 2. If the active user belongs to a Daisy Troop, they should ONLY be able to see booths that are reserved by
+    # Cookie Captains
+    if user_troop.troop_level == 1:
+        booth_blocks_ = booth_blocks_.exclude(booth_block_current_cookie_captain_owner=NO_COOKIE_CAPTAIN_ID)
+    # 3. If the user is a Cookie Captain, they should be able to see booths held just for CCs to reserve
+    # If the user is not a Cookie Captain, they should not be able to see those booths
+    elif not request.user.has_perm('cookie_booths.cookie_captain_reserve_block'):
+        booth_blocks_ = booth_blocks_.exclude(booth_block_held_for_cookie_captains=True)
+        
+
 
     for booth in booth_blocks_:
         if user_troop is None:
