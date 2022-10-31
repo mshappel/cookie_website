@@ -252,27 +252,26 @@ def booth_blocks(request):
         user_troop = Troop.objects.get(troop_cookie_coordinator=username)
     except Troop.DoesNotExist:
         user_troop = None
-        
 
     # Booth filtering step
     # 1. Disabled Booths should be excluded for everyone
     booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
     # 2. If the active user belongs to a Daisy Troop, they should ONLY be able to see booths that are reserved by
     # Cookie Captains
-    if user_troop.troop_level == 1:
+    if user_troop is not None and user_troop.troop_level == 1:
         booth_blocks_ = booth_blocks_.exclude(booth_block_current_cookie_captain_owner=NO_COOKIE_CAPTAIN_ID)
     # 3. If the user is a Cookie Captain, they should be able to see booths held just for CCs to reserve
     # If the user is not a Cookie Captain, they should not be able to see those booths
     elif not request.user.has_perm('cookie_booths.cookie_captain_reserve_block'):
         booth_blocks_ = booth_blocks_.exclude(booth_block_held_for_cookie_captains=True)
-        
 
 
     for booth in booth_blocks_:
         if user_troop is None:
             booth_owned_by_current_user_ = False
         else:
-            if booth.booth_block_current_troop_owner == user_troop.troop_number:
+            if booth.booth_block_current_troop_owner == user_troop.troop_number or \
+               booth.booth_block_daisy_troop_owner == user_troop.troop_number:
                 booth_owned_by_current_user_ = True
             else:
                 booth_owned_by_current_user_ = False
@@ -286,7 +285,10 @@ def booth_blocks(request):
     if request.user.has_perm("cookie_booths.block_reservation_admin"):
         permission_level = "admin"
     elif request.user.has_perm("cookie_booths.block_reservation"):
-        permission_level = "tcc"
+        if user_troop is not None and user_troop.troop_level==1:
+            permission_level = "daisy"
+        else:
+            permission_level = "tcc"
 
     context = {
         "booth_blocks": booth_information,
@@ -336,7 +338,10 @@ def booth_reservations(request):
     if request.user.has_perm("cookie_booths.block_reservation_admin"):
         permission_level = "admin"
     elif request.user.has_perm("cookie_booths.block_reservation"):
-        permission_level = "tcc"
+        if user_troop is not None and user_troop.troop_level==1:
+            permission_level = "daisy"
+        else:
+            permission_level = "tcc"
 
     context = {
         "booth_blocks": booth_information,
@@ -578,6 +583,18 @@ def reserve_block(request, block_id):
 
 
 @login_required
+def reserve_daisy_block(request, block_id):
+    # TODO
+    print("reserve daisy block")
+    message_response = {
+        "message": "Successfully reserved booth",
+        "is_success": True,
+    }
+
+    message_response = json.dumps(message_response)
+    return HttpResponse(message_response)
+
+@login_required
 def cancel_block(request, block_id):
     username = request.user.username
 
@@ -628,6 +645,18 @@ def cancel_block(request, block_id):
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
 
+
+@login_required
+def cancel_daisy_block(request, block_id):
+    # TODO
+
+    message_response = {
+        "message": "Successfully reserved booth",
+        "is_success": True,
+    }
+
+    message_response = json.dumps(message_response)
+    return HttpResponse(message_response)
 
 @login_required
 def hold_block_for_cookie_captain(request, block_id):
