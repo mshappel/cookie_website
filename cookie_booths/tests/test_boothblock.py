@@ -6,6 +6,7 @@ from cookie_booths.models import BoothLocation, BoothDay, BoothBlock
 
 TROOP_NUM_1 = 41001
 TROOP_NUM_2 = 312
+TROOP_NUM_3 = 309
 TROOP_NUM_1_COOKIE_CAP_ID = 1
 TROOP_NUM_2_COOKIE_CAP_ID = 2
 
@@ -83,6 +84,79 @@ class BoothBlockTestCase(TestCase):
         self.assertEqual(self.block.booth_block_current_troop_owner, 0)
         self.assertEqual(self.block.booth_block_current_cookie_captain_owner, 0)
         self.assertFalse(self.block.booth_block_reserved)
+
+    def test_block_daisy_reservation_disabled(self):
+        # Verify that a daisy block reservation fails when the block is disabled
+        self.assertFalse(self.block.reserve_daisy_block(TROOP_NUM_1))
+        self.assertFalse(self.block.booth_block_daisy_reserved)
+        self.assertEqual(self.block.booth_block_daisy_troop_owner, 0)
+
+    def test_block_daisy_reservation_no_cc(self):
+        # Verify that a daisy block reservation fails when the primary owner is not a cookie captain
+        self._enable_and_reserve_booth_block(TROOP_NUM_1, settings.NO_COOKIE_CAPTAIN_ID)
+        self.assertFalse(self.block.reserve_daisy_block(TROOP_NUM_1))
+        self.assertFalse(self.block.booth_block_daisy_reserved)
+        self.assertEqual(self.block.booth_block_daisy_troop_owner, 0)
+
+    def test_block_daisy_reservation_success(self):
+        # Verify that a daisy block reservation is successful
+        self._enable_and_reserve_booth_block(TROOP_NUM_1, TROOP_NUM_1_COOKIE_CAP_ID)
+        self.assertTrue(self.block.reserve_daisy_block(TROOP_NUM_2))
+        self.assertTrue(self.block.booth_block_daisy_reserved)
+        self.assertEqual(self.block.booth_block_daisy_troop_owner, TROOP_NUM_2)
+
+    def test_block_daisy_reservation_already_reserved(self):
+        # Verify that a daisy block reservation fails when already reserved by another daisy troop
+        self._enable_and_reserve_booth_block(TROOP_NUM_1, TROOP_NUM_1_COOKIE_CAP_ID)
+        self.assertTrue(self.block.reserve_daisy_block(TROOP_NUM_2))
+        self.assertFalse(self.block.reserve_daisy_block(TROOP_NUM_3))
+        self.assertTrue(self.block.booth_block_daisy_reserved)
+        self.assertEqual(self.block.booth_block_daisy_troop_owner, TROOP_NUM_2)
+
+    def test_block_daisy_cancellation_disabled(self):
+        # Verify that a daisy block reservation cancellation fails when the block is disabled
+        self.assertFalse(self.block.cancel_daisy_reservation())
+
+    def test_block_daisy_cancellation_not_reserved(self):
+        # Verify that a daisy block reservation cancellation fails when there is no primary owner of the block
+        self.block.enable_block()
+        self.block.save()
+
+        self.assertFalse(self.block.cancel_daisy_reservation())
+
+    def test_block_daisy_cancellation_not_daisy_reserved(self):
+        # Verify that a daisy block reservation cancellation fails when a daisy troop is not currently reserving it
+        self._enable_and_reserve_booth_block(TROOP_NUM_1, TROOP_NUM_1_COOKIE_CAP_ID)
+        self.assertFalse(self.block.cancel_daisy_reservation())
+
+    def test_block_daisy_cancellation_success(self):
+        # Verify that a daisy block reservation cancellation is successful
+        self._enable_and_reserve_booth_block(TROOP_NUM_1, TROOP_NUM_1_COOKIE_CAP_ID)
+        self.assertTrue(self.block.reserve_daisy_block(TROOP_NUM_2))
+        self.assertTrue(self.block.cancel_daisy_reservation())
+        self.assertFalse(self.block.booth_block_daisy_reserved)
+        self.assertEqual(self.block.booth_block_daisy_troop_owner, 0)
+
+    def test_block_cancellation_disabled(self):
+        # Verify that a booth block cancellation fails when the block is disabled
+        self.assertFalse(self.block.cancel_block())
+
+    def test_block_cancellation_not_reserved(self):
+        # Verify that a booth block cancellation fails when the block is not currently reserved
+        self.block.enable_block()
+        self.block.save()
+
+        self.assertFalse(self.block.cancel_block())
+
+    def test_block_cancellation_success(self):
+        # Verify that a booth block reservation cancellation is successful
+        self._enable_and_reserve_booth_block(TROOP_NUM_1, TROOP_NUM_1_COOKIE_CAP_ID)
+        self.assertTrue(self.block.reserve_daisy_block(TROOP_NUM_2))
+        self.assertTrue(self.block.cancel_block())
+        self.assertFalse(self.block.booth_block_reserved)
+        self.assertEqual(self.block.booth_block_current_troop_owner, 0)
+        self.assertFalse(self.block.booth_block_daisy_reserved)
+        self.assertEqual(self.block.booth_block_daisy_troop_owner, 0)
 
     def _enable_and_reserve_booth_block(
         self, TROOP_NUM: int, COOKIE_CAP_ID: int

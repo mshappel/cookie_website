@@ -459,6 +459,9 @@ class BoothBlock(models.Model):
     booth_block_current_cookie_captain_owner = models.IntegerField(default=0)
     booth_block_reserved = models.BooleanField(default=False)
 
+    booth_block_daisy_troop_owner = models.IntegerField(default=0)
+    booth_block_daisy_reserved = models.BooleanField(default=False)
+
     booth_block_enabled = models.BooleanField(default=False)
     booth_block_freeforall_enabled = models.BooleanField(default=False)
 
@@ -488,8 +491,10 @@ class BoothBlock(models.Model):
         self.booth_block_reserved = False
         self.booth_block_current_troop_owner = 0
         self.booth_block_current_cookie_captain_owner = 0
+        self.booth_block_daisy_reserved = False
+        self.booth_block_daisy_troop_owner = 0
 
-        # TODO: Send email confirmation
+        # TODO: Send email confirmation to both the main owner, as well as the daisy troop owner if affected
 
         self.save()
 
@@ -511,6 +516,52 @@ class BoothBlock(models.Model):
 
         # TODO: Send email confirmation
 
+        self.save()
+        return True
+
+    def cancel_daisy_reservation(self):
+        # If this block is not enabled, no cancellation can be made
+        if not self.booth_block_enabled:
+            return False
+
+        # If this block is not reserved, we cannot cancel the block
+        if self.booth_block_reserved:
+            pass
+        else:
+            return False
+
+        # If this block is also not currently reserved by a daisy troop, we cannot cancel it either
+        if self.booth_block_daisy_reserved:
+            pass
+        else:
+            return False
+
+        # At this point we should be able to safely cancel the reservation
+        self.booth_block_daisy_reserved = False
+        self.booth_block_daisy_troop_owner = 0
+
+        # TODO: send email confirmation
+        self.save()
+        return True
+
+    def reserve_daisy_block(self, daisy_troop_id):
+        # If this block is not enabled, no reservation can be made
+        if not self.booth_block_enabled:
+            return False
+
+        # If this block is already reserved by another daisy troop, we cannot reserve it.
+        if self.booth_block_daisy_reserved:
+            return False
+
+        # If the primary owner of this booth is not a cookie captain, we cannot reserve it.
+        if self.booth_block_current_cookie_captain_owner == 0:
+            return False
+
+        # At this point, we should be safe to reserve
+        self.booth_block_daisy_reserved = True
+        self.booth_block_daisy_troop_owner = daisy_troop_id 
+
+        # TODO: send email confirmation
         self.save()
         return True
 
