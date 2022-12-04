@@ -32,11 +32,23 @@ urlpatterns = [
         views.reserve_block,
         name="block_reservation",
     ),
+    # Make Daisy Booth Reservation
+    path(
+        "blocks/reservations/daisy/<int:block_id>",
+        views.reserve_daisy_block,
+        name="daisy_block_reservation",
+    ),
     # Cancel Booth Reservation
     path(
         "blocks/reservations/cancel/<int:block_id>",
         views.cancel_block,
         name="block_cancellation",
+    ),
+    # Cancel Daisy Booth Reservation
+    path(
+        "blocks/reservations/daisy/cancel/<int:block_id>",
+        views.cancel_daisy_block,
+        name="daisy_block_cancellation",
     ),
     # Hold Booth For Cookie Captains
     path(
