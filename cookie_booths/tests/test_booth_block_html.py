@@ -22,13 +22,11 @@ class BoothBlockHtmlTestCase(TestCase):
     TEST_CLOSE_TIME = make_aware(datetime.datetime(2021, 10, 22, 10, 0, 0, 0))
 
     NORMAL_USER = {
-        "username": "nevergonna@giveyou.up",
         "email": "nevergonna@giveyou.up",
         "password": "secret",
     }
 
     DAISY_USER = {
-        "username": "nevergonna@run.around",
         "email": "nevergonna@run.around",
         "password": "secret",
     }
@@ -64,13 +62,11 @@ class BoothBlockHtmlTestCase(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         cls.normal_user = get_user_model().objects.create_user(
-            username=cls.NORMAL_USER["username"],
             email=cls.NORMAL_USER["email"],
             password=cls.NORMAL_USER["password"],
         )
 
         cls.daisy_user = get_user_model().objects.create_user(
-            username=cls.DAISY_USER["username"],
             email=cls.DAISY_USER["email"],
             password=cls.DAISY_USER["password"]
         )
@@ -113,14 +109,14 @@ class BoothBlockHtmlTestCase(TestCase):
     def test_url_exists_at_correct_location_booth_blocks(self):
         # Validate that we can access the booth blocks page. We only test log-in case, since django handles the non-login
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get("/booths/blocks/")
         self.assertEqual(response.status_code, 200)
 
     def test_booth_blocks_html_displays_correctly_without_permissions(self):
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -139,7 +135,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self._add_permissions(PERMISSION_RESERVE_BOOTH)
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -160,7 +156,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.reserve_block(self.same_troop.troop_number, 0)
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -181,7 +177,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.reserve_block(self.diff_troop.troop_number, 0)
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -201,7 +197,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self._add_permissions(PERMISSION_ADMIN_RESERVE_BOOTH)
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -226,7 +222,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.reserve_block(self.diff_troop.troop_number, 0)
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -253,7 +249,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.save()
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -282,7 +278,7 @@ class BoothBlockHtmlTestCase(TestCase):
         )
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -310,7 +306,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self._add_permissions(PERMISSION_COOKIE_CAPTAIN_RESERVE_BOOTH)
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -335,7 +331,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.save()
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -359,7 +355,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.save()
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -375,7 +371,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self._add_permissions(PERMISSION_RESERVE_BOOTH)
 
         self.client.login(
-            username=self.DAISY_USER["username"], password=self.DAISY_USER["password"]
+            email=self.DAISY_USER["email"], password=self.DAISY_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -398,7 +394,7 @@ class BoothBlockHtmlTestCase(TestCase):
         )
 
         self.client.login(
-            username=self.DAISY_USER["username"], password=self.DAISY_USER["password"]
+            email=self.DAISY_USER["email"], password=self.DAISY_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 
@@ -427,7 +423,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.reserve_daisy_block(self.daisy_troop.troop_number)
 
         self.client.login(
-            username=self.DAISY_USER["username"], password=self.DAISY_USER["password"]
+            email=self.DAISY_USER["email"], password=self.DAISY_USER["password"]
         )
         response = self.client.get(reverse("cookie_booths:booth_blocks"))
 

@@ -22,7 +22,7 @@ class TroopSize:
 
 class Troop(models.Model):
     troop_number = models.IntegerField(unique=True)
-    troop_cookie_coordinator = models.CharField(max_length=300, null=True)
+    troop_cookie_coordinator = models.EmailField(null=True)
 
     troop_size = models.SmallIntegerField(default=0)
     troop_level = models.SmallIntegerField(
