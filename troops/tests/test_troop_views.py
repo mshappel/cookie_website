@@ -15,14 +15,14 @@ class TroopViewTestCase(TroopTestCase):
     def test_url_exists_at_correct_location_troops(self):
         # Validate that we can access the troops page. We only test log-in case, since django handles the non-login
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get("/troops/")
         self.assertEqual(response.status_code, 200)
 
     def test_troops_view_displays_correctly_without_permissions(self):
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("troops:troops"))
 
@@ -44,7 +44,7 @@ class TroopViewTestCase(TroopTestCase):
         self._add_permissions(PERMISSION_NAME_DELETE)
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("troops:troops"))
 
@@ -64,7 +64,7 @@ class TroopViewTestCase(TroopTestCase):
     def test_troops_create_without_permissions(self):
         # Test if users without correct permissions get denied
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("troops:create_troop"))
         self.assertEqual(response.status_code, 403)
@@ -76,7 +76,7 @@ class TroopViewTestCase(TroopTestCase):
 
         # Test if user successfully accesses the page
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(reverse("troops:create_troop"))
         self.assertEqual(response.status_code, 200)
@@ -88,7 +88,7 @@ class TroopViewTestCase(TroopTestCase):
         self._add_permissions(PERMISSION_NAME_ADD)
 
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         # Provide valid data
         form_data = {
@@ -118,7 +118,7 @@ class TroopViewTestCase(TroopTestCase):
     def test_troops_update_without_permissions(self):
         # Test if users without correct permissions get denied
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get("/troops/edit/" + str(self.small_troop.pk) + "/")
         self.assertEqual(response.status_code, 403)
@@ -132,7 +132,7 @@ class TroopViewTestCase(TroopTestCase):
         # Do we successfully access the page?
         print(str(self.medium_troop.pk))
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get("/troops/edit/" + str(self.medium_troop.pk) + "/")
 
@@ -156,7 +156,7 @@ class TroopViewTestCase(TroopTestCase):
 
         # Provide valid data, see if it redirects correctly after posting?
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         form_data = {
             "troop_number": self.MEDIUM_TROOP["number"],
@@ -188,7 +188,7 @@ class TroopViewTestCase(TroopTestCase):
 
         # Do we get a 404 error when attempting to access the page with erroneous pk number?
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get("/troops/edit/5000/")
         self.assertEqual(response.status_code, 404)
@@ -197,7 +197,7 @@ class TroopViewTestCase(TroopTestCase):
     def test_troops_delete_without_permissions(self):
         # Test if users without correct permissions get denied
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(
             "/troops/confirm_delete/" + str(self.small_troop.pk) + "/"
@@ -213,7 +213,7 @@ class TroopViewTestCase(TroopTestCase):
         # Get the page and ensure that we use the correct template, it contains the information it should and it
         # is accessible.
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.get(
             "/troops/confirm_delete/" + str(self.medium_troop.pk) + "/"
@@ -229,7 +229,7 @@ class TroopViewTestCase(TroopTestCase):
 
         # Follow-through with the deletion, and check if it redirects correctly
         self.client.login(
-            username=self.NORMAL_USER["username"], password=self.NORMAL_USER["password"]
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
         )
         response = self.client.post(
             "/troops/confirm_delete/" + str(self.medium_troop.pk) + "/"

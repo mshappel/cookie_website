@@ -245,11 +245,11 @@ def booth_blocks(request):
         "booth_day__booth", "booth_day", "booth_block_start_time"
     )
     available_troops = Troop.objects.order_by("troop_number")
-    username = request.user.username
+    email = request.user.email
     booth_information = []
 
     try:
-        user_troop = Troop.objects.get(troop_cookie_coordinator=username)
+        user_troop = Troop.objects.get(troop_cookie_coordinator=email)
     except Troop.DoesNotExist:
         user_troop = None
 
@@ -309,11 +309,11 @@ def booth_reservations(request):
     )
     booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
     available_troops = Troop.objects.order_by("troop_number")
-    username = request.user.username
+    email = request.user.email
     booth_information = []
 
     try:
-        user_troop = Troop.objects.get(troop_cookie_coordinator=username)
+        user_troop = Troop.objects.get(troop_cookie_coordinator=email)
         booth_blocks_ = booth_blocks_.filter(
             booth_block_current_troop_owner=user_troop.troop_number
         )
@@ -428,7 +428,7 @@ def get_num_tickets_remaining(troop, date):
 @login_required
 def reserve_block(request, block_id):
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
-    username = request.user.username
+    email = request.user.email
     message_response = {}
 
     # A few items to gather for sending an email down below - whether the cancel was successful, whether it was
@@ -457,7 +457,7 @@ def reserve_block(request, block_id):
 
         elif request.user.has_perm("cookie_booths.block_reservation"):
             # The user is a TCC; the user's troop # is used for reservation
-            troop = Troop.objects.get(troop_cookie_coordinator=username)
+            troop = Troop.objects.get(troop_cookie_coordinator=email)
             troop_trying_to_reserve = troop.troop_number
             troop_trying_to_reserve_level = troop.troop_level
             rem_tickets, rem_golden_tickets = get_num_tickets_remaining(
@@ -596,7 +596,7 @@ def reserve_daisy_block(request, block_id):
 
 @login_required
 def cancel_block(request, block_id):
-    username = request.user.username
+    email = request.user.email
 
     if request.method == "POST":
         block_to_cancel = BoothBlock.objects.get(id=block_id)
@@ -605,7 +605,7 @@ def cancel_block(request, block_id):
             pass
         elif request.user.has_perm("cookie_booths.block_reservation"):
             # The user is a TCC; the user's troop # is used to check if they can cancel
-            troop_trying_to_cancel = None  # Troop.objects.get(troop_cookie_coordinator=username).troop_number
+            troop_trying_to_cancel = None  # Troop.objects.get(troop_cookie_coordinator=email).troop_number
             if (
                 troop_trying_to_cancel
                 != block_to_cancel.booth_block_current_troop_owner

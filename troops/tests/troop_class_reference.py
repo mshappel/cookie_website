@@ -27,7 +27,6 @@ class TroopTestCase(TestCase):
     }
 
     NORMAL_USER = {
-        "username": SMALL_TROOP["tcc"],
         "email": SMALL_TROOP["tcc"],
         "password": "secret",
     }
@@ -35,7 +34,6 @@ class TroopTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.normal_user = get_user_model().objects.create_user(
-            username=cls.NORMAL_USER["username"],
             email=cls.NORMAL_USER["email"],
             password=cls.NORMAL_USER["password"],
         )
