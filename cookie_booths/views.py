@@ -31,7 +31,7 @@ def booth_editor(request):
 
 
 @login_required
-@permission_required("cookie_booths.booth_loc_creation", raise_exception=True)
+@permission_required("cookie_booths.add_boothlocation", raise_exception=True)
 def create_new_booth_location(request):
     """Create a new booth location"""
     if request.method != "POST":
@@ -50,7 +50,7 @@ def create_new_booth_location(request):
 
 
 @login_required
-@permission_required("cookie_booths.booth_loc_updates", raise_exception=True)
+@permission_required("cookie_booths.change_boothlocation", raise_exception=True)
 def edit_booth_location(request, booth_id):
     """Edit an existing booth location"""
     booth = BoothLocation.objects.get(id=booth_id)
@@ -70,7 +70,7 @@ def edit_booth_location(request, booth_id):
 
 
 @login_required
-@permission_required("cookie_booths.booth_loc_updates", raise_exception=True)
+@permission_required("cookie_booths.change_boothlocation", raise_exception=True)
 def edit_booth_location_hours(request, booth_id):
     """Edit an existing booth location"""
     booth = BoothLocation.objects.get(id=booth_id)
@@ -93,7 +93,7 @@ def edit_booth_location_hours(request, booth_id):
 class BoothLocationDelete(PermissionRequiredMixin, LoginRequiredMixin, DeleteView):
     """Delete an existing booth location"""
 
-    permission_required = "cookie_booths.booth_loc_deletes"
+    permission_required = "cookie_booths.delete_boothlocation"
     model = BoothLocation
     template_name = "cookie_booths/booth_confirm_delete.html"
     success_url = reverse_lazy("cookie_booths:booth_locations")
@@ -313,7 +313,7 @@ def booth_reservations(request):
     booth_information = []
 
     try:
-        user_troop = Troop.objects.get(troop_cookie_coordinator=username)
+        user_troop = Troop.objects.get(troop_cookie_coordinator=email)
         if user_troop.troop_level==1:
             booth_blocks_ = booth_blocks_.filter(
                 booth_block_daisy_troop_owner=user_troop.troop_number
