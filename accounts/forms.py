@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django import forms
 
-from .models import CustomUser
+from .models import CustomUser, UserPreferences
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -29,3 +30,14 @@ class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = CustomUser
         fields = ("first_name", "last_name")
+
+
+class ChangeUserPreferences(forms.ModelForm):
+    class Meta:
+        model = UserPreferences
+        fields = ('email','phone_number', 'communication_preference')
+
+    def __init__(self, *args, **kwargs):
+        super(ChangeUserPreferences, self).__init__(*args, **kwargs)
+
+        self.fields['email'].disabled = True
