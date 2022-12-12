@@ -35,10 +35,10 @@
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <a class="dropdown-item" href="{% url 'cookie_booths:booth_locations' %}">Booth Locations</a>
 
-            {% if perms.cookie_booths.booth_loc_creation %}
+            {% if perms.cookie_booths.add_boothlocation %}
                 <a class="dropdown-item" href="{% url 'cookie_booths:new_location' %}">New Booth Location</a>
             {%  endif %}
-            {% if perms.cookie_booth.toggle_day %}
+            {% if perms.cookie_booths.toggle_day %}
                 <a class="dropdown-item" href="{% url 'cookie_booths:enable_location_by_block' %}">Enable Booths by Block</a>
                 <a class="dropdown-item" href="{% url 'cookie_booths:enable_day' %}">Enable Booths by Day</a>
             {% endif %}
