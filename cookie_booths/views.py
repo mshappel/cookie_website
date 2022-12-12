@@ -313,10 +313,15 @@ def booth_reservations(request):
     booth_information = []
 
     try:
-        user_troop = Troop.objects.get(troop_cookie_coordinator=email)
-        booth_blocks_ = booth_blocks_.filter(
-            booth_block_current_troop_owner=user_troop.troop_number
-        )
+        user_troop = Troop.objects.get(troop_cookie_coordinator=username)
+        if user_troop.troop_level==1:
+            booth_blocks_ = booth_blocks_.filter(
+                booth_block_daisy_troop_owner=user_troop.troop_number
+            )
+        else:
+            booth_blocks_ = booth_blocks_.filter(
+                booth_block_current_troop_owner=user_troop.troop_number
+            )
     except Troop.DoesNotExist:
         user_troop = None
 
@@ -324,7 +329,8 @@ def booth_reservations(request):
         if user_troop is None:
             booth_owned_by_current_user_ = False
         else:
-            if booth.booth_block_current_troop_owner == user_troop.troop_number:
+            if booth.booth_block_current_troop_owner == user_troop.troop_number or \
+               booth.booth_block_daisy_troop_owner == user_troop.troop_number:
                 booth_owned_by_current_user_ = True
             else:
                 booth_owned_by_current_user_ = False
@@ -400,12 +406,20 @@ def get_num_tickets_remaining(troop, date):
     golden_ticket_booth_count = 0
     # We're filtering by Blocks that are owned by this troop, and are associated with a BoothDay which falls into
     # the range of [start_date, end_date] inclusive
-    for block in BoothBlock.objects.filter(
+    blocks_ = BoothBlock.objects.filter(
         booth_block_reserved=True,
-        booth_block_current_troop_owner=troop.troop_number,
         booth_day__booth_day_date__gte=start_date,
         booth_day__booth_day_date__lte=end_date,
-    ):
+    )
+
+    # If this is a daisy troop, they cannot be the primary owner of a block, only secondary
+    # So we need to filter them differently based on that
+    if troop.troop_level==1:
+        blocks_ = blocks_.filter(booth_block_daisy_troop_owner=troop.troop_number)
+    else:
+        blocks_ = blocks_.filter(booth_block_current_troop_owner=troop.troop_number)
+
+    for block in blocks_:
         if block.booth_day.booth_day_is_golden:
             golden_ticket_booth_count += 1
 
@@ -426,7 +440,16 @@ def get_num_tickets_remaining(troop, date):
 
 
 @login_required
-def reserve_block(request, block_id):
+def reserve_block(request, daisy, block_id):
+    # TBD: handle daisy scouts, noop for now
+    if daisy:
+        message_response = {
+            "message": "TODO",
+            "is_success": True,
+        }
+        message_response = json.dumps(message_response)
+        return HttpResponse(message_response)
+
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
     email = request.user.email
     message_response = {}
@@ -581,21 +604,17 @@ def reserve_block(request, block_id):
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
 
-
 @login_required
-def reserve_daisy_block(request, block_id):
-    # TODO
-    print("reserve daisy block")
-    message_response = {
-        "message": "Successfully reserved booth",
-        "is_success": True,
-    }
+def cancel_block(request, daisy, block_id):
+    # TBD: handle daisy scouts, noop for now
+    if daisy:
+        message_response = {
+            "message": "TODO",
+            "is_success": True,
+        }
+        message_response = json.dumps(message_response)
+        return HttpResponse(message_response)
 
-    message_response = json.dumps(message_response)
-    return HttpResponse(message_response)
-
-@login_required
-def cancel_block(request, block_id):
     email = request.user.email
 
     if request.method == "POST":
@@ -642,19 +661,6 @@ def cancel_block(request, block_id):
             "message": "An unknown error occurred",
             "is_success": False,
         }
-    message_response = json.dumps(message_response)
-    return HttpResponse(message_response)
-
-
-@login_required
-def cancel_daisy_block(request, block_id):
-    # TODO
-
-    message_response = {
-        "message": "Successfully reserved booth",
-        "is_success": True,
-    }
-
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
 
