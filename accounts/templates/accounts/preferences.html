@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}
+  Update User Preferences
+{%endblock title %}
+
+{% block page_header %}
+  <h2>Change User Preferences</h2>
+{% endblock page_header %}
+
+{% block content %}
+  <p>If you would prefer to use text messaging please enter a phone number and change your prefered communication method</p>
+  <form method="post">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <input class="btn btn-success" type="submit" value="Change my preferences">
+    <a href="{% url 'home' %}" id="cancel" name="cancel" class="btn btn-danger">Cancel</a>
+  </form>
+
+{% endblock content %}

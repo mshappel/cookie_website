@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # Third Party Apps
     "bootstrap4",
     "bootstrap_datepicker_plus",
+    "phonenumber_field",
     # Default Apps
     "django.contrib.admin",
     "django.contrib.auth",

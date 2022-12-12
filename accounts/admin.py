@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .forms import CustomUserChangeForm, CustomUserCreationForm
-from .models import CustomUser
+from .forms import CustomUserChangeForm, CustomUserCreationForm, ChangeUserPreferences
+from .models import CustomUser, UserPreferences
 
 
 class CustomUserAdmin(UserAdmin):
@@ -28,4 +28,23 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ('email','first_name', 'last_name')
     ordering = ('email',)
 
+class UserPreferencesAdmin(admin.ModelAdmin):
+
+    form = ChangeUserPreferences
+    model = UserPreferences
+    list_display = [
+        "email",
+        "phone_number",
+        "communication_preference"
+    ]
+    fieldsets = (
+        (None, {'fields': ('email', 'phone_number', "communication_preference")}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', "phone_number", "communication_preference")}
+        ),
+    )
 admin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(UserPreferences, UserPreferencesAdmin)
