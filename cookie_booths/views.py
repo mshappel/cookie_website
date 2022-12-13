@@ -539,7 +539,8 @@ def reserve_block(request, daisy, block_id):
                     "message": "Successfully reserved booth",
                     "is_success": True,
                 }
-            elif block_to_reserve.reserve_daisy_block(daisy_troop_id=troop_trying_to_reserve):
+            elif daisy and \
+                block_to_reserve.reserve_daisy_block(daisy_troop_id=troop_trying_to_reserve):
                 # Successfully reserved the booth
                 successful = True
                 message_response = {
@@ -640,7 +641,7 @@ def cancel_block(request, daisy, block_id):
                 "message": "Successfully cancelled reserved booth",
                 "is_success": True,
             }
-        elif block_to_cancel.cancel_daisy_reservation():
+        elif daisy and block_to_cancel.cancel_daisy_reservation():
             # Successfully reserved the booth
             message_response = {
                 "message": "Successfully cancelled reserved booth",
