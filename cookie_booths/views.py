@@ -441,15 +441,6 @@ def get_num_tickets_remaining(troop, date):
 
 @login_required
 def reserve_block(request, daisy, block_id):
-    # TBD: handle daisy scouts, noop for now
-    if daisy:
-        message_response = {
-            "message": "TODO",
-            "is_success": True,
-        }
-        message_response = json.dumps(message_response)
-        return HttpResponse(message_response)
-
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
     email = request.user.email
     message_response = {}
@@ -538,9 +529,17 @@ def reserve_block(request, daisy, block_id):
             cookie_captain_id = request.user.id
 
         if level_in_range:
-            if block_to_reserve.reserve_block(
-                troop_id=troop_trying_to_reserve, cookie_cap_id=cookie_captain_id
-            ):
+            # If this is for a daisy troop, we need to reserve the block differently
+            if not daisy and \
+                block_to_reserve.reserve_block(troop_id=troop_trying_to_reserve, 
+                                               cookie_cap_id=cookie_captain_id):
+                # Successfully reserved the booth
+                successful = True
+                message_response = {
+                    "message": "Successfully reserved booth",
+                    "is_success": True,
+                }
+            elif block_to_reserve.reserve_daisy_block(daisy_troop_id=troop_trying_to_reserve):
                 # Successfully reserved the booth
                 successful = True
                 message_response = {
@@ -552,6 +551,7 @@ def reserve_block(request, daisy, block_id):
                     "message": "Failed to reserve booth",
                     "is_success": False,
                 }
+                
         else:
             message_response = {
                 "message": "Booth has troop level restriction",
@@ -598,7 +598,7 @@ def reserve_block(request, daisy, block_id):
             title,
             message,
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[new_block_owner.email],
+            recipient_list=[new_block_owner],
         )
 
     message_response = json.dumps(message_response)
@@ -606,15 +606,6 @@ def reserve_block(request, daisy, block_id):
 
 @login_required
 def cancel_block(request, daisy, block_id):
-    # TBD: handle daisy scouts, noop for now
-    if daisy:
-        message_response = {
-            "message": "TODO",
-            "is_success": True,
-        }
-        message_response = json.dumps(message_response)
-        return HttpResponse(message_response)
-
     email = request.user.email
 
     if request.method == "POST":
@@ -624,11 +615,9 @@ def cancel_block(request, daisy, block_id):
             pass
         elif request.user.has_perm("cookie_booths.block_reservation"):
             # The user is a TCC; the user's troop # is used to check if they can cancel
-            troop_trying_to_cancel = None  # Troop.objects.get(troop_cookie_coordinator=email).troop_number
-            if (
-                troop_trying_to_cancel
-                != block_to_cancel.booth_block_current_troop_owner
-            ):
+            troop_trying_to_cancel = Troop.objects.get(troop_cookie_coordinator=email).troop_number
+            if (troop_trying_to_cancel != block_to_cancel.booth_block_current_troop_owner and
+                (daisy and troop_trying_to_cancel != block_to_cancel.booth_block_daisy_troop_owner)):
                 message_response = {
                     "message": "You cannot cancel a reservation for another troop",
                     "is_success": False,
@@ -645,7 +634,13 @@ def cancel_block(request, daisy, block_id):
             message_response = json.dumps(message_response)
             return HttpResponse(message_response)
 
-        if block_to_cancel.cancel_block():
+        if not daisy and block_to_cancel.cancel_block():
+            # Successfully reserved the booth
+            message_response = {
+                "message": "Successfully cancelled reserved booth",
+                "is_success": True,
+            }
+        elif block_to_cancel.cancel_daisy_reservation():
             # Successfully reserved the booth
             message_response = {
                 "message": "Successfully cancelled reserved booth",
