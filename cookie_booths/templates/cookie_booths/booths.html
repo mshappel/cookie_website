@@ -1,12 +1,28 @@
 {% extends "base.html" %}
 {% load bootstrap4 %}
+{% load static %}
 
 {% block page_header %}
   <h2>Booth Locations</h2>
 {% endblock page_header %}
 
+{% block title %}
+    Booth Locations
+{% endblock title %}
 
 {% block content %}
+
+{% if perms.cookie_booths.add_boothlocation %}
+<div align="right">
+<a role="button" class="btn btn-success" align="right" href="{% url 'cookie_booths:new_location' %}">
+    <img src="{% static 'cookie_booths/icons8-add-24.png' %}">   
+    Add Booth Location
+</a>
+</div>
+<p>
+<p>
+{% endif %}
+
 <table id="booths" class="table table-striped table-bordered" cellspacing="0" width="100%">
 	<thead>
     	<tr>
