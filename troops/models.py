@@ -16,8 +16,8 @@ class TicketParameters:
 
 
 class TroopSize:
-    MEDIUM_TROOP = 10
-    LARGE_TROOP = 15
+    MEDIUM_TROOP = 8
+    LARGE_TROOP = 10
 
 
 class Troop(models.Model):

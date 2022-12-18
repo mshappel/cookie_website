@@ -9,21 +9,21 @@ class TroopTestCase(TestCase):
         "number": 300,
         "tcc": "test@test.com",
         "level": 2,
-        "troop_size": 3,
+        "troop_size": 7,
     }
 
     MEDIUM_TROOP = {
         "number": 400,
         "tcc": "example@example.com",
         "level": 1,
-        "troop_size": 12,
+        "troop_size": 8,
     }
 
     LARGE_TROOP = {
         "number": 450,
         "tcc": "nevergonna@giveyou.up",
         "level": 4,
-        "troop_size": 16,
+        "troop_size": 10,
     }
 
     NORMAL_USER = {
