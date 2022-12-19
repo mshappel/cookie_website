@@ -196,7 +196,6 @@ class AddOrUpdateHours(TestCase):
             )
         )
 
-
 class EnableAndDisableDay(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:

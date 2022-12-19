@@ -184,6 +184,13 @@ class BoothLocation(models.Model):
 
 
 class BoothHours(models.Model):
+    class Meta:
+        verbose_name_plural = "Booth hours"
+
+    def __str__(self):
+        # Easier to use admin names
+        return f"{self.booth_location} Hours"
+
     booth_location = models.OneToOneField(
         BoothLocation, null=True, on_delete=models.CASCADE
     )
@@ -249,6 +256,10 @@ class BoothDay(models.Model):
             ("make_golden_booth", "Make a booth day golden"),
             ("toggle_freeforall", "Enable/Disable free for all"),
         )
+
+    def __str__(self):
+        # More useful name in the admin site
+        return f"{self.booth} on {self.booth_day_date}"
 
     def enable_day(self):
         # If we're already enabled, nothing to do
@@ -476,6 +487,10 @@ class BoothBlock(models.Model):
             ),
         )
 
+    def __str__(self):
+        # More useful string in the admin
+        return f"{self.booth_day} from {(datetime.time(self.booth_block_start_time)).hour} to {(datetime.time(self.booth_block_end_time)).hour}"
+
     def cancel_block(self):
         # If this block is not enabled, no reservation can be made
         if not self.booth_block_enabled:
@@ -559,7 +574,7 @@ class BoothBlock(models.Model):
 
         # At this point, we should be safe to reserve
         self.booth_block_daisy_reserved = True
-        self.booth_block_daisy_troop_owner = daisy_troop_id 
+        self.booth_block_daisy_troop_owner = daisy_troop_id
 
         # TODO: send email confirmation
         self.save()
@@ -609,6 +624,31 @@ class BoothBlock(models.Model):
             self.save()
 
         return True
+
+
+class CookieSeason(models.Model):
+    season_start_date = models.DateField(blank=True, null=True)
+    season_end_date = models.DateField(blank=True, null=True)
+
+    real_season_start_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        # Makes the string in the admin site more useful
+        return f"Cookie Season {self.season_start_date} to {self.season_end_date}"
+
+    def cookie_season_week(self, current_date):
+        # Determines which week in the season the current date exists
+        return (current_date - self.real_season_start_date).days // 7 + 1
+
+
+@receiver(post_save, sender=CookieSeason)
+def get_real_season_start_date(sender, instance, created, **kwargs):
+    # The season starts on a Saturday, but the for our purposes, it actually starts on a Monday
+    start_date = instance.season_start_date
+    real_season_start_date = start_date - timedelta(days=start_date.weekday())
+    CookieSeason.objects.filter(pk=instance.pk).update(
+        real_season_start_date=real_season_start_date
+    )
 
 
 @receiver(post_save, sender=BoothHours)

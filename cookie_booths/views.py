@@ -16,7 +16,6 @@ from .forms import BoothLocationForm, BoothHoursForm, EnableFreeForAll
 from .models import BoothLocation, BoothDay, BoothHours, BoothBlock
 from troops.models import Troop
 
-
 # -----------------------------------------------------------------------
 # Booth Admin Functions
 # -----------------------------------------------------------------------
@@ -260,8 +259,7 @@ def booth_blocks(request):
     # Cookie Captains
     if user_troop is not None and user_troop.troop_level == 1:
         booth_blocks_ = booth_blocks_.exclude(booth_block_current_cookie_captain_owner=NO_COOKIE_CAPTAIN_ID)
-    # 3. If the user is a Cookie Captain, they should be able to see booths held just for CCs to reserve
-    # If the user is not a Cookie Captain, they should not be able to see those booths
+    # 3. If the user is not a Cookie Captain, they should not be able to see those booths
     elif not request.user.has_perm('cookie_booths.cookie_captain_reserve_block'):
         booth_blocks_ = booth_blocks_.exclude(booth_block_held_for_cookie_captains=True)
 
@@ -399,6 +397,33 @@ def get_week_start_end_from_date(date):
     return start_date, end_date
 
 
+def get_num_tickets_remaining_cookie_captain(cookie_captain_id, date):
+    start_date, end_date = get_week_start_end_from_date(date)
+
+    total_booth_count = 0
+    golden_ticket_booth_count = 0
+    # We're filtering by Blocks that are owned by this troop, and are associated with a BoothDay which falls into
+    # the range of [start_date, end_date] inclusive
+    blocks_ = BoothBlock.objects.filter(
+        booth_block_reserved=True,
+        booth_day__booth_day_date__gte=start_date,
+        booth_day__booth_day_date__lte=end_date,
+    )
+
+    blocks_ = blocks_.filter(booth_block_current_cookie_captain_owner=cookie_captain_id)
+    total_booth_count = blocks_.count()
+
+    COOKIE_CAPTAIN_TOTAL_BOOTH = 3
+
+    rem = (
+        0
+        if (total_booth_count > COOKIE_CAPTAIN_TOTAL_BOOTH)
+        else (COOKIE_CAPTAIN_TOTAL_BOOTH - total_booth_count)
+    )
+    rem_golden_ticket = 0
+
+    return rem, rem_golden_ticket
+
 def get_num_tickets_remaining(troop, date):
     start_date, end_date = get_week_start_end_from_date(date)
 
@@ -441,6 +466,11 @@ def get_num_tickets_remaining(troop, date):
 
 @login_required
 def reserve_block(request, daisy, block_id):
+    # Cookie Captains can reserve any booth that has a) been reserved for them by the admin or
+    # b) available to any other troop
+    # Non-Daisy Troops can reserve any booth that isn't already reserved by a CC or troop
+    # Daisy Troops can only reserve booths that have already been reserved by a CC.
+    
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
     email = request.user.email
     message_response = {}
@@ -481,6 +511,14 @@ def reserve_block(request, daisy, block_id):
             # The user does not have the permissions to reserve a block
             # This should never occur, but adding this in the case something horribly goes wrong.
             return
+
+        # Check to see if the user is a cookie captain
+        cookie_captain_id = settings.NO_COOKIE_CAPTAIN_ID
+        if request.user.has_perm("cookie_booths.cookie_captain_reserve_block"):
+            cookie_captain_id = request.user.id
+            rem_tickets, rem_golden_tickets = get_num_tickets_remaining_cookie_captain(
+                cookie_captain_id, block_to_reserve.booth_day.booth_day_date
+            )
 
         # Check if the troop has remaining tickets for the week
         tickets_remain = True
@@ -523,11 +561,6 @@ def reserve_block(request, daisy, block_id):
                 booth_restrictions_start, booth_restrictions_end + 1
             )
 
-        # Check to see if the user is a cookie captain
-        cookie_captain_id = settings.NO_COOKIE_CAPTAIN_ID
-        if request.user.has_perm("cookie_booths.cookie_captain_reserve_block"):
-            cookie_captain_id = request.user.id
-
         if level_in_range:
             # If this is for a daisy troop, we need to reserve the block differently
             if not daisy and \
@@ -536,7 +569,7 @@ def reserve_block(request, daisy, block_id):
                 # Successfully reserved the booth
                 successful = True
                 message_response = {
-                    "message": "Successfully reserved booth",
+                    "message": f"Successfully reserved booth for {troop_trying_to_reserve}",
                     "is_success": True,
                 }
             elif daisy and \
