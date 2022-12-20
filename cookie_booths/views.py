@@ -13,7 +13,7 @@ from django.views.generic.edit import DeleteView
 from cookie_website.settings import NO_COOKIE_CAPTAIN_ID
 
 from .forms import BoothLocationForm, BoothHoursForm, EnableFreeForAll
-from .models import BoothLocation, BoothDay, BoothHours, BoothBlock
+from .models import BoothLocation, BoothDay, BoothHours, BoothBlock, CookieSeason
 from troops.models import Troop
 
 # -----------------------------------------------------------------------
@@ -401,7 +401,6 @@ def get_num_tickets_remaining_cookie_captain(cookie_captain_id, date):
     start_date, end_date = get_week_start_end_from_date(date)
 
     total_booth_count = 0
-    golden_ticket_booth_count = 0
     # We're filtering by Blocks that are owned by this troop, and are associated with a BoothDay which falls into
     # the range of [start_date, end_date] inclusive
     blocks_ = BoothBlock.objects.filter(
@@ -413,12 +412,17 @@ def get_num_tickets_remaining_cookie_captain(cookie_captain_id, date):
     blocks_ = blocks_.filter(booth_block_current_cookie_captain_owner=cookie_captain_id)
     total_booth_count = blocks_.count()
 
-    COOKIE_CAPTAIN_TOTAL_BOOTH = 3
+    # In the future, we need to fix the cookie seasons to the booth locations, but I don't want to
+    # in the middle of the season and potentially mess stuff up, so here we are using id 1
+    # Cookie Captains cannot reserve during the first week of the season
+    cookie_captain_total_booth = 0
+    if CookieSeason.objects.get(id=1).cookie_season_week(date) > 1:
+        cookie_captain_total_booth = 3
 
     rem = (
         0
-        if (total_booth_count > COOKIE_CAPTAIN_TOTAL_BOOTH)
-        else (COOKIE_CAPTAIN_TOTAL_BOOTH - total_booth_count)
+        if (total_booth_count > cookie_captain_total_booth)
+        else (cookie_captain_total_booth - total_booth_count)
     )
     rem_golden_ticket = 0
 
@@ -480,6 +484,7 @@ def reserve_block(request, daisy, block_id):
     successful = False
     block_to_reserve = BoothBlock.objects.get(id=block_id)
     troop = None
+    cookie_captain_id = settings.NO_COOKIE_CAPTAIN_ID
 
     if request.method == "POST":
         if request.user.has_perm("cookie_booths.block_reservation_admin"):
@@ -507,18 +512,19 @@ def reserve_block(request, daisy, block_id):
             rem_tickets, rem_golden_tickets = get_num_tickets_remaining(
                 troop, block_to_reserve.booth_day.booth_day_date
             )
-        else:
-            # The user does not have the permissions to reserve a block
-            # This should never occur, but adding this in the case something horribly goes wrong.
-            return
 
-        # Check to see if the user is a cookie captain
-        cookie_captain_id = settings.NO_COOKIE_CAPTAIN_ID
-        if request.user.has_perm("cookie_booths.cookie_captain_reserve_block"):
+        elif request.user.has_perm("cookie_booths.cookie_captain_reserve_block"):
             cookie_captain_id = request.user.id
             rem_tickets, rem_golden_tickets = get_num_tickets_remaining_cookie_captain(
                 cookie_captain_id, block_to_reserve.booth_day.booth_day_date
             )
+            troop_trying_to_reserve = 0
+            troop_trying_to_reserve_level = settings.
+
+        else:
+            # The user does not have the permissions to reserve a block
+            # This should never occur, but adding this in the case something horribly goes wrong.
+            return
 
         # Check if the troop has remaining tickets for the week
         tickets_remain = True

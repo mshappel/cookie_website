@@ -360,7 +360,8 @@ class BoothDay(models.Model):
 
     def change_golden_status(self, is_golden_booth):
         self.booth_day_is_golden = is_golden_booth
-
+        self.save()
+        
         return
 
     def enable_freeforall(self):
