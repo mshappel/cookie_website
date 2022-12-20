@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.utils.timezone import make_aware
 
 from cookie_booths.models import BoothLocation, BoothDay, BoothBlock, CookieSeason
-from cookie_booths.views import get_num_tickets_remaining_cookie_captain
+from cookie_booths.views import get_num_tickets_remaining
 
 START_DATE = datetime.date(2023, 1, 21)
 END_DATE = datetime.date(2023, 2, 26)
@@ -93,8 +93,8 @@ class CookieCaptainTests(TestCase):
 
     def test_check_remaining_tickets_for_captain_initial_success(self):
         # Non-first week results
-        rem, rem_golden_ticket = get_num_tickets_remaining_cookie_captain(
-            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE
+        rem, rem_golden_ticket = get_num_tickets_remaining(
+            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE, True
         )
         self.assertEqual(rem, 3)
         self.assertFalse(
@@ -103,8 +103,8 @@ class CookieCaptainTests(TestCase):
 
     def test_check_remaining_tickets_for_captain_initial_failure(self):
         # First week results
-        rem, rem_golden_ticket = get_num_tickets_remaining_cookie_captain(
-            TROOP_NUM_1_COOKIE_CAP_ID, FAILURE_BOOTH_DATE
+        rem, rem_golden_ticket = get_num_tickets_remaining(
+            TROOP_NUM_1_COOKIE_CAP_ID, FAILURE_BOOTH_DATE, True
         )
         self.assertFalse(rem)
         self.assertFalse(rem_golden_ticket)
@@ -116,8 +116,8 @@ class CookieCaptainTests(TestCase):
         ).get()
         success_block.reserve_block(0, TROOP_NUM_1_COOKIE_CAP_ID)
 
-        rem, rem_golden_tickets = get_num_tickets_remaining_cookie_captain(
-            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE
+        rem, rem_golden_tickets = get_num_tickets_remaining(
+            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE, True
         )
         self.assertEqual(rem, 2)
         self.assertFalse(rem_golden_tickets)
@@ -139,8 +139,8 @@ class CookieCaptainTests(TestCase):
         ).get()
         success_block.reserve_block(0, TROOP_NUM_1_COOKIE_CAP_ID)
 
-        rem, rem_golden_tickets = get_num_tickets_remaining_cookie_captain(
-            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE
+        rem, rem_golden_tickets = get_num_tickets_remaining(
+            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE, True
         )
 
         self.assertEqual(rem, 1)
@@ -155,8 +155,8 @@ class CookieCaptainTests(TestCase):
         ).get()
         success_block.reserve_block(0, TROOP_NUM_1_COOKIE_CAP_ID)
 
-        rem, rem_golden_tickets = get_num_tickets_remaining_cookie_captain(
-            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE
+        rem, rem_golden_tickets = get_num_tickets_remaining(
+            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE, True
         )
 
         self.assertFalse(rem)
@@ -164,16 +164,16 @@ class CookieCaptainTests(TestCase):
 
         # Make sure we can cancel and it recognizes it
         success_block.cancel_block()
-        rem, rem_golden_tickets = get_num_tickets_remaining_cookie_captain(
-            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE
+        rem, rem_golden_tickets = get_num_tickets_remaining(
+            TROOP_NUM_1_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE, True
         )
 
         self.assertEqual(rem, 1)
         self.assertFalse(rem_golden_tickets)
 
         # Make sure we don't mix it with another user
-        rem, rem_golden_tickets = get_num_tickets_remaining_cookie_captain(
-            TROOP_NUM_2_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE
+        rem, rem_golden_tickets = get_num_tickets_remaining(
+            TROOP_NUM_2_COOKIE_CAP_ID, SUCCESS_BOOTH_DATE, True
         )
 
         self.assertEqual(rem, 3)
