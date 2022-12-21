@@ -273,7 +273,7 @@ def booth_blocks(request):
     for booth in booth_blocks_:
         # If a booth is owned by the current user then we know for certain that we can display 
         # the cancel button
-        
+
         # If troop number is None, then we cannot possibly own the booth
         if troop_number is None:
             booth_owned_by_current_user_ = False
@@ -303,6 +303,8 @@ def booth_blocks(request):
             permission_level = "daisy"
         else:
             permission_level = "tcc"
+    elif is_cookie_captain:
+        permission_level = "tcc"
 
     context = {
         "booth_blocks": booth_information,
@@ -325,6 +327,7 @@ def booth_reservations(request):
     available_troops = Troop.objects.order_by("troop_number")
     email = request.user.email
     booth_information = []
+    is_cookie_captain = request.user.has_perm('cookie_booths.cookie_captain_reserve_block')
 
     try:
         user_troop = Troop.objects.get(troop_cookie_coordinator=email)
@@ -362,6 +365,8 @@ def booth_reservations(request):
             permission_level = "daisy"
         else:
             permission_level = "tcc"
+    elif is_cookie_captain:
+        permission_level = "tcc"
 
     context = {
         "booth_blocks": booth_information,
@@ -508,18 +513,31 @@ def reserve_block(request, daisy, block_id):
 
 @login_required
 def cancel_block(request, daisy, block_id):
+    user_id = request.user.id
     email = request.user.email
+    is_cookie_admin = request.user.has_perm("cookie_booths.block_reservation_admin")
+    is_tcc = request.user.has_perm("cookie_booths.block_reservation")
+    is_cookie_captain = request.user.has_perm("cookie_booths.cookie_captain_reserve_block")
 
     if request.method == "POST":
         block_to_cancel = BoothBlock.objects.get(id=block_id)
-        if request.user.has_perm("cookie_booths.block_reservation_admin"):
+        if is_cookie_admin:
             # The user is a SUCM or higher they can do this unconditionally
             pass
-        elif request.user.has_perm("cookie_booths.block_reservation"):
+        elif is_tcc:
             # The user is a TCC; the user's troop # is used to check if they can cancel
             troop_trying_to_cancel = Troop.objects.get(troop_cookie_coordinator=email).troop_number
             if (troop_trying_to_cancel != block_to_cancel.booth_block_current_troop_owner and
                 (daisy and troop_trying_to_cancel != block_to_cancel.booth_block_daisy_troop_owner)):
+                message_response = {
+                    "message": "You cannot cancel a reservation for another troop",
+                    "is_success": False,
+                }
+                message_response = json.dumps(message_response)
+                return HttpResponse(message_response)
+        elif is_cookie_captain:
+            # The user is a Cookie Captain; the user's CCID is used to check if they can cancel
+            if block_to_cancel.booth_block_current_cookie_captain_owner != user_id:
                 message_response = {
                     "message": "You cannot cancel a reservation for another troop",
                     "is_success": False,
@@ -701,6 +719,7 @@ def get_num_tickets_remaining(troop, date, is_cookie_captain=False):
 
     return rem, rem_golden_ticket
 
+# TODO: This needs to be renamed, I'll think about about a better name later
 def _identify_user(request, block_to_reserve):
     # Let's simplify the logic in reserve_block
     is_cookie_admin = request.user.has_perm("cookie_booths.block_reservation_admin")

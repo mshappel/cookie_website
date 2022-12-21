@@ -172,13 +172,8 @@
                         let is_success = from_response.is_success;
                         let message = from_response.message;
                         if (is_success === true) {
-                            if (confirm(message)) {
-                                window.location.reload()
-                            }
-                            // Make sure cancelling also prompts a refresh
-                            else {
-                                window.location.reload()
-                            }
+                            alert(message)
+                            $("#booth_blocks").load(window.location + " #booth_blocks");
                         } else {
                             alert(message)
                         }
@@ -200,13 +195,8 @@
                         let is_success = from_response.is_success;
                         let message = from_response.message;
                         if (is_success === true) {
-                            if (confirm(message)) {
-                                window.location.reload()
-                            }
-                            // Make sure cancelling also prompts a refresh
-                            else {
-                                window.location.reload()
-                            }
+                            alert(message)
+                            $("#booth_blocks").load(window.location + " #booth_blocks");
                         } else {
                             alert(message)
                         }
@@ -230,13 +220,8 @@
                     let is_success = from_response.is_success;
                     let message = from_response.message;
                     if (is_success === true) {
-                        if (confirm(message)) {
-                            window.location.reload()
-                        }
-                        // Make sure cancelling also prompts a refresh
-                        else {
-                            window.location.reload()
-                        }
+                        alert(message)
+                        $("#booth_blocks").load(window.location + " #booth_blocks");
                     } else {
                         alert(message)
                     }
@@ -256,13 +241,8 @@
                     let is_success = from_response.is_success;
                     let message = from_response.message;
                     if (is_success === true) {
-                        if (confirm(message)) {
-                            window.location.reload()
-                        }
-                        // Make sure cancelling also prompts a refresh
-                        else {
-                            window.location.reload()
-                        }
+                        alert(message)
+                        $("#booth_blocks").load(window.location + " #booth_blocks");
                     } else {
                         alert(message)
                     }

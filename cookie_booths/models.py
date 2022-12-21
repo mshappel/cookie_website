@@ -361,7 +361,7 @@ class BoothDay(models.Model):
     def change_golden_status(self, is_golden_booth):
         self.booth_day_is_golden = is_golden_booth
         self.save()
-        
+
         return
 
     def enable_freeforall(self):
@@ -668,53 +668,53 @@ def generate_hours_if_needed(sender, instance, created, **kwargs):
         instance.update_booth()
 
 
-# TODO: This is broken and our testing does not cover this
-@receiver(pre_delete, sender=BoothBlock)
-def notify_block_deletion(sender, instance, **kwargs):
-    # If this block has been reserved, notify the owner. Otherwise we have nothing to do
-    if not instance.booth_block_reserved:
-        return
+# # TODO: This is broken and our testing does not cover this
+# @receiver(pre_delete, sender=BoothBlock)
+# def notify_block_deletion(sender, instance, **kwargs):
+#     # If this block has been reserved, notify the owner. Otherwise we have nothing to do
+#     if not instance.booth_block_reserved:
+#         return
 
-    # Get the troop
-    reserved_troop = Troop.objects.get(
-        troop_number=instance.booth_block_current_troop_owner
-    )
-    if not reserved_troop:
-        return
+#     # Get the troop
+#     reserved_troop = Troop.objects.get(
+#         troop_number=instance.booth_block_current_troop_owner
+#     )
+#     if not reserved_troop:
+#         return
 
-    # Then the owner from that
-    block_owner = User.objects.get(username=reserved_troop.troop_cookie_coordinator)
-    if not block_owner:
-        return
+#     # Then the owner from that
+#     block_owner = User.objects.get(username=reserved_troop.troop_cookie_coordinator)
+#     if not block_owner:
+#         return
 
-    title = "Your Reserved Booth Block Has Been Removed"
-    message = (
-        "Hello "
-        + block_owner.first_name
-        + ",\n"
-        + "Due to a schedule change, the following block is no longer available for reservation:\n\n"
-        + "Location: "
-        + instance.booth_day.booth.booth_location
-        + "\n"
-        + "Address: "
-        + instance.booth_day.booth.booth_address
-        + "\n"
-        + "Date: "
-        + instance.booth_day.booth_day_date.strftime("%A, %B %d, %Y")
-        + "\n"
-        + "Time Block: "
-        + instance.booth_block_start_time.strftime("%I:%M %p")
-        + " - "
-        + instance.booth_block_end_time.strftime("%I:%M %p")
-        + "\n\n\n"
-        + "NOTE: Please do not reply to this email directly, this email address is not monitored. Please reach out to an administrator with any further questions."
-    )
+#     title = "Your Reserved Booth Block Has Been Removed"
+#     message = (
+#         "Hello "
+#         + block_owner.first_name
+#         + ",\n"
+#         + "Due to a schedule change, the following block is no longer available for reservation:\n\n"
+#         + "Location: "
+#         + instance.booth_day.booth.booth_location
+#         + "\n"
+#         + "Address: "
+#         + instance.booth_day.booth.booth_address
+#         + "\n"
+#         + "Date: "
+#         + instance.booth_day.booth_day_date.strftime("%A, %B %d, %Y")
+#         + "\n"
+#         + "Time Block: "
+#         + instance.booth_block_start_time.strftime("%I:%M %p")
+#         + " - "
+#         + instance.booth_block_end_time.strftime("%I:%M %p")
+#         + "\n\n\n"
+#         + "NOTE: Please do not reply to this email directly, this email address is not monitored. Please reach out to an administrator with any further questions."
+#     )
 
-    send_mail(
-        title,
-        message,
-        from_email=settings.EMAIL_HOST_USER,
-        recipient_list=[block_owner.email],
-    )
+#     send_mail(
+#         title,
+#         message,
+#         from_email=settings.EMAIL_HOST_USER,
+#         recipient_list=[block_owner.email],
+#     )
 
-    return
+#     return
