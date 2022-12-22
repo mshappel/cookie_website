@@ -184,6 +184,13 @@ class BoothLocation(models.Model):
 
 
 class BoothHours(models.Model):
+    class Meta:
+        verbose_name_plural = "Booth hours"
+
+    def __str__(self):
+        # Easier to use admin names
+        return f"{self.booth_location} Hours"
+
     booth_location = models.OneToOneField(
         BoothLocation, null=True, on_delete=models.CASCADE
     )
@@ -249,6 +256,10 @@ class BoothDay(models.Model):
             ("make_golden_booth", "Make a booth day golden"),
             ("toggle_freeforall", "Enable/Disable free for all"),
         )
+
+    def __str__(self):
+        # More useful name in the admin site
+        return f"{self.booth} on {self.booth_day_date}"
 
     def enable_day(self):
         # If we're already enabled, nothing to do
@@ -349,6 +360,7 @@ class BoothDay(models.Model):
 
     def change_golden_status(self, is_golden_booth):
         self.booth_day_is_golden = is_golden_booth
+        self.save()
 
         return
 
@@ -476,6 +488,10 @@ class BoothBlock(models.Model):
             ),
         )
 
+    def __str__(self):
+        # More useful string in the admin
+        return f"{self.booth_day} from {(datetime.time(self.booth_block_start_time)).hour} to {(datetime.time(self.booth_block_end_time)).hour}"
+
     def cancel_block(self):
         # If this block is not enabled, no reservation can be made
         if not self.booth_block_enabled:
@@ -559,7 +575,7 @@ class BoothBlock(models.Model):
 
         # At this point, we should be safe to reserve
         self.booth_block_daisy_reserved = True
-        self.booth_block_daisy_troop_owner = daisy_troop_id 
+        self.booth_block_daisy_troop_owner = daisy_troop_id
 
         # TODO: send email confirmation
         self.save()
@@ -611,6 +627,31 @@ class BoothBlock(models.Model):
         return True
 
 
+class CookieSeason(models.Model):
+    season_start_date = models.DateField(blank=True, null=True)
+    season_end_date = models.DateField(blank=True, null=True)
+
+    real_season_start_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        # Makes the string in the admin site more useful
+        return f"Cookie Season {self.season_start_date} to {self.season_end_date}"
+
+    def cookie_season_week(self, current_date):
+        # Determines which week in the season the current date exists
+        return (current_date - self.real_season_start_date).days // 7 + 1
+
+
+@receiver(post_save, sender=CookieSeason)
+def get_real_season_start_date(sender, instance, created, **kwargs):
+    # The season starts on a Saturday, but the for our purposes, it actually starts on a Monday
+    start_date = instance.season_start_date
+    real_season_start_date = start_date - timedelta(days=start_date.weekday())
+    CookieSeason.objects.filter(pk=instance.pk).update(
+        real_season_start_date=real_season_start_date
+    )
+
+
 @receiver(post_save, sender=BoothHours)
 def update_booth_location(sender, instance, created, **kwargs):
     # We don't care if it was just created - only on updates that actually set real hours
@@ -627,53 +668,53 @@ def generate_hours_if_needed(sender, instance, created, **kwargs):
         instance.update_booth()
 
 
-# TODO: This is broken and our testing does not cover this
-@receiver(pre_delete, sender=BoothBlock)
-def notify_block_deletion(sender, instance, **kwargs):
-    # If this block has been reserved, notify the owner. Otherwise we have nothing to do
-    if not instance.booth_block_reserved:
-        return
+# # TODO: This is broken and our testing does not cover this
+# @receiver(pre_delete, sender=BoothBlock)
+# def notify_block_deletion(sender, instance, **kwargs):
+#     # If this block has been reserved, notify the owner. Otherwise we have nothing to do
+#     if not instance.booth_block_reserved:
+#         return
 
-    # Get the troop
-    reserved_troop = Troop.objects.get(
-        troop_number=instance.booth_block_current_troop_owner
-    )
-    if not reserved_troop:
-        return
+#     # Get the troop
+#     reserved_troop = Troop.objects.get(
+#         troop_number=instance.booth_block_current_troop_owner
+#     )
+#     if not reserved_troop:
+#         return
 
-    # Then the owner from that
-    block_owner = User.objects.get(username=reserved_troop.troop_cookie_coordinator)
-    if not block_owner:
-        return
+#     # Then the owner from that
+#     block_owner = User.objects.get(username=reserved_troop.troop_cookie_coordinator)
+#     if not block_owner:
+#         return
 
-    title = "Your Reserved Booth Block Has Been Removed"
-    message = (
-        "Hello "
-        + block_owner.first_name
-        + ",\n"
-        + "Due to a schedule change, the following block is no longer available for reservation:\n\n"
-        + "Location: "
-        + instance.booth_day.booth.booth_location
-        + "\n"
-        + "Address: "
-        + instance.booth_day.booth.booth_address
-        + "\n"
-        + "Date: "
-        + instance.booth_day.booth_day_date.strftime("%A, %B %d, %Y")
-        + "\n"
-        + "Time Block: "
-        + instance.booth_block_start_time.strftime("%I:%M %p")
-        + " - "
-        + instance.booth_block_end_time.strftime("%I:%M %p")
-        + "\n\n\n"
-        + "NOTE: Please do not reply to this email directly, this email address is not monitored. Please reach out to an administrator with any further questions."
-    )
+#     title = "Your Reserved Booth Block Has Been Removed"
+#     message = (
+#         "Hello "
+#         + block_owner.first_name
+#         + ",\n"
+#         + "Due to a schedule change, the following block is no longer available for reservation:\n\n"
+#         + "Location: "
+#         + instance.booth_day.booth.booth_location
+#         + "\n"
+#         + "Address: "
+#         + instance.booth_day.booth.booth_address
+#         + "\n"
+#         + "Date: "
+#         + instance.booth_day.booth_day_date.strftime("%A, %B %d, %Y")
+#         + "\n"
+#         + "Time Block: "
+#         + instance.booth_block_start_time.strftime("%I:%M %p")
+#         + " - "
+#         + instance.booth_block_end_time.strftime("%I:%M %p")
+#         + "\n\n\n"
+#         + "NOTE: Please do not reply to this email directly, this email address is not monitored. Please reach out to an administrator with any further questions."
+#     )
 
-    send_mail(
-        title,
-        message,
-        from_email=settings.EMAIL_HOST_USER,
-        recipient_list=[block_owner.email],
-    )
+#     send_mail(
+#         title,
+#         message,
+#         from_email=settings.EMAIL_HOST_USER,
+#         recipient_list=[block_owner.email],
+#     )
 
-    return
+#     return
