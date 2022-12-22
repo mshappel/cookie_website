@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.dateformat import format
 from django.utils.timezone import make_aware
 
 from cookie_booths.models import BoothLocation, BoothDay, BoothBlock
@@ -17,9 +18,9 @@ PERMISSION_COOKIE_CAPTAIN_RESERVE_BOOTH = "Reserve a block for a daisy scout"
 
 class BoothBlockHtmlTestCase(TestCase):
 
-    TEST_DATE = datetime.date(2021, 10, 22)
-    TEST_OPEN_TIME = make_aware(datetime.datetime(2021, 10, 22, 8, 0, 0, 0))
-    TEST_CLOSE_TIME = make_aware(datetime.datetime(2021, 10, 22, 10, 0, 0, 0))
+    TEST_DATE = make_aware(datetime.datetime.now()) + datetime.timedelta(days=1)
+    TEST_OPEN_TIME = make_aware(datetime.datetime.combine(TEST_DATE.date(), datetime.time(8, 0, 0, 0)))
+    TEST_CLOSE_TIME = make_aware(datetime.datetime.combine(TEST_DATE.date(), datetime.time(10, 0, 0, 0)))
 
     NORMAL_USER = {
         "email": "nevergonna@giveyou.up",
@@ -54,7 +55,7 @@ class BoothBlockHtmlTestCase(TestCase):
 
     BOOTH_DETAILS = {
         "booth_location": "Dunkin Donuts",
-        "booth_open_date": "October 22nd, Fri",
+        "booth_open_date": format(TEST_DATE, "F jS, D"),
         "booth_open_time": "08:00 AM",
         "booth_close_time": "10:00 AM",
     }
@@ -438,6 +439,33 @@ class BoothBlockHtmlTestCase(TestCase):
         self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
         self.assertContains(response, "Cancel Booth")
 
+    def test_booth_blocks_html_removed_because_old(self):
+        BAD_DATE = make_aware(datetime.datetime.now()) - datetime.timedelta(minutes=30)
+        BAD_OPEN_TIME = make_aware(datetime.datetime.combine(BAD_DATE.date(), BAD_DATE.time()))
+        BAD_CLOSE_TIME = make_aware(datetime.datetime.combine(BAD_DATE.date(), (BAD_DATE + datetime.timedelta(hours=2)).time()))
+        
+        self._add_permissions(PERMISSION_RESERVE_BOOTH)
+
+        self.client.login(
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
+            )
+        self.block.booth_day.add_or_update_hours(
+            open_time=BAD_OPEN_TIME,
+            close_time=BAD_CLOSE_TIME,
+            )
+        self.block.booth_day.save()
+
+        response = self.client.get(reverse("cookie_booths:booth_blocks"))
+
+        # Is the correct data displayed?
+        # - We should not have a block listed
+        # - We should not see the block details (location, date, times)
+        # - We SHOULD not see a reservation button
+        self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_location"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_open_date"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_open_time"])
+        self.assertNotContains(response, self.BOOTH_DETAILS["booth_close_time"])
     # -----------------------------------------------------------------------
     # Internal
     # -----------------------------------------------------------------------
