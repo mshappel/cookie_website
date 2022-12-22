@@ -41,7 +41,8 @@
                     <td>{{ block.booth_block_information.booth_day.booth_day_date|date:"F jS, D" }}</td>
                     <td>{{ block.booth_block_information.booth_block_start_time|date:"h:i A" }}</td>
                     <td>{{ block.booth_block_information.booth_block_end_time|date:"h:i A" }}</td>
-                    <td>
+                    <td {% if block.booth_block_information.booth_day.booth_day_is_golden %}
+                    style="background-color:#FFD700 !important;" {% endif %}>
                         {% if reserve_or_enable_booths == "reserve" %}
                             {% if permission_level == "admin" %}
                                 <!-- Admins/SUCMs have a greater degree of control -
