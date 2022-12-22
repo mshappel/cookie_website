@@ -292,6 +292,7 @@ def booth_blocks(request):
         current_booth_information = {
             "booth_block_information": booth,
             "booth_owned_by_current_user": booth_owned_by_current_user_,
+            "booth_is_golden": booth.booth_day.booth_day_is_golden,
         }
         booth_information.append(current_booth_information)
 
