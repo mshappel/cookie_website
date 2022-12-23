@@ -5,9 +5,11 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views.generic.edit import DeleteView
 from django.utils.timezone import make_aware
 
@@ -484,6 +486,21 @@ def reserve_block(request, daisy, block_id):
                 message_response["is_success"] = False
                 message_response = json.dumps(message_response)
                 return HttpResponse(message_response)
+
+        # Check to see if the booth is currently reservable in the season
+        # For dates LTE is dates ON or AFTER the booth_day, GTE is dates ON or BEFORE the booth_day
+        booth_day = block_to_reserve.booth_day.booth_day_date
+        try:
+            successful = CookieSeason.objects.filter(Q(season_start_date__lte=booth_day) &
+                Q(season_end_date__gte=booth_day))[0].is_booth_reservable(booth_date=booth_day)
+        except IndexError:
+            successful = False
+        
+        if not successful:
+            message_response["message"] = "This booth is not yet reservable"
+            message_response["is_success"] = False
+            message_response = json.dumps(message_response)
+            return HttpResponse(message_response)
 
         # Finally, after checking if the user is able to reserve a booth, we attempt to reserve
         # the booth.
