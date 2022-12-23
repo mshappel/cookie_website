@@ -34,6 +34,11 @@ DEBUG = env.bool("DEBUG")
 
 ALLOWED_HOSTS = [".herokuapp.com", "localhost", "127.0.0.1"]
 
+# Twilio Information
+TWILIO_ACCOUNT_SID = env.str("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = env.str("TWILIO_AUTH_TOKEN")
+TWILIO_NUMBER = env.str("TWILIO_NUMBER")
+
 # Application definition
 
 INSTALLED_APPS = [

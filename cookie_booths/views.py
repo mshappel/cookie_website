@@ -12,6 +12,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic.edit import DeleteView
 from django.utils.timezone import make_aware
+from twilio.rest import Client
 
 from cookie_website.settings import NO_COOKIE_CAPTAIN_ID
 
@@ -659,6 +660,19 @@ def cancel_hold_for_cookie_captain(request, block_id):
 
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
+
+def send_sms(message, recipients):
+    try:
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        for recipient in recipients:
+            if recipient:
+                client.messages.create(to=recipient,
+                                        from_=settings.TWILIO_NUMBER,
+                                        body=message)
+        success = True
+    except:
+        success = False
+    return success
 
 # Helper Functions
 def get_week_start_end_from_date(date):
