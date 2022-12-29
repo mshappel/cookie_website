@@ -1,23 +1,63 @@
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
 
-class TicketParameters:
-    SMALL_TROOP_TOTAL_TICKETS_PER_WEEK = 5
-    SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK = 1
+class TicketParameters(models.Model):
+    small_troop_total_tickets_per_week = models.IntegerField(default=5)
+    small_troop_golden_tickets_per_week = models.IntegerField(default=1)
+    medium_troop_additional_golden_tickets = models.IntegerField(default=1)
+    large_troop_additional_golden_tickets = models.IntegerField(default=2)
 
-    MEDIUM_TROOP_TOTAL_TICKETS_PER_WEEK = SMALL_TROOP_TOTAL_TICKETS_PER_WEEK * 2
-    MEDIUM_TROOP_GOLDEN_TICKETS_PER_WEEK = SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK * 2
+    @property
+    def get_small_troop_total_tickets_per_week(self):
+        return self.small_troop_total_tickets_per_week
 
-    LARGE_TROOP_TOTAL_TICKETS_PER_WEEK = SMALL_TROOP_TOTAL_TICKETS_PER_WEEK * 3
-    LARGE_TROOP_GOLDEN_TICKETS_PER_WEEK = SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK * 3
+    @property
+    def get_small_troop_golden_tickets_per_week(self):
+        return self.small_troop_golden_tickets_per_week
+    
+    @property
+    def get_medium_troop_total_tickets_per_week(self):
+        return int(self.small_troop_golden_tickets_per_week * 2)
+
+    @property
+    def get_medium_troop_golden_tickets_per_week(self):
+        return int(self.small_troop_golden_tickets_per_week + 
+            self.medium_troop_additional_golden_tickets)
+
+    @property
+    def get_large_troop_total_tickets_per_week(self):
+        return int(self.small_troop_total_tickets_per_week * 3)
+        
+    @property
+    def get_large_troop_golden_tickets_per_week(self):
+        return int(self.small_troop_golden_tickets_per_week +
+            self.large_troop_additional_golden_tickets)
+
+    # We only EVER need one instance of this model.
+    def save(self, *args, **kwargs):
+        self.id = 1
+        super().save(*args, **kwargs)
 
 
-class TroopSize:
-    MEDIUM_TROOP = 8
-    LARGE_TROOP = 10
+class TroopSize(models.Model):
+    medium_troop_size = models.IntegerField(default=8)
+    large_troop_size = models.IntegerField(default=10)
+
+    @property
+    def get_medium_troop_size(self):
+        return int(self.medium_troop_size)
+
+    @property
+    def get_large_troop_size(self):
+        return int(self.large_troop_size)
+
+    # We only EVER need one instance of this model.
+    def save(self, *args, **kwargs):
+        self.id = 1
+        super().save(*args, **kwargs)
 
 
 class Troop(models.Model):
@@ -41,31 +81,50 @@ class Troop(models.Model):
 
 
 @receiver(pre_save, sender=Troop)
-def update_tickets(sender, instance, **kwargs):
+def update_troop(sender, instance, **kwargs):
     # This really should only care about setting/updating these after creation, but there is always the chance
     # A troop could be updated after the fact. In that case, if they've booked more blocks than they should've,
     # oh well.
-    if instance.troop_size >= TroopSize.LARGE_TROOP:
-        instance.total_booth_tickets_per_week = (
-            TicketParameters.LARGE_TROOP_TOTAL_TICKETS_PER_WEEK
+    if not TroopSize.objects.first():
+        TroopSize.objects.create()
+    if not TicketParameters.objects.first():    
+        TicketParameters.objects.create()
+    update_tickets(instance)
+
+
+@receiver(post_save, sender=TroopSize)
+@receiver(post_save, sender=TicketParameters)
+def update_all_troops(sender, instance, **kwargs):
+    troops = Troop.objects.all()
+    for troop in troops:
+        update_tickets(troop=troop)
+        troop.save()
+
+def update_tickets(troop):
+    # This really should only care about setting/updating these after creation, but there is always the chance
+    # A troop could be updated after the fact. In that case, if they've booked more blocks than they should've,
+    # oh well.
+    if troop.troop_size >= TroopSize.objects.first().get_large_troop_size:
+        troop.total_booth_tickets_per_week = (
+            TicketParameters.objects.first().get_large_troop_total_tickets_per_week
         )
-        instance.booth_golden_tickets_per_week = (
-            TicketParameters.LARGE_TROOP_GOLDEN_TICKETS_PER_WEEK
+        troop.booth_golden_tickets_per_week = (
+            TicketParameters.objects.first().get_large_troop_golden_tickets_per_week
         )
         return
 
-    if instance.troop_size >= TroopSize.MEDIUM_TROOP:
-        instance.total_booth_tickets_per_week = (
-            TicketParameters.MEDIUM_TROOP_TOTAL_TICKETS_PER_WEEK
+    if troop.troop_size >= TroopSize.objects.first().get_medium_troop_size:
+        troop.total_booth_tickets_per_week = (
+            TicketParameters.objects.first().get_medium_troop_total_tickets_per_week
         )
-        instance.booth_golden_tickets_per_week = (
-            TicketParameters.MEDIUM_TROOP_GOLDEN_TICKETS_PER_WEEK
+        troop.booth_golden_tickets_per_week = (
+            TicketParameters.objects.first().get_medium_troop_golden_tickets_per_week
         )
         return
 
-    instance.total_booth_tickets_per_week = (
-        TicketParameters.SMALL_TROOP_TOTAL_TICKETS_PER_WEEK
+    troop.total_booth_tickets_per_week = (
+        TicketParameters.objects.first().get_small_troop_total_tickets_per_week
     )
-    instance.booth_golden_tickets_per_week = (
-        TicketParameters.SMALL_TROOP_GOLDEN_TICKETS_PER_WEEK
+    troop.booth_golden_tickets_per_week = (
+        TicketParameters.objects.first().get_small_troop_golden_tickets_per_week
     )
