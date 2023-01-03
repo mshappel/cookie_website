@@ -104,27 +104,31 @@ def update_tickets(troop):
     # This really should only care about setting/updating these after creation, but there is always the chance
     # A troop could be updated after the fact. In that case, if they've booked more blocks than they should've,
     # oh well.
-    if troop.troop_size >= TroopSize.objects.first().get_large_troop_size:
+    try:
+        if troop.troop_size >= TroopSize.objects.first().get_large_troop_size:
+            troop.total_booth_tickets_per_week = (
+                TicketParameters.objects.first().get_large_troop_total_tickets_per_week
+            )
+            troop.booth_golden_tickets_per_week = (
+                TicketParameters.objects.first().get_large_troop_golden_tickets_per_week
+            )
+            return
+
+        if troop.troop_size >= TroopSize.objects.first().get_medium_troop_size:
+            troop.total_booth_tickets_per_week = (
+                TicketParameters.objects.first().get_medium_troop_total_tickets_per_week
+            )
+            troop.booth_golden_tickets_per_week = (
+                TicketParameters.objects.first().get_medium_troop_golden_tickets_per_week
+            )
+            return
+
         troop.total_booth_tickets_per_week = (
-            TicketParameters.objects.first().get_large_troop_total_tickets_per_week
+            TicketParameters.objects.first().get_small_troop_total_tickets_per_week
         )
         troop.booth_golden_tickets_per_week = (
-            TicketParameters.objects.first().get_large_troop_golden_tickets_per_week
+            TicketParameters.objects.first().get_small_troop_golden_tickets_per_week
         )
-        return
-
-    if troop.troop_size >= TroopSize.objects.first().get_medium_troop_size:
-        troop.total_booth_tickets_per_week = (
-            TicketParameters.objects.first().get_medium_troop_total_tickets_per_week
-        )
-        troop.booth_golden_tickets_per_week = (
-            TicketParameters.objects.first().get_medium_troop_golden_tickets_per_week
-        )
-        return
-
-    troop.total_booth_tickets_per_week = (
-        TicketParameters.objects.first().get_small_troop_total_tickets_per_week
-    )
-    troop.booth_golden_tickets_per_week = (
-        TicketParameters.objects.first().get_small_troop_golden_tickets_per_week
-    )
+    except AttributeError:
+        # Do not try to update if we cannot find the Parameters yet. 
+        pass
