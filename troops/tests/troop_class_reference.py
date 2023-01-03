@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from troops.models import Troop
+from troops.models import Troop, TroopSize, TicketParameters
 
 
 class TroopTestCase(TestCase):
@@ -33,6 +33,9 @@ class TroopTestCase(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.troop_size = TroopSize.objects.create()
+        cls.ticket_parameters = TicketParameters.objects.create()
+        
         cls.normal_user = get_user_model().objects.create_user(
             email=cls.NORMAL_USER["email"],
             password=cls.NORMAL_USER["password"],
