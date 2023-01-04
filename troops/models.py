@@ -20,7 +20,7 @@ class TicketParameters(models.Model):
     
     @property
     def get_medium_troop_total_tickets_per_week(self):
-        return int(self.small_troop_golden_tickets_per_week * 2)
+        return int(self.small_troop_total_tickets_per_week * 2)
 
     @property
     def get_medium_troop_golden_tickets_per_week(self):
