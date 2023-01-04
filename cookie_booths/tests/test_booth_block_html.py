@@ -93,6 +93,11 @@ class BoothBlockHtmlTestCase(TestCase):
             troop_size=cls.DAISY_TROOP_DETAILS["troop_size"]
         )
 
+        cls.cookie_captain = get_user_model().objects.create_user(
+            email="cookies@monster.com",
+            password="cisforcookie",
+        )
+
         cls.location = BoothLocation.objects.create(
             booth_location=cls.BOOTH_DETAILS["booth_location"]
         )
@@ -391,7 +396,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.booth_block_held_for_cookie_captains = True
         self.block.save()
         self.block.reserve_block(
-            self.diff_troop.troop_number, self.diff_troop.troop_number
+            0, self.cookie_captain.id
         )
 
         self.client.login(
@@ -417,9 +422,8 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.booth_block_held_for_cookie_captains = True
         self.block.save()
         self.block.reserve_block(
-            self.diff_troop.troop_number, self.diff_troop.troop_number
+            0, self.cookie_captain.id
         )
-
         # Flag that same booth as owned by this daisy troop
         self.block.reserve_daisy_block(self.daisy_troop.troop_number)
 
