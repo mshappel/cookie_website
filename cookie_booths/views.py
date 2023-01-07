@@ -334,6 +334,7 @@ def booth_reservations(request):
 
     try:
         user_troop = Troop.objects.get(troop_cookie_coordinator=email)
+        troop_number = user_troop.troop_number
         if user_troop.troop_level==1:
             booth_blocks_ = booth_blocks_.filter(
                 booth_block_daisy_troop_owner=user_troop.troop_number
@@ -348,16 +349,28 @@ def booth_reservations(request):
             booth_blocks_ = booth_blocks_.filter(
                 booth_block_current_cookie_captain_owner=request.user.id
             )
+            troop_number = 0
             
     for booth in booth_blocks_:
-        if user_troop is None:
+        
+        # If a booth is owned by the current user then we know for certain that we can display 
+        # the cancel button
+
+        # If troop number is None, then we cannot possibly own the booth
+        if troop_number is None:
             booth_owned_by_current_user_ = False
+        # If the user is a cookie captain, that means they all share troop number 0, so we check
+        # to see if the user id matches if they own the booth.
+        elif is_cookie_captain:
+            booth_owned_by_current_user_ = booth.booth_block_current_cookie_captain_owner == request.user.id
+        # Otherwise, we see if the booth is owned by either the daisy troop or the current owner
         else:
-            if booth.booth_block_current_troop_owner == user_troop.troop_number or \
-               booth.booth_block_daisy_troop_owner == user_troop.troop_number:
-                booth_owned_by_current_user_ = True
-            else:
-                booth_owned_by_current_user_ = False
+            booth_owned_by_current_user_ = (
+                booth.booth_block_current_troop_owner == troop_number or 
+                booth.booth_block_daisy_troop_owner == troop_number
+                )
+
+        # Provide information back to the table about the booth
         current_booth_information = {
             "booth_block_information": booth,
             "booth_owned_by_current_user": booth_owned_by_current_user_,
