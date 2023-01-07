@@ -268,7 +268,7 @@ def booth_blocks(request):
     # 2a. If the active user belongs to a Daisy Troop, they should ONLY be able to see booths that 
     # are reserved by Cookie Captains.
     if is_daisy_troop:
-        booth_blocks_ = booth_blocks_.exclude(booth_block_current_cookie_captain_owner=NO_COOKIE_CAPTAIN_ID)
+        booth_blocks_ = booth_blocks_.filter(Q(booth_block_current_troop_owner=0) & Q(booth_block_reserved=True))
     # 2b. If the user is not a Cookie Captain, they should not be able to see booths held for CCs
     elif not is_cookie_captain:
         booth_blocks_ = booth_blocks_.exclude(booth_block_held_for_cookie_captains=True)
@@ -349,6 +349,7 @@ def booth_reservations(request):
             booth_blocks_ = booth_blocks_.filter(
                 booth_block_current_cookie_captain_owner=request.user.id
             )
+
             troop_number = 0
             
     for booth in booth_blocks_:
