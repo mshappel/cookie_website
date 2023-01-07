@@ -344,7 +344,11 @@ def booth_reservations(request):
             )
     except Troop.DoesNotExist:
         user_troop = None
-
+        if is_cookie_captain:
+            booth_blocks_ = booth_blocks_.filter(
+                booth_block_current_cookie_captain_owner=request.user.id
+            )
+            
     for booth in booth_blocks_:
         if user_troop is None:
             booth_owned_by_current_user_ = False
