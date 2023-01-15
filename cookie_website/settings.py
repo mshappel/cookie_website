@@ -34,6 +34,11 @@ DEBUG = env.bool("DEBUG")
 
 ALLOWED_HOSTS = [".herokuapp.com", "localhost", "127.0.0.1"]
 
+# Debug
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
 # Twilio Information
 TWILIO_ACCOUNT_SID = env.str("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = env.str("TWILIO_AUTH_TOKEN")
@@ -51,6 +56,8 @@ INSTALLED_APPS = [
     "bootstrap4",
     "bootstrap_datepicker_plus",
     "phonenumber_field",
+    # Debug Apps
+    "debug_toolbar",
     # Default Apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -61,6 +68,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # Debug
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    # Default Middleware
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",

@@ -23,4 +23,5 @@ urlpatterns = [
     path("booths/", include("cookie_booths.urls")),
     path("troops/", include("troops.urls")),
     path("", include("pages.urls")),
+    path('__debug__/', include('debug_toolbar.urls')),
 ]
