@@ -106,7 +106,7 @@ def enable_location_by_block(request):
     booth_information = []
     booth_blocks_ = BoothBlock.objects.order_by(
         "booth_day__booth", "booth_day", "booth_block_start_time"
-    )
+    ).select_related('booth_day', 'booth_day__booth')
 
     for booth in booth_blocks_:
         current_booth_information = {
@@ -243,7 +243,7 @@ def booth_blocks(request):
     """Display all booths"""
     booth_blocks_ = BoothBlock.objects.order_by(
         "booth_day__booth", "booth_day", "booth_block_start_time"
-    )
+    ).select_related('booth_day', 'booth_day__booth')
     available_troops = Troop.objects.order_by("troop_number")
     booth_information = []
     email = request.user.email
@@ -325,7 +325,7 @@ def booth_reservations(request):
     """Display all blocks currently reserved by the current user"""
     booth_blocks_ = BoothBlock.objects.order_by(
         "booth_day__booth", "booth_day", "booth_block_start_time"
-    )
+    ).select_related('booth_day', 'booth_day__booth')
     booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
     available_troops = Troop.objects.order_by("troop_number")
     email = request.user.email
