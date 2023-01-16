@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
+import sys
 from pathlib import Path
 from environs import Env
 
@@ -31,13 +32,10 @@ SECRET_KEY = env.str("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG")
+TESTING_MODE = 'test' in sys.argv
+DEV_MODE = DEBUG and not TESTING_MODE
 
 ALLOWED_HOSTS = [".herokuapp.com", "localhost", "127.0.0.1"]
-
-# Debug
-INTERNAL_IPS = [
-    "127.0.0.1",
-]
 
 # Twilio Information
 TWILIO_ACCOUNT_SID = env.str("TWILIO_ACCOUNT_SID")
@@ -56,8 +54,6 @@ INSTALLED_APPS = [
     "bootstrap4",
     "bootstrap_datepicker_plus",
     "phonenumber_field",
-    # Debug Apps
-    "debug_toolbar",
     # Default Apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -68,8 +64,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # Debug
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     # Default Middleware
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -164,6 +158,19 @@ LOGOUT_REDIRECT_URL = "home"
 
 # Heroku settings
 django_heroku.settings(locals())
+
+# Debug Settings
+if DEV_MODE:
+    MIDDLEWARE += (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    )
+    INSTALLED_APPS += (
+        'debug_toolbar',
+    )
+    INTERNAL_IPS = ('127.0.0.1', )
+    DEBUG_TOOLBAR_CONFIG = {
+        'INTERCEPT_REDIRECTS': False,
+    }
 
 # Email settings
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
