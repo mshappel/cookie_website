@@ -1,0 +1,82 @@
+{% if reserve_or_enable_booths == "reserve" %}
+    {% if permission_level == "admin" %}
+        <!-- Admins/SUCMs have a greater degree of control -
+        - They can reserve/cancel any booth for any troop
+        - They can flag booths for only cookie captains to reserve -->
+        <!-- There are four cases that we need to handle: -->
+        <!-- 1. If a block is not reserved or flagged for cookie captains, we can either reserve or flag -->
+        {% if block.booth_block_information.booth_block_reserved is False and block.booth_block_information.booth_block_held_for_cookie_captains is False %}
+            <input type="button" id="ReserveBooth" value="Reserve Booth"
+                onclick="ReserveBooth({{ block.booth_block_information.id }},
+                    '{{ block.booth_block_information.booth_day.booth.booth_requires_masks }}',
+                    0)">
+            <input type="button" id="HoldForCC" value="Hold for Cookie Captains"
+                onclick="HoldBoothForCookieCaptains({{ block.booth_block_information.id }})">
+        <!-- 2. If a block is reserved but not flagged for cookie captains, we can only cancel -->
+        {% elif block.booth_block_information.booth_block_reserved is True and block.booth_block_information.booth_block_held_for_cookie_captains is False %}
+            {% if block.booth_block_information.booth_block_current_troop_owner %}
+                Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
+            {% else %}
+                {% with block.booth_block_information.booth_block_current_cookie_captain_owner as user_id %}
+                    Reserved by {{ user.user_id.email }}
+                {% endwith %}
+            {% endif %}
+            <p></p>
+            <input type="button" id="CancelBooth" value="Cancel Booth"
+                onclick="CancelBooth({{ block.booth_block_information.id }},
+                    0)">
+        <!-- 3. If a block is not reserved but flagged for cookie captains, we can only unflag -->
+        {% elif block.booth_block_information.booth_block_reserved is False and block.booth_block_information.booth_block_held_for_cookie_captains is True %}
+            <input type="button" id="UnholdForCC" value="Cancel Hold for Cookie Captains"
+                onclick="UnholdBoothForCookieCaptains({{ block.booth_block_information.id }})">
+        <!-- 4. If a block is reserved and flagged, we can unreserve or unflag (which will also result in unreserving the daisy troop) -->
+        {% else %}
+            Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
+            <p></p>
+            <input type="button" id="CancelBooth" value="Cancel Booth"
+                onclick="CancelBooth({{ block.booth_block_information.id }},
+                    0)">
+            <input type="button" id="UnholdForCC" value="Cancel Booth And Cancel Hold for Cookie Captains"
+                onclick="UnholdBoothForCookieCaptains({{ block.booth_block_information.id }})">
+        {% endif %}
+    {% elif permission_level == "daisy" %}
+        <!-- For Daisy scouts, they can reserve or cancel booths that are reserved 
+                by Cookie Captains. For the list provided to this HTML, all booths in
+                the list should be owned by Cookie Captains, so the main piece we have
+                to do here is see whether another daisy troop owns this booth -->
+        {% if block.booth_block_information.booth_block_daisy_reserved is False %}
+            <input type="button" id="ReserveBooth" value="Reserve Booth"
+                onclick="ReserveBooth({{ block.booth_block_information.id }},
+                    '{{ block.booth_block_information.booth_day.booth.booth_requires_masks }}',
+                    1)">
+        {% elif block.booth_owned_by_current_user is True %}
+            <input type="button" id="CancelBooth" value="Cancel Booth"
+                onclick="CancelBooth({{ block.booth_block_information.id }},
+                    1)">
+        {% else %}
+            Reserved by {{ block.booth_block_information.booth_block_daisy_troop_owner }}
+        {% endif %}
+    {% elif permission_level == "tcc" %}
+        <!-- For TCCs, they can reserve or cancel booths for their troop only -->
+        {% if block.booth_block_information.booth_block_reserved is False %}
+            <input type="button" id="ReserveBooth" value="Reserve Booth"
+                onclick="ReserveBooth({{ block.booth_block_information.id }},
+                    '{{ block.booth_block_information.booth_day.booth.booth_requires_masks }}',
+                    0)">
+        {% elif  block.booth_owned_by_current_user is True %}
+            <input type="button" id="CancelBooth" value="Cancel Booth"
+                onclick="CancelBooth({{ block.booth_block_information.id }},
+                    0)">
+        {% else %}
+            Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
+        {% endif %}
+    {% endif %}
+{% elif reserve_or_enable_booths == "enable" %}
+    {% if block.booth_block_information.booth_block_enabled %}
+        <input type="button" id="DisableBooth" value="Disable Booth"
+                    onclick="DisableBooth({{ block.booth_block_information.id }})">
+    {% else %}
+        <input type="button" id="EnableBooth" value="Enable Booth"
+                    onclick="EnableBooth({{ block.booth_block_information.id }})">
+    {% endif %}
+{% endif %}

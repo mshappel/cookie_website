@@ -106,7 +106,7 @@ def enable_location_by_block(request):
     booth_information = []
     booth_blocks_ = BoothBlock.objects.order_by(
         "booth_day__booth", "booth_day", "booth_block_start_time"
-    )
+    ).select_related('booth_day', 'booth_day__booth')
 
     for booth in booth_blocks_:
         current_booth_information = {
