@@ -263,7 +263,7 @@ def booth_blocks(request):
 
     # Let's filter the booths following these steps
     # 1. Disabled Booths should be excluded for everyone
-    time_threshold = datetime.today() - timedelta(minutes=30)
+    time_threshold = make_aware(datetime.today()) - timedelta(minutes=30)
     booth_blocks_ = booth_blocks_.filter(booth_block_enabled=True, booth_block_start_time__gt=time_threshold) 
     # 2a. If the active user belongs to a Daisy Troop, they should ONLY be able to see booths that 
     # are reserved by Cookie Captains.
@@ -272,8 +272,9 @@ def booth_blocks(request):
     # 2b. If the user is not a Cookie Captain, they should not be able to see booths held for CCs
     elif not is_cookie_captain:
         booth_blocks_ = booth_blocks_.exclude(booth_block_held_for_cookie_captains=True)
+
     for booth in booth_blocks_:
-        # If a booth is owned by the current user the we know for certain that we can display 
+        # If a booth is owned by the current user then we know for certain that we can display 
         # the cancel button
 
         # If troop number is None, then we cannot possibly own the booth
