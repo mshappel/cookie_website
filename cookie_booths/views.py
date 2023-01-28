@@ -9,7 +9,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic.edit import DeleteView
-from django.utils.timezone import make_aware, datetime, timedelta
+from django.utils.timezone import make_aware, datetime, timedelta, utc
 from twilio.rest import Client
 
 from cookie_website.settings import NO_COOKIE_CAPTAIN_ID
@@ -263,7 +263,8 @@ def booth_blocks(request):
 
     # Let's filter the booths following these steps
     # 1. Disabled Booths should be excluded for everyone
-    time_threshold = make_aware(datetime.today()) - timedelta(minutes=30)
+    # TO DO: THIS IS A TEMPORARY FIX, THIS CAUSES A TEST FAILURE
+    time_threshold = make_aware(datetime.today()) - timedelta(hours=6, minutes=30)
     booth_blocks_ = booth_blocks_.filter(booth_block_enabled=True, booth_block_start_time__gt=time_threshold) 
     # 2a. If the active user belongs to a Daisy Troop, they should ONLY be able to see booths that 
     # are reserved by Cookie Captains.
