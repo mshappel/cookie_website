@@ -59,9 +59,10 @@
                                         onclick="HoldBoothForCookieCaptains({{ block.booth_block_information.id }})">
                                 <!-- 2. If a block is reserved but not flagged for cookie captains, we can only cancel -->
                                 {% elif block.booth_block_information.booth_block_reserved is True and block.booth_block_information.booth_block_held_for_cookie_captains is False %}
-                                    Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
                                     {% if block.booth_owned_by_cookie_captain is True %}
-                                    <br/>Reserved by Cookie Captain {{ block.booth_block_cookie_captain_email }}
+                                    Reserved by Cookie Captain {{ block.booth_block_cookie_captain_email }}
+                                    {% else %}
+                                    Reserved by {{ block.booth_block_information.booth_block_current_troop_owner }}
                                     {% endif %}
 
                                     {% if block.booth_block_information.booth_block_daisy_reserved is True %}
