@@ -298,7 +298,7 @@ def booth_blocks(request):
         # Next, if the booth does happen to be owned by a cookie captain, try to get their email address
         booth_owned_by_cookie_captain_ = False
         cookie_cap_user_email_ = None
-        if booth.booth_block_current_cookie_captain_owner != 0:
+        if booth.booth_block_current_cookie_captain_owner != 0 and not booth.booth_block_current_troop_owner:
             booth_owned_by_cookie_captain_ = True
             cookie_cap_user_email_ = CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner).email
 
@@ -387,7 +387,7 @@ def booth_reservations(request):
         # Next, if the booth does happen to be owned by a cookie captain, try to get their email address
         booth_owned_by_cookie_captain_ = False
         cookie_cap_user_email_ = None
-        if booth.booth_block_current_cookie_captain_owner != 0:
+        if booth.booth_block_current_cookie_captain_owner != 0 and not booth.booth_block_current_troop_owner:
             booth_owned_by_cookie_captain_ = True
             cookie_cap_user_email_ = CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner).email
 
