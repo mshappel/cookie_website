@@ -27,6 +27,11 @@ class BoothBlockHtmlTestCase(TestCase):
         "password": "secret",
     }
 
+    COOKIE_CAPTAIN_USER = {
+        "email": "cookies@monster.com",
+        "password": "secret"
+    }
+
     DAISY_USER = {
         "email": "nevergonna@run.around",
         "password": "secret",
@@ -94,8 +99,8 @@ class BoothBlockHtmlTestCase(TestCase):
         )
 
         cls.cookie_captain = get_user_model().objects.create_user(
-            email="cookies@monster.com",
-            password="cisforcookie",
+            email=cls.COOKIE_CAPTAIN_USER["email"],
+            password=cls.COOKIE_CAPTAIN_USER["password"]
         )
 
         cls.location = BoothLocation.objects.create(
@@ -236,6 +241,7 @@ class BoothBlockHtmlTestCase(TestCase):
         # - We should have a block listed
         # - We should have the option to reserve, with a drop down to select a troop
         # - We should see the block details (location, date, times)
+        # - We should see info for the troop that is currently reserving this booth
         # - We should see a cancellation button along with with a note of which troop owns this booth
         self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
         self.assertContains(response, "Select a Troop")
@@ -280,7 +286,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.block.booth_block_held_for_cookie_captains = True
         self.block.save()
         self.block.reserve_block(
-            self.diff_troop.troop_number, self.diff_troop.troop_number
+            self.diff_troop.troop_number, 0
         )
 
         self.client.login(
@@ -292,6 +298,7 @@ class BoothBlockHtmlTestCase(TestCase):
         # - We should have a block listed
         # - We should have the option to reserve, with a drop down to select a troop
         # - We should see the block details (location, date, times)
+        # - We should see info for the troop that is currently reserving this booth
         # - We should see a button to cancel holding the booth for cookie captains
         # - We should see a button to cancel the active reservation for the booth
         self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
@@ -300,6 +307,7 @@ class BoothBlockHtmlTestCase(TestCase):
         self.assertContains(response, self.BOOTH_DETAILS["booth_open_date"])
         self.assertContains(response, self.BOOTH_DETAILS["booth_open_time"])
         self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
+        self.assertContains(response, "Reserved by 301")
         self.assertContains(response, "Cancel Booth")
         self.assertContains(
             response, "Cancel Booth And Cancel Hold for Cookie Captains"
@@ -373,6 +381,65 @@ class BoothBlockHtmlTestCase(TestCase):
         self.assertNotContains(response, self.BOOTH_DETAILS["booth_open_time"])
         self.assertNotContains(response, self.BOOTH_DETAILS["booth_close_time"])
 
+    def test_booth_blocks_html_tcc_sees_daisy_and_cc_held_booth(self):
+        # Testing that a third party user can see the daisy and cookie captain information associated with a booth
+        self._add_permissions(PERMISSION_RESERVE_BOOTH)
+
+        # Flag the booth as both held by a cookie captain and a daisy troop
+        self.block.reserve_block(
+            0, self.cookie_captain.id
+        )
+        self.block.reserve_daisy_block(self.daisy_troop.troop_number)
+
+        self.client.login(
+            email=self.NORMAL_USER["email"], password=self.NORMAL_USER["password"]
+        )
+        response = self.client.get(reverse("cookie_booths:booth_blocks"))
+
+        # Is the correct data displayed?
+        # - We should have a block listed
+        # - We should see the block details (location, date, times)
+        # - We should see that the block is reserved by a Daisy Troop
+        # - We should not see a button to reserve or cancel this block
+        self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
+        self.assertContains(response, self.BOOTH_DETAILS["booth_location"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_date"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_time"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
+        self.assertContains(response, "Reserved by Cookie Captain cookies@monster.com")
+        self.assertContains(response, "Reserved by Daisy Troop 302")
+        self.assertNotContains(response, "Reserve Booth")
+        self.assertNotContains(response, "Cancel Booth")
+
+    def test_booth_blocks_html_cc_sees_daisy_held_booth(self):
+        # Testing that a cookie captain can see info for a daisy troop that is reserving the same booth as them
+        self._add_permissions(PERMISSION_RESERVE_BOOTH)
+        self._add_permissions(PERMISSION_COOKIE_CAPTAIN_RESERVE_BOOTH)
+
+        # Flag the booth as both held by a cookie captain and a daisy troop
+        self.block.reserve_block(
+            0, self.cookie_captain.id
+        )
+        self.block.reserve_daisy_block(self.daisy_troop.troop_number)
+
+        self.client.login(
+            email=self.COOKIE_CAPTAIN_USER["email"], password=self.COOKIE_CAPTAIN_USER["password"]
+        )
+        response = self.client.get(reverse("cookie_booths:booth_blocks"))
+
+        # Is the correct data displayed?
+        # - We should have a block listed
+        # - We should see the block details (location, date, times)
+        # - We should see that the block is reserved by a Daisy Troop
+        # - We should see a button to cancel this block (though it will not work)
+        self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
+        self.assertContains(response, self.BOOTH_DETAILS["booth_location"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_date"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_open_time"])
+        self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
+        self.assertContains(response, "Reserved by Daisy Troop 302")
+        self.assertContains(response, "Cancel Booth")
+
     def test_booth_blocks_html_daisy_troop_no_booths_available(self):
         self._add_permissions(PERMISSION_RESERVE_BOOTH)
 
@@ -407,12 +474,14 @@ class BoothBlockHtmlTestCase(TestCase):
         # Is the correct data displayed?
         # - We should have a block listed
         # - We should see the block details (location, date, times)
+        # - We should see that the block is reserved by a cookie captain
         # - We should see a button for the daisy troop to reserve the block
         self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
         self.assertContains(response, self.BOOTH_DETAILS["booth_location"])
         self.assertContains(response, self.BOOTH_DETAILS["booth_open_date"])
         self.assertContains(response, self.BOOTH_DETAILS["booth_open_time"])
         self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
+        self.assertContains(response, "Reserved by Cookie Captain cookies@monster.com")
         self.assertContains(response, "Reserve Booth")
 
     def test_booth_blocks_html_daisy_troop_booth_reserved(self):
@@ -435,12 +504,14 @@ class BoothBlockHtmlTestCase(TestCase):
         # Is the correct data displayed?
         # - We should have a block listed
         # - We should see the block details (location, date, times)
+        # - We should see that the block is reserved by a cookie captain
         # - We should see a button for the daisy troop to cancel the reservation
         self.assertTemplateUsed(response, "cookie_booths/booth_blocks.html")
         self.assertContains(response, self.BOOTH_DETAILS["booth_location"])
         self.assertContains(response, self.BOOTH_DETAILS["booth_open_date"])
         self.assertContains(response, self.BOOTH_DETAILS["booth_open_time"])
         self.assertContains(response, self.BOOTH_DETAILS["booth_close_time"])
+        self.assertContains(response, "Reserved by Cookie Captain cookies@monster.com")
         self.assertContains(response, "Cancel Booth")
 
     # Disable for temporary fix
@@ -482,3 +553,6 @@ class BoothBlockHtmlTestCase(TestCase):
 
         self.daisy_user.user_permissions.add(permission)
         self.daisy_user.save()
+
+        self.cookie_captain.user_permissions.add(permission)
+        self.cookie_captain.save()

@@ -16,6 +16,7 @@ from cookie_website.settings import NO_COOKIE_CAPTAIN_ID
 
 from .forms import BoothLocationForm, BoothHoursForm, EnableFreeForAll
 from .models import BoothLocation, BoothDay, BoothHours, BoothBlock, CookieSeason
+from accounts.models import CustomUser
 from troops.models import Troop
 
 # -----------------------------------------------------------------------
@@ -112,6 +113,8 @@ def enable_location_by_block(request):
         current_booth_information = {
             "booth_block_information": booth,
             "booth_owned_by_current_user": None,
+            "booth_owned_by_cookie_captain": False,
+            "booth_block_cookie_captain_email": ""
         }
         booth_information.append(current_booth_information)
 
@@ -292,10 +295,19 @@ def booth_blocks(request):
                 booth.booth_block_daisy_troop_owner == troop_number
                 )
 
+        # Next, if the booth does happen to be owned by a cookie captain, try to get their email address
+        booth_owned_by_cookie_captain_ = False
+        cookie_cap_user_email_ = None
+        if booth.booth_block_current_cookie_captain_owner != 0:
+            booth_owned_by_cookie_captain_ = True
+            cookie_cap_user_email_ = CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner).email
+
         # Provide information back to the table about the booth
         current_booth_information = {
             "booth_block_information": booth,
             "booth_owned_by_current_user": booth_owned_by_current_user_,
+            "booth_owned_by_cookie_captain": booth_owned_by_cookie_captain_,
+            "booth_block_cookie_captain_email": cookie_cap_user_email_
         }
         booth_information.append(current_booth_information)
 
@@ -372,10 +384,19 @@ def booth_reservations(request):
                 booth.booth_block_daisy_troop_owner == troop_number
                 )
 
+        # Next, if the booth does happen to be owned by a cookie captain, try to get their email address
+        booth_owned_by_cookie_captain_ = False
+        cookie_cap_user_email_ = None
+        if booth.booth_block_current_cookie_captain_owner != 0:
+            booth_owned_by_cookie_captain_ = True
+            cookie_cap_user_email_ = CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner).email
+
         # Provide information back to the table about the booth
         current_booth_information = {
             "booth_block_information": booth,
             "booth_owned_by_current_user": booth_owned_by_current_user_,
+            "booth_owned_by_cookie_captain": booth_owned_by_cookie_captain_,
+            "booth_block_cookie_captain_email": cookie_cap_user_email_
         }
         booth_information.append(current_booth_information)
 
@@ -577,6 +598,15 @@ def cancel_block(request, daisy, block_id):
             if block_to_cancel.booth_block_current_cookie_captain_owner != user_id:
                 message_response = {
                     "message": "You cannot cancel a reservation for another troop",
+                    "is_success": False,
+                }
+                message_response = json.dumps(message_response)
+                return HttpResponse(message_response)
+            # The user is a Cookie Captain, but the booth is already reserved by a daisy troop.
+            # They cannot cancel the booth and need to speak to the Cookie Team
+            elif block_to_cancel.booth_block_daisy_reserved:
+                message_response = {
+                    "message": "You cannot cancel a reservation that has been reserved by a Daisy Troop. Please contact the Cookie Team.",
                     "is_success": False,
                 }
                 message_response = json.dumps(message_response)
