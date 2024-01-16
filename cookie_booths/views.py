@@ -107,14 +107,14 @@ def enable_location_by_block(request):
     booth_information = []
     booth_blocks_ = BoothBlock.objects.order_by(
         "booth_day__booth", "booth_day", "booth_block_start_time"
-    ).select_related('booth_day', 'booth_day__booth')
+    ).select_related("booth_day", "booth_day__booth")
 
     for booth in booth_blocks_:
         current_booth_information = {
             "booth_block_information": booth,
             "booth_owned_by_current_user": None,
             "booth_owned_by_cookie_captain": False,
-            "booth_block_cookie_captain_email": ""
+            "booth_block_cookie_captain_email": "",
         }
         booth_information.append(current_booth_information)
 
@@ -241,17 +241,20 @@ def enable_all_locations_ffa(request):
 # Booth User Functions
 # -----------------------------------------------------------------------
 
+
 @login_required
 def booth_blocks(request):
     """Display all booths"""
     booth_blocks_ = BoothBlock.objects.order_by(
         "booth_day__booth", "booth_day", "booth_block_start_time"
-    ).select_related('booth_day', 'booth_day__booth')
+    ).select_related("booth_day", "booth_day__booth")
     available_troops = Troop.objects.order_by("troop_number")
     booth_information = []
     email = request.user.email
     user_id = request.user.id
-    is_cookie_captain = request.user.has_perm('cookie_booths.cookie_captain_reserve_block')
+    is_cookie_captain = request.user.has_perm(
+        "cookie_booths.cookie_captain_reserve_block"
+    )
 
     troop_number = None
     try:
@@ -268,17 +271,21 @@ def booth_blocks(request):
     # 1. Disabled Booths should be excluded for everyone
     # TO DO: THIS IS A TEMPORARY FIX, THIS CAUSES A TEST FAILURE
     time_threshold = make_aware(datetime.today()) - timedelta(hours=6, minutes=30)
-    booth_blocks_ = booth_blocks_.filter(booth_block_enabled=True, booth_block_start_time__gt=time_threshold) 
-    # 2a. If the active user belongs to a Daisy Troop, they should ONLY be able to see booths that 
+    booth_blocks_ = booth_blocks_.filter(
+        booth_block_enabled=True, booth_block_start_time__gt=time_threshold
+    )
+    # 2a. If the active user belongs to a Daisy Troop, they should ONLY be able to see booths that
     # are reserved by Cookie Captains.
     if is_daisy_troop:
-        booth_blocks_ = booth_blocks_.filter(Q(booth_block_current_troop_owner=0) & Q(booth_block_reserved=True))
+        booth_blocks_ = booth_blocks_.filter(
+            Q(booth_block_current_troop_owner=0) & Q(booth_block_reserved=True)
+        )
     # 2b. If the user is not a Cookie Captain, they should not be able to see booths held for CCs
     elif not is_cookie_captain:
         booth_blocks_ = booth_blocks_.exclude(booth_block_held_for_cookie_captains=True)
 
     for booth in booth_blocks_:
-        # If a booth is owned by the current user then we know for certain that we can display 
+        # If a booth is owned by the current user then we know for certain that we can display
         # the cancel button
 
         # If troop number is None, then we cannot possibly own the booth
@@ -287,27 +294,34 @@ def booth_blocks(request):
         # If the user is a cookie captain, that means they all share troop number 0, so we check
         # to see if the user id matches if they own the booth.
         elif is_cookie_captain:
-            booth_owned_by_current_user_ = booth.booth_block_current_cookie_captain_owner == user_id
+            booth_owned_by_current_user_ = (
+                booth.booth_block_current_cookie_captain_owner == user_id
+            )
         # Otherwise, we see if the booth is owned by either the daisy troop or the current owner
         else:
             booth_owned_by_current_user_ = (
-                booth.booth_block_current_troop_owner == troop_number or 
-                booth.booth_block_daisy_troop_owner == troop_number
-                )
+                booth.booth_block_current_troop_owner == troop_number
+                or booth.booth_block_daisy_troop_owner == troop_number
+            )
 
         # Next, if the booth does happen to be owned by a cookie captain, try to get their email address
         booth_owned_by_cookie_captain_ = False
         cookie_cap_user_email_ = None
-        if booth.booth_block_current_cookie_captain_owner != 0 and not booth.booth_block_current_troop_owner:
+        if (
+            booth.booth_block_current_cookie_captain_owner != 0
+            and not booth.booth_block_current_troop_owner
+        ):
             booth_owned_by_cookie_captain_ = True
-            cookie_cap_user_email_ = CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner).email
+            cookie_cap_user_email_ = f"""Cookie Captain: {CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner).first_name}
+                                         {CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner).last_name}
+                                        || Contact: {CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner)}"""
 
         # Provide information back to the table about the booth
         current_booth_information = {
             "booth_block_information": booth,
             "booth_owned_by_current_user": booth_owned_by_current_user_,
             "booth_owned_by_cookie_captain": booth_owned_by_cookie_captain_,
-            "booth_block_cookie_captain_email": cookie_cap_user_email_
+            "booth_block_cookie_captain_email": cookie_cap_user_email_,
         }
         booth_information.append(current_booth_information)
 
@@ -338,17 +352,19 @@ def booth_reservations(request):
     """Display all blocks currently reserved by the current user"""
     booth_blocks_ = BoothBlock.objects.order_by(
         "booth_day__booth", "booth_day", "booth_block_start_time"
-    ).select_related('booth_day', 'booth_day__booth')
+    ).select_related("booth_day", "booth_day__booth")
     booth_blocks_ = booth_blocks_.exclude(booth_block_enabled=False)
     available_troops = Troop.objects.order_by("troop_number")
     email = request.user.email
     booth_information = []
-    is_cookie_captain = request.user.has_perm('cookie_booths.cookie_captain_reserve_block')
+    is_cookie_captain = request.user.has_perm(
+        "cookie_booths.cookie_captain_reserve_block"
+    )
 
     try:
         user_troop = Troop.objects.get(troop_cookie_coordinator=email)
         troop_number = user_troop.troop_number
-        if user_troop.troop_level==1:
+        if user_troop.troop_level == 1:
             booth_blocks_ = booth_blocks_.filter(
                 booth_block_daisy_troop_owner=user_troop.troop_number
             )
@@ -364,10 +380,10 @@ def booth_reservations(request):
             )
 
             troop_number = 0
-            
+
     for booth in booth_blocks_:
-        
-        # If a booth is owned by the current user then we know for certain that we can display 
+
+        # If a booth is owned by the current user then we know for certain that we can display
         # the cancel button
 
         # If troop number is None, then we cannot possibly own the booth
@@ -376,27 +392,34 @@ def booth_reservations(request):
         # If the user is a cookie captain, that means they all share troop number 0, so we check
         # to see if the user id matches if they own the booth.
         elif is_cookie_captain:
-            booth_owned_by_current_user_ = booth.booth_block_current_cookie_captain_owner == request.user.id
+            booth_owned_by_current_user_ = (
+                booth.booth_block_current_cookie_captain_owner == request.user.id
+            )
         # Otherwise, we see if the booth is owned by either the daisy troop or the current owner
         else:
             booth_owned_by_current_user_ = (
-                booth.booth_block_current_troop_owner == troop_number or 
-                booth.booth_block_daisy_troop_owner == troop_number
-                )
+                booth.booth_block_current_troop_owner == troop_number
+                or booth.booth_block_daisy_troop_owner == troop_number
+            )
 
         # Next, if the booth does happen to be owned by a cookie captain, try to get their email address
         booth_owned_by_cookie_captain_ = False
         cookie_cap_user_email_ = None
-        if booth.booth_block_current_cookie_captain_owner != 0 and not booth.booth_block_current_troop_owner:
+        if (
+            booth.booth_block_current_cookie_captain_owner != 0
+            and not booth.booth_block_current_troop_owner
+        ):
             booth_owned_by_cookie_captain_ = True
-            cookie_cap_user_email_ = CustomUser.objects.get(id=booth.booth_block_current_cookie_captain_owner).email
+            cookie_cap_user_email_ = CustomUser.objects.get(
+                id=booth.booth_block_current_cookie_captain_owner
+            ).first_name
 
         # Provide information back to the table about the booth
         current_booth_information = {
             "booth_block_information": booth,
             "booth_owned_by_current_user": booth_owned_by_current_user_,
             "booth_owned_by_cookie_captain": booth_owned_by_cookie_captain_,
-            "booth_block_cookie_captain_email": cookie_cap_user_email_
+            "booth_block_cookie_captain_email": cookie_cap_user_email_,
         }
         booth_information.append(current_booth_information)
 
@@ -404,7 +427,7 @@ def booth_reservations(request):
     if request.user.has_perm("cookie_booths.block_reservation_admin"):
         permission_level = "admin"
     elif request.user.has_perm("cookie_booths.block_reservation"):
-        if user_troop is not None and user_troop.troop_level==1:
+        if user_troop is not None and user_troop.troop_level == 1:
             permission_level = "daisy"
         else:
             permission_level = "tcc"
@@ -460,7 +483,7 @@ def reserve_block(request, daisy, block_id):
     # b) available to any other troop
     # Non-Daisy Troops can reserve any booth that isn't already reserved by a CC or troop
     # Daisy Troops can only reserve booths that have already been reserved by a CC.
-    
+
     # Attempt to reserve a block, based on the amount of tickets available to the user, FFA status, etc
     email = request.user.email
     message_response = {}
@@ -469,8 +492,8 @@ def reserve_block(request, daisy, block_id):
 
     # Default message response
     message_response = {
-    "message": None,
-    "is_success": False,    
+        "message": None,
+        "is_success": False,
     }
 
     if request.method == "POST":
@@ -478,9 +501,9 @@ def reserve_block(request, daisy, block_id):
         user_identification = _identify_user(request, block_to_reserve)
 
         # If we did not succeed identifying the user trying to reserve, then return a message
-        if not user_identification['success']:
+        if not user_identification["success"]:
             message_response["message"] = f"{user_identification['message']}"
-            message_response["is_success"] = user_identification['success']
+            message_response["is_success"] = user_identification["success"]
             message_response = json.dumps(message_response)
             return HttpResponse(message_response)
 
@@ -488,16 +511,18 @@ def reserve_block(request, daisy, block_id):
         # If FFA is not enabled, check if the user has remaining tickets
         if not block_to_reserve.booth_day.booth_day_freeforall_enabled:
             tickets_remain = True
-            
-            if not user_identification['rem_tickets']:
+
+            if not user_identification["rem_tickets"]:
                 message_response["message"] = "No remaining tickets for this week"
                 message_response["is_success"] = False
                 tickets_remain = False
 
             # Tickets may remain, but check to see if they may have a golden booth.
             booth_is_golden = block_to_reserve.booth_day.booth_day_is_golden
-            if booth_is_golden and not user_identification['rem_golden_tickets']:
-                message_response["message"] = "No remaining golden tickets for this week"
+            if booth_is_golden and not user_identification["rem_golden_tickets"]:
+                message_response[
+                    "message"
+                ] = "No remaining golden tickets for this week"
                 message_response["is_success"] = False
                 tickets_remain = False
 
@@ -514,14 +539,17 @@ def reserve_block(request, daisy, block_id):
             block_to_reserve.booth_day.booth.booth_block_level_restrictions_end
         )
 
-        # If the booth_restraction is start is zero greater than zero, then True, so check if 
+        # If the booth_restraction is start is zero greater than zero, then True, so check if
         # the user has a troop within range. Cookie captains can only reserve booths that Daisy troops
         # themselves could reserve.
-        if booth_restrictions_start: 
-            if (not user_identification['troop_trying_to_reserve_level'] in range(
-                booth_restrictions_start, booth_restrictions_end + 1)):
+        if booth_restrictions_start:
+            if not user_identification["troop_trying_to_reserve_level"] in range(
+                booth_restrictions_start, booth_restrictions_end + 1
+            ):
 
-                message_response["message"] = "Cannot reserve booth, troop level restrictions apply"
+                message_response[
+                    "message"
+                ] = "Cannot reserve booth, troop level restrictions apply"
                 message_response["is_success"] = False
                 message_response = json.dumps(message_response)
                 return HttpResponse(message_response)
@@ -530,11 +558,12 @@ def reserve_block(request, daisy, block_id):
         # For dates LTE is dates ON or AFTER the booth_day, GTE is dates ON or BEFORE the booth_day
         booth_day = block_to_reserve.booth_day.booth_day_date
         try:
-            successful = CookieSeason.objects.filter(Q(season_start_date__lte=booth_day) &
-                Q(season_end_date__gte=booth_day))[0].is_booth_reservable(booth_date=booth_day)
+            successful = CookieSeason.objects.filter(
+                Q(season_start_date__lte=booth_day) & Q(season_end_date__gte=booth_day)
+            )[0].is_booth_reservable(booth_date=booth_day)
         except IndexError:
             successful = False
-        
+
         if not successful:
             message_response["message"] = "This booth is not yet reservable"
             message_response["is_success"] = False
@@ -545,29 +574,32 @@ def reserve_block(request, daisy, block_id):
         # the booth.
         if daisy:
             successful = block_to_reserve.reserve_daisy_block(
-                daisy_troop_id=user_identification['troop_trying_to_reserve']
-                )
+                daisy_troop_id=user_identification["troop_trying_to_reserve"]
+            )
         else:
             successful = block_to_reserve.reserve_block(
-                troop_id=user_identification['troop_trying_to_reserve'],
-                cookie_cap_id=user_identification['cookie_captain_id']
+                troop_id=user_identification["troop_trying_to_reserve"],
+                cookie_cap_id=user_identification["cookie_captain_id"],
             )
 
         # If we were successful, provide a positive message, if we were not, provide a negative
         # response.
         message_response["is_success"] = successful
         if successful:
-            message_snippit = user_identification['troop_trying_to_reserve']           
+            message_snippit = user_identification["troop_trying_to_reserve"]
             # If the user is a cookie captain, indicate to them via their email address that
             # they successfully signed up for a booth.
-            if user_identification['cookie_captain_id']:
-                message_snippit = email           
-            message_response['message'] = f"Successfully reserved booth for {message_snippit}"    
+            if user_identification["cookie_captain_id"]:
+                message_snippit = email
+            message_response[
+                "message"
+            ] = f"Successfully reserved booth for {message_snippit}"
         else:
-            message_response['message'] = f"Failed to reserve booth"
-            
+            message_response["message"] = f"Failed to reserve booth"
+
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
+
 
 @login_required
 def cancel_block(request, daisy, block_id):
@@ -575,7 +607,9 @@ def cancel_block(request, daisy, block_id):
     email = request.user.email
     is_cookie_admin = request.user.has_perm("cookie_booths.block_reservation_admin")
     is_tcc = request.user.has_perm("cookie_booths.block_reservation")
-    is_cookie_captain = request.user.has_perm("cookie_booths.cookie_captain_reserve_block")
+    is_cookie_captain = request.user.has_perm(
+        "cookie_booths.cookie_captain_reserve_block"
+    )
 
     if request.method == "POST":
         block_to_cancel = BoothBlock.objects.get(id=block_id)
@@ -584,9 +618,18 @@ def cancel_block(request, daisy, block_id):
             pass
         elif is_tcc:
             # The user is a TCC; the user's troop # is used to check if they can cancel
-            troop_trying_to_cancel = Troop.objects.get(troop_cookie_coordinator=email).troop_number
-            if (troop_trying_to_cancel != block_to_cancel.booth_block_current_troop_owner and
-                (daisy and troop_trying_to_cancel != block_to_cancel.booth_block_daisy_troop_owner)):
+            troop_trying_to_cancel = Troop.objects.get(
+                troop_cookie_coordinator=email
+            ).troop_number
+            if (
+                troop_trying_to_cancel
+                != block_to_cancel.booth_block_current_troop_owner
+                and (
+                    daisy
+                    and troop_trying_to_cancel
+                    != block_to_cancel.booth_block_daisy_troop_owner
+                )
+            ):
                 message_response = {
                     "message": "You cannot cancel a reservation for another troop",
                     "is_success": False,
@@ -645,6 +688,7 @@ def cancel_block(request, daisy, block_id):
         }
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
+
 
 @login_required
 def hold_block_for_cookie_captain(request, block_id):
@@ -708,18 +752,20 @@ def cancel_hold_for_cookie_captain(request, block_id):
     message_response = json.dumps(message_response)
     return HttpResponse(message_response)
 
+
 def send_sms(message, recipients):
     try:
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
         for recipient in recipients:
             if recipient:
-                client.messages.create(to=recipient,
-                                        from_=settings.TWILIO_NUMBER,
-                                        body=message)
+                client.messages.create(
+                    to=recipient, from_=settings.TWILIO_NUMBER, body=message
+                )
         success = True
     except:
         success = False
     return success
+
 
 # Helper Functions
 def get_week_start_end_from_date(date):
@@ -751,6 +797,7 @@ def get_num_tickets_remaining_cookie_captain(cookie_captain_id, date, blocks):
 
     return rem, rem_golden_ticket
 
+
 def get_num_tickets_remaining(troop, date, is_cookie_captain=False):
 
     start_date, end_date = get_week_start_end_from_date(date)
@@ -765,8 +812,8 @@ def get_num_tickets_remaining(troop, date, is_cookie_captain=False):
 
     if is_cookie_captain:
         return get_num_tickets_remaining_cookie_captain(
-            cookie_captain_id=troop, 
-            date=date, 
+            cookie_captain_id=troop,
+            date=date,
             blocks=blocks_,
         )
 
@@ -775,7 +822,7 @@ def get_num_tickets_remaining(troop, date, is_cookie_captain=False):
 
     # If this is a daisy troop, they cannot be the primary owner of a block, only secondary
     # So we need to filter them differently based on that
-    if troop.troop_level==1:
+    if troop.troop_level == 1:
         blocks_ = blocks_.filter(booth_block_daisy_troop_owner=troop.troop_number)
     else:
         blocks_ = blocks_.filter(booth_block_current_troop_owner=troop.troop_number)
@@ -799,29 +846,32 @@ def get_num_tickets_remaining(troop, date, is_cookie_captain=False):
 
     return rem, rem_golden_ticket
 
+
 # TODO: This needs to be renamed, I'll think about about a better name later
 def _identify_user(request, block_to_reserve):
     # Let's simplify the logic in reserve_block
     is_cookie_admin = request.user.has_perm("cookie_booths.block_reservation_admin")
     is_tcc = request.user.has_perm("cookie_booths.block_reservation")
-    is_cookie_captain = request.user.has_perm("cookie_booths.cookie_captain_reserve_block")
+    is_cookie_captain = request.user.has_perm(
+        "cookie_booths.cookie_captain_reserve_block"
+    )
 
     email = request.user.email
 
     # To simplify the return, let's make it a dictionary.
     user_identification = {
-        'success': False,
-        'message': None,
-        'troop_trying_to_reserve': 0,
-        'troop_trying_to_reserve_level': 0,
-        'rem_tickets': 0,
-        'rem_golden_tickets': 0,
-        'cookie_captain_id': settings.NO_COOKIE_CAPTAIN_ID
+        "success": False,
+        "message": None,
+        "troop_trying_to_reserve": 0,
+        "troop_trying_to_reserve_level": 0,
+        "rem_tickets": 0,
+        "rem_golden_tickets": 0,
+        "cookie_captain_id": settings.NO_COOKIE_CAPTAIN_ID,
     }
 
     # First let's see if a cookie admin is making reservations.
     if is_cookie_admin:
-        troop_trying_to_reserve = request.POST['troop_number']
+        troop_trying_to_reserve = request.POST["troop_number"]
         # The cookie admin forgot to select a troop, we return default to indicate there was a failure
         if not troop_trying_to_reserve:
             user_identification["message"] = "Please select a troop"
@@ -831,9 +881,9 @@ def _identify_user(request, block_to_reserve):
         troop = Troop.objects.get(troop_number=troop_trying_to_reserve)
         troop_trying_to_reserve_level = troop.troop_level
         rem_tickets, rem_golden_tickets = get_num_tickets_remaining(
-                troop=troop, 
-                date=block_to_reserve.booth_day.booth_day_date,
-            )
+            troop=troop,
+            date=block_to_reserve.booth_day.booth_day_date,
+        )
 
     elif is_tcc:
         # The user is a TCC; the user's troop # is used for reservation
@@ -841,18 +891,18 @@ def _identify_user(request, block_to_reserve):
         troop_trying_to_reserve = troop.troop_number
         troop_trying_to_reserve_level = troop.troop_level
         rem_tickets, rem_golden_tickets = get_num_tickets_remaining(
-            troop=troop, 
+            troop=troop,
             date=block_to_reserve.booth_day.booth_day_date,
-        )        
+        )
 
     elif is_cookie_captain:
         cookie_captain_id = request.user.id
         rem_tickets, rem_golden_tickets = get_num_tickets_remaining(
-            troop=cookie_captain_id, 
-            date=block_to_reserve.booth_day.booth_day_date, 
+            troop=cookie_captain_id,
+            date=block_to_reserve.booth_day.booth_day_date,
             is_cookie_captain=True,
         )
-        
+
         # When a cookie captain is reserving, we reserve it under Troop 0, and we give restrictions
         # for Daisy troops.
         troop_trying_to_reserve = 0
@@ -864,12 +914,12 @@ def _identify_user(request, block_to_reserve):
     else:
         # Shouldn't happen, but if it does we are passing a success of false.
         user_identification["message"] = "Unknown issue, please contact admin"
-        return user_identification     
+        return user_identification
 
-    user_identification['success'] = True
-    user_identification['troop_trying_to_reserve'] = troop_trying_to_reserve
-    user_identification['troop_trying_to_reserve_level'] = troop_trying_to_reserve_level
-    user_identification['rem_tickets'] = rem_tickets
-    user_identification['rem_golden_tickets'] = rem_golden_tickets
+    user_identification["success"] = True
+    user_identification["troop_trying_to_reserve"] = troop_trying_to_reserve
+    user_identification["troop_trying_to_reserve_level"] = troop_trying_to_reserve_level
+    user_identification["rem_tickets"] = rem_tickets
+    user_identification["rem_golden_tickets"] = rem_golden_tickets
 
     return user_identification
