@@ -1,6 +1,9 @@
 {% extends "base.html" %}
-{% load bootstrap4 %}
-{% bootstrap_javascript jquery='full' %}
+{% load django_bootstrap5 %}
+
+<!-- Load jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRlWwo3Xr2N/7cl01V24b1n6zRLCVJc1Et0k0ST3I" crossorigin="anonymous"></script>
+{% bootstrap_javascript %}
 
 {% block title %}
     Booth Editor
@@ -15,9 +18,9 @@
   <form action="{% url 'cookie_booths:enable_ffa' %}" method='post' class="form">
     {% csrf_token %}
     {% bootstrap_form form %}
-    {{  form.media }}
-    {% buttons %}
-    <button name="submit">Enable Free For All</button>
-    {% endbuttons %}
+    {{ form.media }}
+    <div class="mb-3">
+      <button name="submit">Enable Free For All</button>
+    </div>
   </form>
 {% endblock content %}

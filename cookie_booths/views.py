@@ -2,22 +2,22 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.mail import send_mail
 from django.db.models import Q
-from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.utils.timezone import datetime, make_aware, timedelta
 from django.views.generic.edit import DeleteView
-from django.utils.timezone import make_aware, datetime, timedelta, utc
 from twilio.rest import Client
 
-from cookie_website.settings import NO_COOKIE_CAPTAIN_ID
-
-from .forms import BoothLocationForm, BoothHoursForm, EnableFreeForAll
-from .models import BoothLocation, BoothDay, BoothHours, BoothBlock, CookieSeason
 from accounts.models import CustomUser
+from cookie_website.settings import NO_COOKIE_CAPTAIN_ID
 from troops.models import Troop
+
+from .forms import BoothHoursForm, BoothLocationForm, EnableFreeForAll
+from .models import BoothBlock, BoothDay, BoothHours, BoothLocation, CookieSeason
 
 # -----------------------------------------------------------------------
 # Booth Admin Functions
@@ -198,9 +198,7 @@ def disable_location_by_day(request):
 def enable_location_ffa(request, booth_id, date):
     # Enable free-for-all for a particular booth up to and including a particular date.
     # Will also enable dates up until that day if not already
-    for booth_day in BoothDay.objects.filter(
-        booth_id=booth_id, booth_day_date__lte=date
-    ):
+    for booth_day in BoothDay.objects.filter(booth_id=booth_id, booth_day_date__lte=date):
         booth_day.enable_freeforall()
 
     return
@@ -252,9 +250,7 @@ def booth_blocks(request):
     booth_information = []
     email = request.user.email
     user_id = request.user.id
-    is_cookie_captain = request.user.has_perm(
-        "cookie_booths.cookie_captain_reserve_block"
-    )
+    is_cookie_captain = request.user.has_perm("cookie_booths.cookie_captain_reserve_block")
 
     troop_number = None
     try:
@@ -294,9 +290,7 @@ def booth_blocks(request):
         # If the user is a cookie captain, that means they all share troop number 0, so we check
         # to see if the user id matches if they own the booth.
         elif is_cookie_captain:
-            booth_owned_by_current_user_ = (
-                booth.booth_block_current_cookie_captain_owner == user_id
-            )
+            booth_owned_by_current_user_ = booth.booth_block_current_cookie_captain_owner == user_id
         # Otherwise, we see if the booth is owned by either the daisy troop or the current owner
         else:
             booth_owned_by_current_user_ = (
@@ -357,9 +351,7 @@ def booth_reservations(request):
     available_troops = Troop.objects.order_by("troop_number")
     email = request.user.email
     booth_information = []
-    is_cookie_captain = request.user.has_perm(
-        "cookie_booths.cookie_captain_reserve_block"
-    )
+    is_cookie_captain = request.user.has_perm("cookie_booths.cookie_captain_reserve_block")
 
     try:
         user_troop = Troop.objects.get(troop_cookie_coordinator=email)
@@ -520,9 +512,7 @@ def reserve_block(request, daisy, block_id):
             # Tickets may remain, but check to see if they may have a golden booth.
             booth_is_golden = block_to_reserve.booth_day.booth_day_is_golden
             if booth_is_golden and not user_identification["rem_golden_tickets"]:
-                message_response[
-                    "message"
-                ] = "No remaining golden tickets for this week"
+                message_response["message"] = "No remaining golden tickets for this week"
                 message_response["is_success"] = False
                 tickets_remain = False
 
@@ -535,9 +525,7 @@ def reserve_block(request, daisy, block_id):
         booth_restrictions_start = (
             block_to_reserve.booth_day.booth.booth_block_level_restrictions_start
         )
-        booth_restrictions_end = (
-            block_to_reserve.booth_day.booth.booth_block_level_restrictions_end
-        )
+        booth_restrictions_end = block_to_reserve.booth_day.booth.booth_block_level_restrictions_end
 
         # If the booth_restraction is start is zero greater than zero, then True, so check if
         # the user has a troop within range. Cookie captains can only reserve booths that Daisy troops
@@ -547,9 +535,7 @@ def reserve_block(request, daisy, block_id):
                 booth_restrictions_start, booth_restrictions_end + 1
             ):
 
-                message_response[
-                    "message"
-                ] = "Cannot reserve booth, troop level restrictions apply"
+                message_response["message"] = "Cannot reserve booth, troop level restrictions apply"
                 message_response["is_success"] = False
                 message_response = json.dumps(message_response)
                 return HttpResponse(message_response)
@@ -591,9 +577,7 @@ def reserve_block(request, daisy, block_id):
             # they successfully signed up for a booth.
             if user_identification["cookie_captain_id"]:
                 message_snippit = email
-            message_response[
-                "message"
-            ] = f"Successfully reserved booth for {message_snippit}"
+            message_response["message"] = f"Successfully reserved booth for {message_snippit}"
         else:
             message_response["message"] = f"Failed to reserve booth"
 
@@ -607,9 +591,7 @@ def cancel_block(request, daisy, block_id):
     email = request.user.email
     is_cookie_admin = request.user.has_perm("cookie_booths.block_reservation_admin")
     is_tcc = request.user.has_perm("cookie_booths.block_reservation")
-    is_cookie_captain = request.user.has_perm(
-        "cookie_booths.cookie_captain_reserve_block"
-    )
+    is_cookie_captain = request.user.has_perm("cookie_booths.cookie_captain_reserve_block")
 
     if request.method == "POST":
         block_to_cancel = BoothBlock.objects.get(id=block_id)
@@ -618,17 +600,9 @@ def cancel_block(request, daisy, block_id):
             pass
         elif is_tcc:
             # The user is a TCC; the user's troop # is used to check if they can cancel
-            troop_trying_to_cancel = Troop.objects.get(
-                troop_cookie_coordinator=email
-            ).troop_number
-            if (
-                troop_trying_to_cancel
-                != block_to_cancel.booth_block_current_troop_owner
-                and (
-                    daisy
-                    and troop_trying_to_cancel
-                    != block_to_cancel.booth_block_daisy_troop_owner
-                )
+            troop_trying_to_cancel = Troop.objects.get(troop_cookie_coordinator=email).troop_number
+            if troop_trying_to_cancel != block_to_cancel.booth_block_current_troop_owner and (
+                daisy and troop_trying_to_cancel != block_to_cancel.booth_block_daisy_troop_owner
             ):
                 message_response = {
                     "message": "You cannot cancel a reservation for another troop",
@@ -758,9 +732,7 @@ def send_sms(message, recipients):
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
         for recipient in recipients:
             if recipient:
-                client.messages.create(
-                    to=recipient, from_=settings.TWILIO_NUMBER, body=message
-                )
+                client.messages.create(to=recipient, from_=settings.TWILIO_NUMBER, body=message)
         success = True
     except:
         success = False
@@ -852,9 +824,7 @@ def _identify_user(request, block_to_reserve):
     # Let's simplify the logic in reserve_block
     is_cookie_admin = request.user.has_perm("cookie_booths.block_reservation_admin")
     is_tcc = request.user.has_perm("cookie_booths.block_reservation")
-    is_cookie_captain = request.user.has_perm(
-        "cookie_booths.cookie_captain_reserve_block"
-    )
+    is_cookie_captain = request.user.has_perm("cookie_booths.cookie_captain_reserve_block")
 
     email = request.user.email
 
