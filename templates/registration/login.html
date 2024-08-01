@@ -1,6 +1,6 @@
 
 {% extends 'base.html' %}
-{% load bootstrap4 %}
+{% load django_bootstrap5 %}
 
 {% block title %}
   Log In
@@ -15,9 +15,9 @@
   <form method="post">
     {% csrf_token %}
     {% bootstrap_form form %}
-    {% buttons %}
+    <div class="mb-3">
       <button name="submit" class="btn btn-primary">Log in</button>
-    {% endbuttons %}
+    </div>
   </form>
 
   <p><a href="{% url 'password_reset' %}">Forgot your password?</a></p>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap4 %}
+{% load django_bootstrap5 %}
 
 {% block title %}
   Create Troop
@@ -13,8 +13,8 @@
   <form action="{% url 'troops:create_troop' %}" method='post' class="form">
     {% csrf_token %}
     {% bootstrap_form form %}
-    {% buttons %}
-    <button name="submit">Submit</button>
-    {% endbuttons %}
+    <div class="mb-3">
+      <button name="submit">Submit</button>
+    </div>
   </form>
 {% endblock content %}

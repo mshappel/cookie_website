@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 
-{% load bootstrap4 %}
-{% bootstrap_css %}
-{% bootstrap_javascript jquery='full' %}
+{% load django_bootstrap5 %}
+{% load static %}
 
 {% block title %}
     Booth Editor
@@ -17,54 +16,15 @@
     {% csrf_token %}
     {% bootstrap_form_errors form %}
     {% bootstrap_form form %}
-    {{ form.media }}
-    {% buttons %}
-    <button name="submit">Update Booth Hours</button>
-    {% endbuttons %}
+    <div class="mb-3">
+      <button name="submit">Update Booth Hours</button>
+    </div>
   </form>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script type="text/javascript">
-
-    $(function () {
-        $("input[id*='day_open']").click(function () {
-            var checkbox_selected = $(this);
-            var checkbox_day_of_week = this.id.split('_')[1];
-
-            $("input[class='form-control']").each(function(item) {
-              var control_day_of_week = this.name.split('_')[0];
-              var same_day = checkbox_day_of_week === control_day_of_week;
-
-              if (same_day) {
-                if (checkbox_selected.is(":checked"))  {
-                  $(this).removeAttr("disabled");
-                } else {
-                  $(this).attr("disabled", "disabled");
-                }
-              }
-            });
-        });
-    });
-</script>
-<script type="text/javascript">
-        $(document).ready(function () {
-          $("input[id*='day_open']").each(function(item) {
-            var checkbox_selected = $(this);
-            var checkbox_day_of_week = this.id.split('_')[1];
-
-              $("input[class='form-control']").each(function(item) {
-                var control_day_of_week = this.name.split('_')[0];
-                var same_day = checkbox_day_of_week === control_day_of_week;
-
-                if (same_day) {
-                  if (checkbox_selected.is(":checked"))  {
-                    $(this).removeAttr("disabled");
-                  } else {
-                    $(this).attr("disabled", "disabled");
-                  }
-                }
-              });
-          });
-        });
-</script>
 {% endblock content %}
+
+{% block extra_js %}
+
+  {{ form.media }}
+
+  <script src="{% static 'cookie_booths/js/toggle_controls.js' %}"></script>
+{% endblock extra_js %}

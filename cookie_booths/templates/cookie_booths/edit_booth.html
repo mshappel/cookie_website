@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap4 %}
+{% load django_bootstrap5 %}
 
 {% block title %}
     Booth Editor
@@ -13,8 +13,8 @@
   <form action="{% url 'cookie_booths:edit_location' booth.id %}" method='post' class="form">
     {% csrf_token %}
     {% bootstrap_form form %}
-    {% buttons %}
-    <button name="submit">Update Cookie Booth</button>
-    {% endbuttons %}
+    <div class="mb-3">
+      <button name="submit">Update Cookie Booth</button>
+    </div>
   </form>
 {% endblock content %}

@@ -9,12 +9,12 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+
 import os
 from pathlib import Path
-from environs import Env
 
 import django_heroku
-
+from environs import Env
 
 # Environmental variables
 env = Env()
@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     "pages.apps.PagesConfig",
     "troops.apps.TroopsConfig",
     # Third Party Apps
-    "bootstrap4",
+    "django_bootstrap5",
     "bootstrap_datepicker_plus",
     "phonenumber_field",
     # Default Apps
@@ -176,3 +176,20 @@ GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
 
 NO_COOKIE_CAPTAIN_ID = 0
 NO_DAISY_TROOP = 0
+
+BOOTSTRAP_DATEPICKER_PLUS = {
+    "variant_options": {
+        "date": {
+            "format": "MM/DD/YYYY",
+            "showClose": True,
+            "showClear": True,
+            "showTodayButton": True,
+        },
+        "time": {
+            "format": "hh:mm A",
+            "showClose": True,
+            "showClear": True,
+            "showTodayButton": True,
+        },
+    }
+}

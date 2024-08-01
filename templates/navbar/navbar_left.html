@@ -1,0 +1,25 @@
+<ul class="navbar-nav me-auto">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'home' %}">Home</a>
+    </li>
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+         data-bs-toggle="dropdown" aria-expanded="false">Cookie Booths</a>
+      <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <li><a class="dropdown-item" href="{% url 'cookie_booths:booth_locations' %}">Booth Locations</a></li>
+        {% if perms.cookie_booths.add_boothlocation %}
+            <li><a class="dropdown-item" href="{% url 'cookie_booths:new_location' %}">New Booth Location</a></li>
+        {% endif %}
+        {% if perms.cookie_booths.toggle_day %}
+            <li><a class="dropdown-item" href="{% url 'cookie_booths:enable_location_by_block' %}">Enable Booths by Block</a></li>
+            <li><a class="dropdown-item" href="{% url 'cookie_booths:enable_day' %}">Enable Booths by Day</a></li>
+        {% endif %}
+        <li><a class="dropdown-item" href="{% url 'cookie_booths:booth_blocks' %}">Make Booth Reservations</a></li>
+        <li><a class="dropdown-item" href="{% url 'cookie_booths:booth_reservations' %}">Manage Your Booth Reservations</a></li>
+      </ul>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'troops:troops' %}">Troops</a>
+    </li>
+</ul>
+  
