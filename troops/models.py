@@ -1,7 +1,8 @@
-from django.conf import settings
 from django.db import models
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+
+from utils.constants import GIRL_SCOUT_TROOP_LEVELS_WITH_NONE
 
 
 class TicketParameters(models.Model):
@@ -17,24 +18,26 @@ class TicketParameters(models.Model):
     @property
     def get_small_troop_golden_tickets_per_week(self):
         return self.small_troop_golden_tickets_per_week
-    
+
     @property
     def get_medium_troop_total_tickets_per_week(self):
         return int(self.small_troop_total_tickets_per_week * 2)
 
     @property
     def get_medium_troop_golden_tickets_per_week(self):
-        return int(self.small_troop_golden_tickets_per_week + 
-            self.medium_troop_additional_golden_tickets)
+        return int(
+            self.small_troop_golden_tickets_per_week + self.medium_troop_additional_golden_tickets
+        )
 
     @property
     def get_large_troop_total_tickets_per_week(self):
         return int(self.small_troop_total_tickets_per_week * 3)
-        
+
     @property
     def get_large_troop_golden_tickets_per_week(self):
-        return int(self.small_troop_golden_tickets_per_week +
-            self.large_troop_additional_golden_tickets)
+        return int(
+            self.small_troop_golden_tickets_per_week + self.large_troop_additional_golden_tickets
+        )
 
     # We only EVER need one instance of this model.
     def save(self, *args, **kwargs):
@@ -65,9 +68,7 @@ class Troop(models.Model):
     troop_cookie_coordinator = models.EmailField(null=True)
 
     troop_size = models.SmallIntegerField(default=0)
-    troop_level = models.SmallIntegerField(
-        choices=settings.GIRL_SCOUT_TROOP_LEVELS_WITH_NONE, default=0
-    )
+    troop_level = models.SmallIntegerField(choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE, default=0)
 
     total_booth_tickets_per_week = models.PositiveSmallIntegerField(default=0)
     booth_golden_tickets_per_week = models.PositiveSmallIntegerField(default=0)
@@ -79,6 +80,14 @@ class Troop(models.Model):
     def __str__(self):
         return "Troop " + str(self.troop_number)
 
+    @property
+    def is_daisy_troop(self):
+        return self.troop_level == 1
+
+    @classmethod
+    def get_by_cookie_coordinator_email(cls, email):
+        return cls.objects.filter(troop_cookie_coordinator=email).first()
+
 
 @receiver(pre_save, sender=Troop)
 def update_troop(sender, instance, **kwargs):
@@ -87,7 +96,7 @@ def update_troop(sender, instance, **kwargs):
     # oh well.
     if not TroopSize.objects.first():
         TroopSize.objects.create()
-    if not TicketParameters.objects.first():    
+    if not TicketParameters.objects.first():
         TicketParameters.objects.create()
     update_tickets(instance)
 
@@ -99,6 +108,7 @@ def update_all_troops(sender, instance, **kwargs):
     for troop in troops:
         update_tickets(troop=troop)
         troop.save()
+
 
 def update_tickets(troop):
     # This really should only care about setting/updating these after creation, but there is always the chance
@@ -130,5 +140,5 @@ def update_tickets(troop):
             TicketParameters.objects.first().get_small_troop_golden_tickets_per_week
         )
     except AttributeError:
-        # Do not try to update if we cannot find the Parameters yet. 
+        # Do not try to update if we cannot find the Parameters yet.
         pass

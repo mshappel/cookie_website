@@ -2,82 +2,11 @@ from bootstrap_datepicker_plus.widgets import DatePickerInput, TimePickerInput
 from django import forms
 from django.utils.translation import gettext as _
 
+from utils.constants import DAYS_OF_WEEK, GOLDEN_TICKET_DAYS
+
 from .models import BoothHours, BoothLocation
 
-DAYS_OF_WEEK = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-GOLDEN_TICKET_DAYS = ["saturday", "sunday"]
-DAY_FIELD_STRUCTURE = {
-    "open": "open",
-    "open_time": "open_time",
-    "close_time": "close_time",
-    "golden_ticket": "golden_ticket",
-}
-
-
-def generate_labels():
-    """
-    Generate a dictionary of labels for the cookie booth form.
-
-    Returns:
-        dict: A dictionary containing labels for various fields in the form.
-    """
-    labels = {
-        "booth_start_date": _("Booth Starting Date"),
-        "booth_end_date": _("Booth Ending Date"),
-    }
-
-    for day in DAYS_OF_WEEK:
-        labels[f"{day}_open"] = _(f"Open {day.capitalize()}s")
-        labels[f"{day}_open_time"] = _(f"{day.capitalize()} Open Time")
-        labels[f"{day}_close_time"] = _(f"{day.capitalize()} Close Time")
-        if day in GOLDEN_TICKET_DAYS:
-            labels[f"{day}_golden_ticket"] = _(f"Golden Ticket on {day.capitalize()}")
-
-    return labels
-
-
-def generate_widgets():
-    """
-    Generate and return a dictionary of widgets for the cookie booth form.
-
-    Returns:
-        dict: A dictionary containing the generated widgets.
-    """
-    widgets = {
-        "booth_start_date": DatePickerInput(
-            attrs={"class": "datepicker", "name": "booth_start_date"}
-        ),
-        "booth_end_date": DatePickerInput(attrs={"class": "datepicker", "name": "booth_end_date"}),
-    }
-
-    for day in DAYS_OF_WEEK:
-        widgets[f"{day}_open_time"] = TimePickerInput(
-            attrs={"id": f"{day}_open_time", "class": "timepicker"}
-        )
-        widgets[f"{day}_close_time"] = TimePickerInput(
-            attrs={"id": f"{day}_close_time", "class": "timepicker"}
-        )
-
-    return widgets
-
-
-def generate_fields():
-    """
-    Generate a list of fields for a cookie booth form.
-
-    Returns:
-        list: A list of field names.
-    """
-    fields = ["booth_start_date", "booth_end_date"]
-
-    for day in DAYS_OF_WEEK:
-        fields.append(f"{day}_open")
-        if day in GOLDEN_TICKET_DAYS:
-            fields.append(f"{day}_golden_ticket")
-        fields.append(f"{day}_open_time")
-        fields.append(f"{day}_close_time")
-
-    return fields
+DAYS = [day.lower() for _, day in DAYS_OF_WEEK]
 
 
 class BoothLocationForm(forms.ModelForm):
@@ -194,13 +123,50 @@ class BoothHoursForm(forms.ModelForm):
     class Meta:
         model = BoothHours
 
-        fields = generate_fields()
-        widgets = generate_widgets()
-        labels = generate_labels()
+        fields = ["booth_start_date", "booth_end_date"]
+        labels = {
+            "booth_start_date": _("Enter the date sales will begin at this booth."),
+            "booth_end_date": _("Enter the last date of sales for this booth."),
+        }
         help_texts = {
             "booth_start_date": _("Enter the date sales will begin at this booth."),
             "booth_end_date": _("Enter the last date of sales for this booth."),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+        initial = kwargs.get("initial", {})
+
+        if instance and instance.daily_attributes:
+            for day in DAYS:
+                day_attributes = instance.daily_attributes.get(day, {})
+                initial.update(
+                    {
+                        f"{day}_open": day_attributes.get("open", False),
+                        f"{day}_golden_ticket": (
+                            day_attributes.get("golden_ticket", False)
+                            if DAYS.index(day) in GOLDEN_TICKET_DAYS
+                            else None
+                        ),
+                        f"{day}_open_time": day_attributes.get("open_time", None),
+                        f"{day}_close_time": day_attributes.get("close_time", None),
+                    }
+                )
+
+        kwargs["initial"] = initial
+        super().__init__(*args, **kwargs)
+
+        for day in DAYS:
+            self.fields[f"{day}_open"] = forms.BooleanField(required=False)
+            if DAYS.index(day) in GOLDEN_TICKET_DAYS:
+                self.fields[f"{day}_golden_ticket"] = forms.BooleanField(required=False)
+            self.fields[f"{day}_open_time"] = forms.TimeField(
+                widget=TimePickerInput(), required=False
+            )
+            self.fields[f"{day}_close_time"] = forms.TimeField(
+                widget=TimePickerInput(), required=False
+            )
 
     def clean_booth_start_date(self):
         """
@@ -244,10 +210,30 @@ class BoothHoursForm(forms.ModelForm):
             forms.ValidationError: If the times in the form are not set correctly.
         """
         super().clean()
-
+        self.instance.daily_attributes = self.__process_daily_attributes(self.cleaned_data)
         # Make sure we have valid times - both populated is needed if the checkbox is checked
-        for day in DAYS_OF_WEEK:
+        for day in DAYS:
             self.__check_times_set_correctly(day_of_week=day)
+
+    def __process_daily_attributes(self, cleaned_data):
+        daily_attributes = {}
+        for day in DAYS:
+            daily_attributes[day] = {
+                "open": cleaned_data.get(f"{day}_open"),
+                "open_time": (
+                    cleaned_data.get(f"{day}_open_time").strftime("%H:%M:%S")
+                    if cleaned_data.get(f"{day}_open_time")
+                    else None
+                ),
+                "close_time": (
+                    cleaned_data.get(f"{day}_close_time").strftime("%H:%M:%S")
+                    if cleaned_data.get(f"{day}_close_time")
+                    else None
+                ),
+                "golden_ticket": cleaned_data.get(f"{day}_golden_ticket", False),
+            }
+        cleaned_data["daily_attributes"] = daily_attributes
+        return daily_attributes
 
     def __check_times_set_correctly(self, day_of_week):
         """

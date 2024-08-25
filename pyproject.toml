@@ -15,6 +15,7 @@ django-phonenumber-field = "^8.0.0"
 phonenumberslite = "^8.13.40"
 twilio = "^9.2.3"
 django-bootstrap5 = "^24.2"
+pyyaml = "^6.0.2"
 
 
 [build-system]

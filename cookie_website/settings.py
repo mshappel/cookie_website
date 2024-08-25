@@ -163,20 +163,6 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # EMAIL_HOST_USER = 'cfsu.cookiewebsite@gmail.com'
 # EMAIL_HOST_PASSWORD = env.str("GMAIL_PASSWORD")
 
-# Project Level Constants
-GIRL_SCOUT_TROOP_LEVELS_WITH_NONE = [
-    (0, "None"),
-    (1, "Daisies"),
-    (2, "Brownies"),
-    (3, "Juniors"),
-    (4, "Cadettes"),
-    (5, "Seniors"),
-    (6, "Ambassadors"),
-]
-
-NO_COOKIE_CAPTAIN_ID = 0
-NO_DAISY_TROOP = 0
-
 BOOTSTRAP_DATEPICKER_PLUS = {
     "variant_options": {
         "date": {
@@ -192,4 +178,39 @@ BOOTSTRAP_DATEPICKER_PLUS = {
             "showTodayButton": True,
         },
     }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'debug.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }

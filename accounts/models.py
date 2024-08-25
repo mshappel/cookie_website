@@ -54,6 +54,18 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
+    @property
+    def has_cookie_captain_permissions(self):
+        return self.has_perm("cookie_booths.block_reservation_admin")
+
+    @property
+    def has_cookie_admin_permissions(self):
+        return self.has_perm("cookie_booths.block_reservation_admin")
+
+    @property
+    def has_tcc_permissions(self):
+        return self.has_perm("cookie_booths.block_reservation")
+
 
 class UserPreferences(models.Model):
     class Meta:

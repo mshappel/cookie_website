@@ -3,12 +3,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     daysOfWeek.forEach(day => {
         const dayOpenCheckbox = document.getElementById(`id_${day}_open`);
-        const dayOpenTimeInput = document.getElementById(`${day}_open_time`);
-        const dayCloseTimeInput = document.getElementById(`${day}_close_time`);
+        const dayOpenTimeInput = document.getElementById(`id_${day}_open_time`);
+        const dayCloseTimeInput = document.getElementById(`id_${day}_close_time`);
         const dayOpenTimeGroup = dayOpenTimeInput ? dayOpenTimeInput.closest('.input-group') : null;
         const dayCloseTimeGroup = dayCloseTimeInput ? dayCloseTimeInput.closest('.input-group') : null;
-        const dayOpenTimeLabel = document.querySelector(`label[for="${day}_open_time"]`);
-        const dayCloseTimeLabel = document.querySelector(`label[for="${day}_close_time"]`);
+        const dayOpenTimeLabel = document.querySelector(`label[for="id_${day}_open_time"]`);
+        const dayCloseTimeLabel = document.querySelector(`label[for="id_${day}_close_time"]`);
 
         let dayGoldenTicketCheckbox = null;
         let dayGoldenTicketContainer = null;

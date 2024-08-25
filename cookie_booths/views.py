@@ -3,17 +3,15 @@ import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.mail import send_mail
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy, reverse
 from django.utils.timezone import datetime, make_aware, timedelta
 from django.views.generic.edit import DeleteView
 from twilio.rest import Client
 
 from accounts.models import CustomUser
-from cookie_website.settings import NO_COOKIE_CAPTAIN_ID
 from troops.models import Troop
 
 from .forms import BoothHoursForm, BoothLocationForm, EnableFreeForAll
@@ -66,6 +64,9 @@ def edit_booth_location(request, booth_id):
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse_lazy("cookie_booths:booth_locations"))
+        else:
+            # Print form errors to debug
+            print(form.errors)
 
     context = {"booth": booth, "form": form}
     return render(request, "cookie_booths/edit_booth.html", context)
@@ -75,18 +76,13 @@ def edit_booth_location(request, booth_id):
 @permission_required("cookie_booths.change_boothlocation", raise_exception=True)
 def edit_booth_location_hours(request, booth_id):
     """Edit an existing booth location"""
-    booth = BoothLocation.objects.get(id=booth_id)
-    hours = BoothHours.objects.get(booth_location=booth.id)
+    booth = get_object_or_404(BoothLocation, id=booth_id)
+    hours, _ = BoothHours.objects.get_or_create(booth_location=booth)
+    form = BoothHoursForm(instance=hours, data=request.POST or None)
 
-    if request.method != "POST":
-        # Initial request; pre-fill with the current entry.
-        form = BoothHoursForm(instance=hours)
-    else:
-        # POST data submitted; process data.
-        form = BoothHoursForm(instance=hours, data=request.POST)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse_lazy("cookie_booths:booth_locations"))
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        return redirect(reverse("cookie_booths:booth_locations"))
 
     context = {"booth": booth, "form": form}
     return render(request, "cookie_booths/edit_booth_hours.html", context)
