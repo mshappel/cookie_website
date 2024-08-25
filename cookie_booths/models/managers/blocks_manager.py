@@ -1,20 +1,24 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 
 from accounts.models import CustomUser as User
 from troops.models import Troop
 from utils.date_utils import get_week_start_end_from_date
 
+ORDERING_FIELDS = ["booth_day__booth", "booth_day", "booth_block_start_time"]
+
 
 class BoothBlockManager(models.Manager):
+
+    def order_booth_blocks(self):
+        return self._select_and_order_booth_blocks(self)
+
     def get_block_to_reserve(self, block_id):
         block = self.select_related("booth_day__booth").get(id=block_id)
         return block
 
-    def retrieve_booth_blocks(
-        self, is_daisy_troop, is_cookie_captain, time_threshold, ordering_fields
-    ):
+    def retrieve_booth_blocks(self, is_daisy_troop, is_cookie_captain, time_threshold):
         """
         Retrieve booth blocks based on user type, time threshold, and ordering fields.
 
@@ -26,19 +30,16 @@ class BoothBlockManager(models.Manager):
             is_daisy_troop (bool): Indicates if the user is part of a Daisy troop.
             is_cookie_captain (bool): Indicates if the user is a cookie captain.
             time_threshold (datetime): A datetime object to filter booth blocks starting after this time.
-            ordering_fields (list): A list of fields to order the results by.
 
         Returns:
             QuerySet: A Django QuerySet of booth blocks that match the filter criteria.
         """
+
         booth_block_filter = self._get_booth_block_filter(
             is_daisy_troop, is_cookie_captain, time_threshold
         )
-        return (
-            self.filter(booth_block_filter, booth_block_enabled=True)
-            .select_related("booth_day", "booth_day__booth")
-            .order_by(*ordering_fields)
-        )
+        queryset = self.filter(booth_block_filter, booth_block_enabled=True)
+        return self._select_and_order_booth_blocks(queryset)
 
     def total_booth_count_for_cookie_captain(self, cookie_captain_id, date):
         """
@@ -89,6 +90,9 @@ class BoothBlockManager(models.Manager):
         )
 
         return blocks_aggregated
+
+    def _select_and_order_booth_blocks(self, queryset: QuerySet):
+        return queryset.select_related("booth_day", "booth_day__booth").order_by(*ORDERING_FIELDS)
 
     def _get_booth_block_filter(self, is_daisy_troop, is_cookie_captain, time_threshold):
         """

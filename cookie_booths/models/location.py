@@ -6,6 +6,7 @@ from django.db.models import Q
 from pytz import utc
 
 from cookie_booths.models.helpers import _get_booth_day_model, _get_booth_hours_model
+from cookie_booths.models.managers.location_manager import BoothLocationManager
 from utils.constants import (
     GIRL_SCOUT_TROOP_LEVELS_WITH_NONE,
     GOLDEN_TICKET_DAYS,
@@ -31,6 +32,8 @@ class BoothLocation(models.Model):
 
     booth_is_outside = models.BooleanField(default=False)
     booth_notes = models.CharField(max_length=100, blank=True)
+
+    objects: BoothLocationManager = BoothLocationManager()
 
     class Meta:
         verbose_name_plural = "booth locations"

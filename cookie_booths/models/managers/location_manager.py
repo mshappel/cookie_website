@@ -6,6 +6,6 @@ _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
 
 
-class BoothDayManager(models.Manager):
-    def order_booth_days(self):
-        return self.order_by("booth", "booth_day_date")
+class BoothLocationManager(models.Manager):
+    def order_booth_locations(self):
+        return self.order_by("booth_location")

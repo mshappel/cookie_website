@@ -5,6 +5,7 @@ from django.db.models import Q
 
 from cookie_booths.models.helpers import _get_booth_block_model
 from cookie_booths.models.location import BoothLocation
+from cookie_booths.models.managers.days_manager import BoothDayManager
 
 
 class BoothDay(models.Model):
@@ -21,6 +22,8 @@ class BoothDay(models.Model):
 
     booth_day_enabled = models.BooleanField(default=False)
     booth_day_freeforall_enabled = models.BooleanField(default=False)
+
+    objects: BoothDayManager = BoothDayManager()
 
     class Meta:
         permissions = (

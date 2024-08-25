@@ -1,87 +1,96 @@
 from django.urls import path
 
-from . import views
+from cookie_booths.views import booth_administration, booth_users
 
 app_name = "cookie_booths"
+
+
 urlpatterns = [
-    # # Create New Booth
-    # path("new/", views.create_new_booth_location, name="new_location"),
-    # # Booths Home
-    # path("edit/", views.booth_editor, name="booth_locations"),
-    # # Edit Booth Page
-    # path("edit/<int:booth_id>/", views.edit_booth_location, name="edit_location"),
-    # # Edit Booth Hours
-    # path(
-    #     "edit/<int:booth_id>/hours/",
-    #     views.edit_booth_location_hours,
-    #     name="edit_booth_hours",
-    # ),
-    # # Delete Booth
-    # path(
-    #     "confirm_delete/<int:pk>/",
-    #     views.BoothLocationDelete.as_view(),
-    #     name="delete_booth",
-    # ),
-    # # Manage Booth Blocks Home
-    # path("blocks/", views.booth_blocks, name="booth_blocks"),
-    # # Your Booth Reservations
-    # path("blocks/reservations/", views.booth_reservations, name="booth_reservations"),
-    # # Make Booth Reservation
-    # path(
-    #     "blocks/reservations/<int:daisy>/<int:block_id>",
-    #     views.reserve_block,
-    #     name="block_reservation",
-    # ),
-    # # Cancel Booth Reservation
-    # path(
-    #     "blocks/reservations/cancel/<int:daisy>/<int:block_id>",
-    #     views.cancel_block,
-    #     name="block_cancellation",
-    # ),
-    # # Hold Booth For Cookie Captains
-    # path(
-    #     "blocks/cchold/<int:block_id>",
-    #     views.hold_block_for_cookie_captain,
-    #     name="hold_block_for_cookie_captain",
-    # ),
-    # # Cancel Holding Booth For Cookie Captains
-    # path(
-    #     "blocks/cchold/cancel/<int:block_id>",
-    #     views.cancel_hold_for_cookie_captain,
-    #     name="cancel_hold_for_cookie_captain",
-    # ),
-    # # User Enable Booth by Block
-    # path(
-    #     "blocks/enable_blocks",
-    #     views.enable_location_by_block,
-    #     name="enable_location_by_block",
-    # ),
-    # # AJAX Enable Booth by Block
-    # path(
-    #     "blocks/enable_blocks/<int:block_id>",
-    #     views.ajax_enable_location_by_block,
-    #     name="ajax_enable_location_by_block",
-    # ),
-    # # AJAX Disable Booth by Block
-    # path(
-    #     "blocks/disable_blocks/<int:block_id>",
-    #     views.ajax_disable_location_by_block,
-    #     name="ajax_disable_location_by_block",
-    # ),
-    # # User Enable Booth Day
-    # path("blocks/enable_booth_days", views.enable_or_disable_day, name="enable_day"),
-    # # AJAX Enable Booth by Day
-    # path(
-    #     "blocks/enable_booth_days/enable",
-    #     views.enable_location_by_day,
-    #     name="ajax_enable_day",
-    # ),
-    # # AJAX Disable Booth by Day
-    # path(
-    #     "blocks/enable_booth_days/disable",
-    #     views.disable_location_by_day,
-    #     name="ajax_disable_day",
-    # ),
-    # #
-    # path("enable_ffa", views.enable_all_locations_ffa, name="enable_ffa"),
+    # User-related URLs
+    path(
+        "booth_blocks/",
+        booth_users.booth_blocks,
+        name="booth_blocks",
+    ),
+    path(
+        "booth_reservations/",
+        booth_users.booth_reservations,
+        name="booth_reservations",
+    ),
+    path(
+        "reserve_block/<str:daisy>/<int:block_id>/",
+        booth_users.reserve_block,
+        name="reserve_block",
+    ),
+    path(
+        "cancel_block/<str:daisy>/<int:block_id>/",
+        booth_users.cancel_block,
+        name="cancel_block",
+    ),
+    path(
+        "hold_block_for_cookie_captain/<int:block_id>/",
+        booth_users.hold_block_for_cookie_captain,
+        name="hold_block_for_cookie_captain",
+    ),
+    path(
+        "cancel_hold_for_cookie_captain/<int:block_id>/",
+        booth_users.cancel_hold_for_cookie_captain,
+        name="cancel_hold_for_cookie_captain",
+    ),
+    # Admin-related URLs
+    path(
+        "booth_editor/",
+        booth_administration.booth_editor,
+        name="booth_editor",
+    ),
+    path(
+        "create_new_booth_location/",
+        booth_administration.create_new_booth_location,
+        name="create_new_booth_location",
+    ),
+    path(
+        "edit_booth_location/<int:booth_id>/",
+        booth_administration.edit_booth_location,
+        name="edit_booth_location",
+    ),
+    path(
+        "edit_booth_location_hours/<int:booth_id>/",
+        booth_administration.edit_booth_location_hours,
+        name="edit_booth_location_hours",
+    ),
+    path(
+        "delete_booth_location/<int:pk>/",
+        booth_administration.BoothLocationDelete.as_view(),
+        name="delete_booth_location",
+    ),
+    path(
+        "enable_location_by_block/",
+        booth_administration.enable_location_by_block,
+        name="enable_location_by_block",
+    ),
+    path(
+        "ajax_enable_location_by_block/<int:block_id>/",
+        booth_administration.ajax_enable_location_by_block,
+        name="ajax_enable_location_by_block",
+    ),
+    path(
+        "ajax_disable_location_by_block/<int:block_id>/",
+        booth_administration.ajax_disable_location_by_block,
+        name="ajax_disable_location_by_block",
+    ),
+    path(
+        "enable_or_disable_day/",
+        booth_administration.enable_or_disable_day,
+        name="enable_or_disable_day",
+    ),
+    path(
+        "enable_location_by_day/",
+        booth_administration.enable_location_by_day,
+        name="enable_location_by_day",
+    ),
+    path(
+        "disable_location_by_day/",
+        booth_administration.disable_location_by_day,
+        name="disable_location_by_day",
+    ),
 ]
