@@ -1,16 +1,15 @@
 {% extends "base.html" %}
 {% load django_bootstrap5 %}
-
 {% block title %}
-    Booth Editor
+  Booth Editor
 {% endblock title %}
-
 {% block page_header %}
   <h2>Add a new cookie booth</h2>
 {% endblock page_header %}
-
 {% block content %}
-  <form action="{% url 'cookie_booths:new_location' %}" method='post' class="form">
+  <form action="{% url 'cookie_booths:new_location' %}"
+        method='post'
+        class="form">
     {% csrf_token %}
     {% bootstrap_form form %}
     <div class="mb-3">

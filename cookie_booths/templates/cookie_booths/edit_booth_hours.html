@@ -1,18 +1,16 @@
 {% extends "base.html" %}
-
 {% load django_bootstrap5 %}
 {% load static %}
-
 {% block title %}
-    Booth Editor
+  Booth Editor
 {% endblock title %}
-
 {% block page_header %}
   <h2>Edit cookie booth hours</h2>
 {% endblock page_header %}
-
 {% block content %}
-  <form action="{% url 'cookie_booths:edit_booth_hours' booth.id %}" method='post' class="form">
+  <form action="{% url 'cookie_booths:edit_booth_hours' booth.id %}"
+        method='post'
+        class="form">
     {% csrf_token %}
     {% bootstrap_form_errors form %}
     {% bootstrap_form form %}
@@ -21,10 +19,7 @@
     </div>
   </form>
 {% endblock content %}
-
 {% block extra_js %}
-
   {{ form.media }}
-
   <script src="{% static 'cookie_booths/js/toggle_controls.js' %}"></script>
 {% endblock extra_js %}

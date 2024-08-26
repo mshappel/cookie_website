@@ -1,53 +1,49 @@
 {% load django_bootstrap5 %}
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
-  <title>{% block title %}{% endblock title %}</title>
-
-  <link rel="shortcut icon" type="image/png" href="{% static 'cookie_booths/favicon.ico' %}"/>
-  {% bootstrap_css %}
-  <!-- Load Bootstrap JavaScript -->
-  {% bootstrap_javascript %}
-
-</head>
-<body>
-  
-  {% include 'navbar/navbar.html' %}
-
-  <main role="main" class="container">
-    <div class="pb-2 mb-2 border-bottom">
-      {% block page_header %}{% endblock page_header %}
-    </div>
-    <div>
-      {% block content %}{% endblock content %}
-    </div>
-  </main>
-
-  <!-- Load jQuery first -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  
-
-  
-  <!-- Load moment.js before bootstrap-datetimepicker -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-
-  <!-- Load bootstrap-datetimepicker -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
-  
-  <!-- Load bootstrap-datepicker -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-
-  <!-- Load datepicker-widget -->
-  <script src="{% static 'bootstrap_datepicker_plus/js/datepicker-widget.js' %}"></script>
-
-  {% block extra_js %}
-  {% endblock extra_js %}
-</body>
-
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Girl Scouts Cookie Booth reservations" />
+    <meta name="keywords" content="girl scout, cookies, booths, reservations" />
+    <title>
+      {% block title %}
+      {% endblock title %}
+    </title>
+    <link rel="shortcut icon"
+          type="image/png"
+          href="{% static 'cookie_booths/favicon.ico' %}" />
+    {% bootstrap_css %}
+    <!-- Load Bootstrap JavaScript -->
+    {% bootstrap_javascript %}
+    <!-- Load jQuery first -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Load csrf.js -->
+    <script src="{% static 'js/csrf.js' %}"></script>
+  </head>
+  <body>
+    {% include "navbar/navbar.html" %}
+    <main role="main" class="container">
+      <div class="pb-2 mb-2 border-bottom">
+        {% block page_header %}
+        {% endblock page_header %}
+      </div>
+      <div>
+        {% block content %}
+        {% endblock content %}
+      </div>
+    </main>
+    <!-- Load moment.js before bootstrap-datetimepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <!-- Load bootstrap-datetimepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    <!-- Load bootstrap-datepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <!-- Load datepicker-widget -->
+    <script src="{% static 'bootstrap_datepicker_plus/js/datepicker-widget.js' %}"></script>
+    {% block extra_js %}
+    {% endblock extra_js %}
+  </body>
 </html>
