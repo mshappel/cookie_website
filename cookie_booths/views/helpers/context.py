@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from django.http import HttpResponse
 
@@ -41,16 +42,35 @@ def get_booth_context(request, time_threshold):
     )
 
     # Initialize booth information list
-    booth_information = _create_booth_information_list(
+    booth_information = BoothBlock.objects.create_booth_information_list(
         selected_booth_blocks=selected_booth_blocks,
         owner=owner,
         is_cookie_captain=is_cookie_captain,
     )
+
+    # Process each booth block to determine its state and permissions
+    processed_booth_information = []
+    for block in booth_information:
+        block_info = {
+            "booth_block_information": block,
+            "booth_block_reserved": block.booth_block_reserved,
+            "booth_block_held_for_cookie_captains": block.booth_block_held_for_cookie_captains,
+            "booth_owned_by_cookie_captain": block.booth_block_current_troop_owner == owner,
+            "booth_block_daisy_reserved": block.booth_block_daisy_reserved,
+            "booth_block_daisy_troop_owner": block.booth_block_daisy_troop_owner,
+            "booth_block_cookie_captain_email": block.booth_block_cookie_captain_email,
+            "booth_owned_by_current_user": block.booth_block_current_troop_owner == request.user,
+        }
+        processed_booth_information.append(block_info)
+
+    # Get permission level
     permission_level = permissions.get_permission_level(
         user=request.user,
         is_daisy_troop=is_daisy_troop,
         is_cookie_captain=is_cookie_captain,
     )
+
+    # Get available troop list
     available_troop_list = _get_available_troop_list(permission_level)
 
     return {
@@ -58,6 +78,23 @@ def get_booth_context(request, time_threshold):
         "available_troops": available_troop_list,
         "permission_level": permission_level,
     }
+
+
+def process_booth_information(booth_information: List[BoothBlock], owner, request) -> List[dict]:
+    processed_booth_information = []
+    for block in booth_information:
+        block_info = {
+            "booth_block_information": block,
+            "booth_block_reserved": block.booth_block_reserved,
+            "booth_block_held_for_cookie_captains": block.booth_block_held_for_cookie_captains,
+            "booth_owned_by_cookie_captain": block.is_owner_custom_user(),
+            "booth_block_daisy_reserved": block.booth_block_daisy_reserved,
+            "booth_block_daisy_troop_owner": block.booth_block_daisy_troop_owner,
+            "booth_block_cookie_captain_email": block.booth_block_current_owner.email,
+            "booth_owned_by_current_user": block.booth_block_current_troop_owner == request.user,
+        }
+        processed_booth_information.append(block_info)
+    return processed_booth_information
 
 
 def _get_available_troop_list(permission_level):
@@ -73,70 +110,6 @@ def _get_available_troop_list(permission_level):
     if permission_level == "admin":
         return retrieve_available_troops()
     return None
-
-
-def _create_booth_information_list(selected_booth_blocks, owner, is_cookie_captain):
-    """
-    Create a list of booth information from the selected booth blocks.
-
-    Args:
-        selected_booth_blocks (QuerySet): The selected booth blocks.
-        owner (User): The owner of the booth blocks.
-        is_cookie_captain (bool): Whether the user is a cookie captain.
-
-    Returns:
-        list: A list of booth information dictionaries.
-    """
-    booth_information = []
-    for booth in selected_booth_blocks:
-        current_booth_information = _create_booth_information(
-            booth_block=booth,
-            owner=owner,
-            is_cookie_captain=is_cookie_captain,
-        )
-        booth_information.append(current_booth_information)
-    return booth_information
-
-
-def _is_booth_owned_by_current_user(booth: BoothBlock, owner, is_cookie_captain):
-    booth_owner = booth.booth_block_current_owner
-    daisy_booth_owner = booth.booth_block_daisy_troop_owner
-    is_owned_by_booth_owner = booth_owner == owner
-    is_owned_by_daisy_troop_owner = daisy_booth_owner == owner
-
-    if owner is None:
-        return False
-    elif is_cookie_captain:
-        return is_owned_by_booth_owner
-    else:
-        return is_owned_by_booth_owner or is_owned_by_daisy_troop_owner
-
-
-def _get_cookie_captain_email_message(booth_block: BoothBlock):
-    booth_owner: CustomUser = booth_block.booth_block_current_owner
-    return (
-        f"Cookie Captain: {booth_owner.first_name} {booth_owner.last_name} || "
-        f"Contact: {booth_owner.email}"
-    )
-
-
-def _create_booth_information(booth_block: BoothBlock, owner, is_cookie_captain):
-    booth_owned_by_current_user = _is_booth_owned_by_current_user(
-        booth_block, owner, is_cookie_captain
-    )
-    booth_owned_by_cookie_captain = booth_block.is_owner_custom_user()
-    if booth_owned_by_cookie_captain:
-        cookie_cap_email_message = _get_cookie_captain_email_message(booth_block)
-    else:
-        cookie_cap_email_message = None
-
-    return {
-        "booth_block_information": booth_block,
-        "booth_owned_by_current_user": booth_owned_by_current_user,
-        "booth_owned_by_cookie_captain": booth_owned_by_cookie_captain,
-        "booth_block_cookie_captain_email": cookie_cap_email_message,
-    }
-
 
 # TODO: MOVE THIS TO A MANAGER
 def retrieve_available_troops():

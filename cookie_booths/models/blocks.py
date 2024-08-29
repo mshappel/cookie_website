@@ -1,7 +1,6 @@
 from datetime import datetime
+from typing import Optional
 
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from accounts.models import CustomUser as User
@@ -20,11 +19,9 @@ class BoothBlock(models.Model):
 
     booth_block_held_for_cookie_captains = models.BooleanField(default=False)
 
-    owner_content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, default=None, null=True
+    booth_block_current_owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=True, blank=True
     )
-    owner_object_id = models.PositiveIntegerField(default=0)
-    booth_block_current_owner = GenericForeignKey("owner_content_type", "owner_object_id")
 
     booth_block_reserved = models.BooleanField(default=False)
 
@@ -116,10 +113,6 @@ class BoothBlock(models.Model):
     def disable_block(self):
         return self._set_block_enabled(False)
 
-    def is_owner_custom_user(self):
-        custom_user_type = ContentType.objects.get_for_model(User)
-        return self.owner_content_type == custom_user_type
-
     # helpers
     def _is_block_enabled(self):
         return self.booth_block_enabled
@@ -130,30 +123,22 @@ class BoothBlock(models.Model):
     def _is_daisy_reserved(self):
         return self.booth_block_daisy_reserved
 
-    def _update_reservation(self, should_reserve, owner=None):
+    def _update_reservation(self, should_reserve: bool, owner: Optional[User] = None) -> bool:
         """
         Updates the reservation status and owner of the booth block.
 
         Args:
-            reserved (bool): The reservation status of the booth block.
-            owner (Troop or User, optional): The owner of the booth block. Defaults to None.
+            should_reserve (bool): The reservation status of the booth block.
+            owner (User, optional): The owner of the booth block. Defaults to None.
 
         Returns:
             bool: True if the update is successful, False otherwise.
         """
         self.booth_block_reserved = should_reserve
         if owner:
-            if isinstance(owner, Troop):
-                self.owner_content_type = ContentType.objects.get_for_model(Troop)
-                self.owner_object_id = owner.id
-            elif isinstance(owner, User):
-                self.owner_content_type = ContentType.objects.get_for_model(User)
-                self.owner_object_id = owner.id
-            else:
-                return False  # Invalid owner type
+            self.booth_block_current_owner = owner.email
         else:
-            self.owner_content_type = None
-            self.owner_object_id = 0
+            self.booth_block_current_owner = None
             self.booth_block_daisy_reserved = False
             self.booth_block_daisy_troop_owner = 0
         self.save()

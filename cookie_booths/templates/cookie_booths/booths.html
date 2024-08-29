@@ -14,46 +14,47 @@
                class="btn btn-success"
                align="right"
                href="{% url 'cookie_booths:new_location' %}">
-                <img src="{% static 'cookie_booths/icons8-add-24.png' %}">
+                <img src="{% static 'cookie_booths/icons8-add-24.png' %}"
+                     alt="Add Booth"
+                     height="24"
+                     width="24">
                 Add Booth Location
             </a>
         </div>
-        <p>
-            <p>
-            {% endif %}
-            <table id="booths"
-                   class="table table-striped table-bordered"
-                   cellspacing="0"
-                   width="100%">
-                <thead>
-                    <tr>
-                        <th>Location</th>
-                        <th>Address</th>
-                        <th>Booth Outside</th>
-                        <th>Booth Requires Masks</th>
-                        <th>Booth Notes</th>
-                        {% if perms.cookie_booths.booth_loc_updates or perms.cookie_booths.booth_loc_deletes %}<th>Actions</th>{% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for booth in booths %}
-                        <tr>
-                            <td>{{ booth.booth_location }}</td>
-                            <td>{{ booth.booth_address }}</td>
-                            <td>{{ booth.booth_is_outside }}</td>
-                            <td>{{ booth.booth_requires_masks }}</td>
-                            <td>{{ booth.booth_notes }}</td>
-                            <td>
-                                {% if perms.cookie_booths.booth_loc_updates %}
-                                    <a href="{% url 'cookie_booths:edit_location' booth.id %}">Edit Booth</a> |
-                                    <a href="{% url 'cookie_booths:edit_booth_hours' booth.id %}">Edit Hours</a> |
-                                {% endif %}
-                                {% if perms.cookie_booths.booth_loc_deletes %}
-                                    <a href="{% url 'cookie_booths:delete_booth' booth.pk %}">Delete Booth</a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endblock content %}
+    {% endif %}
+    <table id="booths"
+           class="table table-striped table-bordered"
+           cellspacing="0"
+           width="100%">
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Address</th>
+                <th>Booth Outside</th>
+                <th>Booth Requires Masks</th>
+                <th>Booth Notes</th>
+                {% if perms.cookie_booths.booth_loc_updates or perms.cookie_booths.booth_loc_deletes %}<th>Actions</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for booth in booths %}
+                <tr>
+                    <td>{{ booth.booth_location }}</td>
+                    <td>{{ booth.booth_address }}</td>
+                    <td>{{ booth.booth_is_outside }}</td>
+                    <td>{{ booth.booth_requires_masks }}</td>
+                    <td>{{ booth.booth_notes }}</td>
+                    <td>
+                        {% if perms.cookie_booths.booth_loc_updates %}
+                            <a href="{% url 'cookie_booths:edit_location' booth.id %}">Edit Booth</a> |
+                            <a href="{% url 'cookie_booths:edit_booth_hours' booth.id %}">Edit Hours</a> |
+                        {% endif %}
+                        {% if perms.cookie_booths.booth_loc_deletes %}
+                            <a href="{% url 'cookie_booths:delete_booth' booth.pk %}">Delete Booth</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock content %}
