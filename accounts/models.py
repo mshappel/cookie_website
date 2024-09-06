@@ -2,11 +2,20 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
+
+
+class AccountType(models.TextChoices):
+    COOKIE_CAPTAIN = "cookie_captain", _("Cookie Captain")
+    COOKIE_ADMIN = "cookie_admin", _("Cookie Admin")
+    COOKIE_STAFF = "cookie_staff", _("Cookie Staff")
+    TCC = "tcc", _("TCC")
+    UNASSIGNED = "unassigned", _("Unassigned")
 
 
 class CustomUserManager(BaseUserManager):
@@ -45,6 +54,11 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     username = None
     email = models.EmailField(_("email address"), unique=True)
+    account_type = models.CharField(
+        max_length=20,
+        choices=AccountType.choices,
+        default=AccountType.UNASSIGNED,
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -54,17 +68,38 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
-    @property
-    def has_cookie_captain_permissions(self):
-        return self.has_perm("cookie_booths.block_reservation_admin")
+    def has_permission(self, permission):
+        permissions = {
+            AccountType.COOKIE_CAPTAIN: ["reserve_block_captain"],
+            AccountType.COOKIE_ADMIN: ["reserve_block_admin", "manage_users", "update_booth_day"],
+            AccountType.TCC: ["reserve_block_tcc", "edit_tcc_data"],
+            AccountType.COOKIE_STAFF: ["update_booth_day"],
+        }
+        return permission in permissions.get(self.account_type, [])
+
+    @cached_property
+    def cached_account_type(self):
+        return self.account_type
 
     @property
-    def has_cookie_admin_permissions(self):
-        return self.has_perm("cookie_booths.block_reservation_admin")
+    def is_cookie_captain(self):
+        return self.cached_account_type == AccountType.COOKIE_CAPTAIN
 
     @property
-    def has_tcc_permissions(self):
-        return self.has_perm("cookie_booths.block_reservation")
+    def is_admin(self):
+        return self.cached_account_type == AccountType.COOKIE_ADMIN
+
+    @property
+    def is_tcc(self):
+        return self.cached_account_type == AccountType.TCC
+
+    @property
+    def is_cookie_staff(self):
+        return self.cached_account_type == AccountType.COOKIE_STAFF
+
+    @property
+    def can_edit_booths(self):
+        return self.is_admin or self.is_cookie_staff
 
 
 class UserPreferences(models.Model):

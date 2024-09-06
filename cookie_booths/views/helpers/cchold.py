@@ -52,7 +52,7 @@ def process_block_action(request, block_id, action):
     )
 
 
-def _block_action_for_cookie_captain(condition, block, success_message, warning_message, action):
+def _block_action_for_cookie_captain(condition, block: BoothBlock, success_message, warning_message, action):
     if condition:
         if action == "hold":
             block.hold_for_cookie_captains()

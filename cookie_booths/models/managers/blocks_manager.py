@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -46,8 +46,8 @@ class BoothBlockManager(models.Manager):
         Returns:
             bool: True if the owner is a custom user, False otherwise.
         """
-        custom_user_type = ContentType.objects.get_for_model(User)
-        return block.owner_content_type == custom_user_type
+        owner = block.booth_block_current_owner
+        return owner.is_cookie_captain
 
     def get_current_owner_email(self, block: "BoothBlock") -> str:
         """
@@ -56,12 +56,7 @@ class BoothBlockManager(models.Manager):
         Returns:
             str: The email of the current owner of the booth block.
         """
-        if self.is_owner_cookie_captain(block):
-            captain: User = block.booth_block_current_owner
-            return captain.email
-        else:
-            owner: Troop = block.booth_block_current_owner
-            return owner.troop_cookie_coordinator
+        return block.booth_block_current_owner.email
 
     def get_cookie_captain_name_and_email(self, block: "BoothBlock") -> tuple:
         """
@@ -73,33 +68,33 @@ class BoothBlockManager(models.Manager):
         captain: User = block.booth_block_current_owner
         return captain.get_full_name(), captain.email
 
-    def get_cookie_captain_email_message(self, booth_block: BoothBlock):
+    def get_cookie_captain_email_message(self, booth_block: "BoothBlock"):
         cookie_captain_name, cookie_captain_email = self.get_cookie_captain_name_and_email(
             booth_block
         )
         return f"Cookie Captain: {cookie_captain_name} || " f"Contact: {cookie_captain_email}"
 
-    def block_owned_by_requester(self, block: "BoothBlock", request_user: User) -> bool:
+    def block_owned_by_requester(
+        self,
+        block: "BoothBlock",
+        request_user: User,
+        is_daisy: Optional[bool] = False,
+    ) -> bool:
         """
         Check if the booth block is owned by the requester.
 
         Returns:
             bool: True if the booth block is owned by the requester, False otherwise.
         """
-        if self.is_owner_cookie_captain(block):
-            captain: User = block.booth_block_current_owner
-            return captain == request_user
+        if is_daisy:
+            return block.booth_block_daisy_troop_owner == request_user
         else:
-            owner: Troop = block.booth_block_current_owner
-            return owner == request_user
-    
+            return block.booth_block_current_owner == request_user
+
     def retrieve_and_process_booth_information(
         self,
-        is_daisy_troop: bool,
-        is_cookie_captain: bool,
         time_threshold: datetime,
-        owner,
-        request_user,
+        request_user: User,
     ) -> list:
         """
         Retrieve booth blocks, create booth information list, and process each booth block.
@@ -114,6 +109,10 @@ class BoothBlockManager(models.Manager):
         Returns:
             list: A list of processed booth information dictionaries.
         """
+        requestor_email: str = request_user.email
+        is_cookie_captain: bool = request_user.is_cookie_captain
+        is_daisy_troop: bool = Troop.objects.is_daisy_troop_by_email(requestor_email)
+
         # Retrieve booth blocks with combined filters
         selected_booth_blocks = self.retrieve_booth_blocks(
             is_daisy_troop=is_daisy_troop,
@@ -122,9 +121,9 @@ class BoothBlockManager(models.Manager):
         )
 
         # Initialize booth information list
-        booth_information: List['BoothBlock'] = self.create_booth_information_list(
+        booth_information: List["BoothBlock"] = self.create_booth_information_list(
             selected_booth_blocks=selected_booth_blocks,
-            owner=owner,
+            requestor_email=requestor_email,
             is_cookie_captain=is_cookie_captain,
         )
 
@@ -139,14 +138,17 @@ class BoothBlockManager(models.Manager):
                 "booth_block_daisy_reserved": block.booth_block_daisy_reserved,
                 "booth_block_daisy_troop_owner": block.booth_block_daisy_troop_owner,
                 "booth_block_cookie_captain_email": block.objects.get_current_owner_email(block),
-                "booth_owned_by_current_user": block.booth_block_current_troop_owner
-                == request_user,
+                "booth_owned_by_current_user": self.block_owned_by_requester(
+                    block=block, request_user=request_user
+                ),
             }
             processed_booth_information.append(block_info)
 
         return processed_booth_information
 
-    def create_booth_information_list(self, selected_booth_blocks, owner, is_cookie_captain: bool):
+    def create_booth_information_list(
+        self, selected_booth_blocks: QuerySet, requestor_email: str, is_cookie_captain: bool
+    ):
         """
         Create a list of booth information from the selected booth blocks.
 
@@ -162,13 +164,15 @@ class BoothBlockManager(models.Manager):
         for booth in selected_booth_blocks:
             current_booth_information = self.create_booth_information(
                 booth_block=booth,
-                owner=owner,
+                requestor_email=requestor_email,
                 is_cookie_captain=is_cookie_captain,
             )
             booth_information.append(current_booth_information)
         return booth_information
 
-    def create_booth_information(self, booth_block: BoothBlock, owner, is_cookie_captain: bool):
+    def create_booth_information(
+        self, booth_block: "BoothBlock", requestor_email: str, is_cookie_captain: bool
+    ):
         """
         Creates booth information dictionary.
         Args:
@@ -183,7 +187,7 @@ class BoothBlockManager(models.Manager):
                 - "booth_block_cookie_captain_email": The email message of the cookie captain, if applicable.
         """
         booth_owned_by_current_user = self.is_booth_owned_by_current_user(
-            booth_block, owner, is_cookie_captain
+            booth_block, requestor_email, is_cookie_captain
         )
         booth_owned_by_cookie_captain = self.is_owner_cookie_captain(booth_block)
         if booth_owned_by_cookie_captain:
@@ -200,7 +204,7 @@ class BoothBlockManager(models.Manager):
 
     def is_booth_owned_by_current_user(
         self,
-        booth: BoothBlock,
+        booth: "BoothBlock",
         owner,
         is_cookie_captain: bool,
     ) -> bool:

@@ -6,7 +6,6 @@ from django.db import models
 from accounts.models import CustomUser as User
 from cookie_booths.models.day import BoothDay
 from cookie_booths.models.managers.blocks_manager import BoothBlockManager
-from troops.models import Troop
 
 
 class BoothBlock(models.Model):
@@ -35,13 +34,9 @@ class BoothBlock(models.Model):
 
     class Meta:
         permissions = (
-            ("block_reservation", "Reserve/Cancel a booth"),
-            ("reserve_block", "Reserve a booth"),
-            ("cookie_captain_reserve_block", "Reserve a block for a daisy scout"),
-            (
-                "block_reservation_admin",
-                "Administrator reserve/cancel any booth, or hold booths for reservation",
-            ),
+            ("reserve_block_tcc", "Reserve a booth"),
+            ("reserve_block_captain", "Reserve a block for a daisy troop"),
+            ("reserve_block_admin", "Reserve/cancel any booth or hold booths for captains"),
         )
 
     def __str__(self):
@@ -95,7 +90,7 @@ class BoothBlock(models.Model):
         if self._is_daisy_reserved():
             return False
 
-        if isinstance(owner, Troop):
+        if not owner.is_cookie_captain:
             return False
 
         self._update_daisy_reservation(should_reserve=True, daisy_troop_id=daisy_troop_id)
@@ -136,11 +131,15 @@ class BoothBlock(models.Model):
         """
         self.booth_block_reserved = should_reserve
         if owner:
-            self.booth_block_current_owner = owner.email
+            self.booth_block_current_owner = owner
         else:
-            self.booth_block_current_owner = None
-            self.booth_block_daisy_reserved = False
-            self.booth_block_daisy_troop_owner = 0
+            if self.booth_block_daisy_reserved:
+                # If a Daisy Troop has reserved the booth, you cannot cancel the reservation
+                return False
+            else:
+                self.booth_block_current_owner = None
+                self.booth_block_daisy_reserved = False
+                self.booth_block_daisy_troop_owner = 0
         self.save()
         return True
 
@@ -167,7 +166,7 @@ class BoothBlock(models.Model):
             bool: True if the hold status was successfully set, False otherwise.
         """
         if self.booth_block_held_for_cookie_captains == hold:
-            return True
+            return False
 
         if hold and self.booth_block_reserved:
             return False

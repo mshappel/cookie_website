@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
+from troops.troop_manager import TroopManager
 from utils.constants import GIRL_SCOUT_TROOP_LEVELS_WITH_NONE
 
 
@@ -73,6 +74,8 @@ class Troop(models.Model):
     total_booth_tickets_per_week = models.PositiveSmallIntegerField(default=0)
     booth_golden_tickets_per_week = models.PositiveSmallIntegerField(default=0)
 
+    objects: TroopManager = TroopManager()
+
     class Meta:
         verbose_name_plural = "troops"
         verbose_name = "troop"
@@ -83,10 +86,6 @@ class Troop(models.Model):
     @property
     def is_daisy_troop(self):
         return self.troop_level == 1
-
-    @classmethod
-    def get_by_cookie_coordinator_email(cls, email):
-        return cls.objects.filter(troop_cookie_coordinator=email).first()
 
 
 @receiver(pre_save, sender=Troop)

@@ -1,5 +1,8 @@
 import logging
 
+from django.http import HttpRequest
+
+from accounts.models import CustomUser as User
 from cookie_booths.models import BoothBlock, CookieSeason
 from troops.models import Troop
 from utils.display_message import MessageLoader
@@ -75,28 +78,29 @@ def identify_user(request, block_to_reserve):
     return user_identification
 
 
-def get_owner_and_user_type(request):
+def get_requestor_and_user_type(request: HttpRequest):
     """
-    Retrieves the owner and user type based on the given request.
+    Retrieves the requestor and user type based on the given request.
 
     Args:
         request (HttpRequest): The HTTP request object.
 
     Returns:
         tuple: A tuple containing the owner and user type. The tuple has the following format:
-            - owner: The troop number if it the user is a troop, or the user_id if cookie_captain.
+            - requester_email: Email address of the requestor.
             - is_daisy_troop: A boolean value indicating whether the user is part of a Daisy troop.
             - is_cookie_captain: A boolean value indicating whether the user is a cookie captain.
     """
-    email = request.user.email
-    user_id = request.user.id
-    is_cookie_captain = request.user.has_cookie_captain_permissions
+    request_user: User = request.user
+    email = request_user.email
+    is_cookie_captain = request_user.is_cookie_captain
+    is_tcc = request_user.is_tcc
 
-    user_troop = Troop.get_by_cookie_coordinator_email(email)
-    if user_troop:
-        return user_troop.troop_number, user_troop.is_daisy_troop, is_cookie_captain
+    if is_tcc:
+        user_troop = Troop.get_troop_by_email(email)
+        return email, user_troop.is_daisy_troop, is_cookie_captain
     elif is_cookie_captain:
-        return user_id, False, is_cookie_captain
+        return email, False, is_cookie_captain
     else:
         _logger.error("%s: %s", error_messages["unexpected_user"], email)
         return None, False, is_cookie_captain
