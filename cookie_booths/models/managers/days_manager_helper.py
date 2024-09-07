@@ -24,7 +24,7 @@ class StartEnd(TypedDict):
 
 class BoothDayHourManager:
 
-    def __init__(self, booth_day: "BoothDay", open_time: datetime, close_time: datetime):
+    def __init__(self, booth_day: "BoothDay", open_time: datetime, close_time: datetime) -> None:
         self.booth_day = booth_day
         self.open_time = open_time
         self.close_time = close_time

@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from django.db import models
 
@@ -18,20 +18,16 @@ class BoothDayManager(models.Manager):
     def order_booth_days(self):
         return self.order_by("booth", "booth_day_date")
 
-    def enable_day(self, day_id):
-        _logger.debug("Enabling day %s", day_id)
+    def enable_day(self, day_id: int) -> bool:
         return self._set_day_enabled(day_id, True)
 
-    def disable_day(self, day_id):
-        _logger.debug("Disabling day %s", day_id)
+    def disable_day(self, day_id: int) -> bool:
         return self._set_day_enabled(day_id, False)
 
-    def enable_freeforall(self, day_id):
-        _logger.debug("Enabling freeforall %s", day_id)
+    def enable_freeforall(self, day_id: int) -> bool:
         return self._set_freeforall_enabled(day_id, True)
 
-    def disable_freeforall(self, day_id):
-        _logger.debug("Disabling freeforall %s", day_id)
+    def disable_freeforall(self, day_id: int) -> bool:
         return self._set_freeforall_enabled(day_id, False)
 
     def add_or_update_hours(
@@ -50,7 +46,14 @@ class BoothDayManager(models.Manager):
         """
         BoothDayHourManager(booth_day, open_time, close_time).add_or_update_hours()
 
-    def _set_enabled(self, day_id, enabled, day_attr, block_attr=None, block_method=None) -> bool:
+    def _set_enabled(
+        self,
+        day_id: int,
+        enabled: bool,
+        day_attr: str,
+        block_attr: Optional[str] = None,
+        block_method: Optional[str] = None,
+    ) -> bool:
         """
         Set the enabled state of a booth day and its associated booth blocks.
 
@@ -72,6 +75,7 @@ class BoothDayManager(models.Manager):
         if getattr(day, day_attr) == enabled:
             return False
 
+        _logger.debug("Setting %s to %s for %s", day_attr, enabled, str(day))
         setattr(day, day_attr, enabled)
 
         block: BoothBlock
@@ -86,7 +90,7 @@ class BoothDayManager(models.Manager):
 
         return True
 
-    def _set_day_enabled(self, day_id, enabled):
+    def _set_day_enabled(self, day_id: int, enabled: bool) -> bool:
         return self._set_enabled(
             day_id=day_id,
             enabled=enabled,
@@ -94,7 +98,7 @@ class BoothDayManager(models.Manager):
             block_method="enable_block" if enabled else "disable_block",
         )
 
-    def _set_freeforall_enabled(self, day_id, enabled):
+    def _set_freeforall_enabled(self, day_id: int, enabled: bool) -> bool:
         return self._set_enabled(
             day_id=day_id,
             enabled=enabled,

@@ -33,7 +33,7 @@ class BoothDay(models.Model):
         # More useful name in the admin site
         return f"{self.booth} on {self.booth_day_date}"
 
-    def change_golden_status(self, is_golden_booth):
+    def change_golden_status(self, is_golden_booth: bool) -> None:
         _logger.debug("Changing golden status of booth day %s to %s", str(self), is_golden_booth)
         self.booth_day_is_golden = is_golden_booth
         self.save()
