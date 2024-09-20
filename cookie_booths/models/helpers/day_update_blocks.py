@@ -1,10 +1,11 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING, Callable, Tuple, TypedDict
 
 from django.db.models import Q
 
 from cookie_booths.models.blocks import BoothBlock
+from utils.constants import GOLDEN_TICKET_DAYS
 
 if TYPE_CHECKING:
     from cookie_booths.models.day import BoothDay
@@ -22,14 +23,21 @@ class StartEnd(TypedDict):
     cont: bool
 
 
-class BoothDayHourManager:
+class BoothDayUpdateBlocks:
 
-    def __init__(self, booth_day: "BoothDay", open_time: datetime, close_time: datetime) -> None:
-        self.booth_day = booth_day
-        self.open_time = open_time
-        self.close_time = close_time
+    def __init__(
+        self,
+        booth_day_instance: "BoothDay",
+        open_time: time,
+        close_time: time,
+        is_golden: bool,
+    ) -> None:
+        self.booth_day_instance = booth_day_instance
+        self.open_datetime: datetime = self._initialize_datetimes(open_time)
+        self.close_datetime: datetime = self._initialize_datetimes(close_time)
+        self.is_golden = is_golden
 
-    def add_or_update_hours(self) -> None:
+    def add_or_update_hours_per_day(self) -> None:
         """
         Adds or updates the hours for a booth day.
 
@@ -39,7 +47,8 @@ class BoothDayHourManager:
         # There are two cases to handle:
         # (1) Hours have been previously set or (2) the hours have not be previously set
         _logger.info("Adding or updating booth day hours")
-        if self.booth_day.booth_day_hours_set:
+        print(f"Booth day model hours set: {self.booth_day_instance.booth_day_hours_set}")
+        if self.booth_day_instance.booth_day_hours_set:
             _logger.debug("Hours have been previously set")
             # (1) Hours have been previously set
             if self._is_same_open_close_time():
@@ -62,14 +71,25 @@ class BoothDayHourManager:
         self._set_and_save_booth_days()
 
     def _set_and_save_booth_days(self):
-        self.booth_day.booth_day_hours_set = True
-        self.booth_day.booth_day_open_time = self.open_time
-        self.booth_day.booth_day_close_time = self.close_time
-        self.booth_day.save()
+        self.booth_day_instance.booth_day_hours_set = True
+        self.booth_day_instance.booth_day_open_time = self.open_datetime
+        self.booth_day_instance.booth_day_close_time = self.close_datetime
+        self._update_golden_booth()
+        self.booth_day_instance.save()
 
     def _initialize_blocks_if_not_set(self) -> None:
-        start_end = (self.open_time, self.open_time + timedelta(hours=2), True)
+        start_end = (self.open_datetime, self.open_datetime + timedelta(hours=2), True)
         self._add_blocks(start_end, self._adjust_times_forwards)
+
+    def _initialize_datetimes(self, booth_time: time):
+        return datetime.combine(self.booth_day_instance.booth_day_date, booth_time)
+
+    def _update_golden_booth(self) -> None:
+        """
+        Updates the golden booth status for the booth day.
+        """
+        if self.booth_day_instance.booth_day_date.weekday() in GOLDEN_TICKET_DAYS:
+            self.booth_day_instance.booth_day_is_golden = self.is_golden
 
     def _update_booth_day_hours(self) -> None:
         """
@@ -77,15 +97,15 @@ class BoothDayHourManager:
         """
         # In order to minimize database queries, we will first query all blocks for the booth day
         blocks = list(
-            BoothBlock.objects.filter(booth_day__id=self.booth_day.id).order_by(
+            BoothBlock.objects.filter(booth_day__id=self.booth_day_instance.id).order_by(
                 "booth_block_start_time"
             )
         )
 
         if not blocks:
-            self.booth_day.booth_day_hours_set = False
+            self.booth_day_instance.booth_day_hours_set = False
         else:
-            first_block = blocks[0]  # This is the first block
+            first_block: BoothBlock = blocks[0]  # This is the first block
             start_end = {
                 "start_time": first_block.booth_block_start_time - timedelta(hours=2),
                 "end_time": first_block.booth_block_start_time,
@@ -93,7 +113,7 @@ class BoothDayHourManager:
             }
             self._add_blocks(start_end, self._adjust_times_backwards)
 
-            last_block = blocks[-1]  # This is the last block
+            last_block: BoothBlock = blocks[-1]  # This is the last block
             start_end = {
                 "start_time": last_block.booth_block_end_time,
                 "end_time": last_block.booth_block_end_time + timedelta(hours=2),
@@ -107,9 +127,9 @@ class BoothDayHourManager:
         for a booth day.
         """
         BoothBlock.objects.filter(
-            Q(booth_day__id=self.booth_day.id),
-            Q(booth_block_start_time__lt=self.open_time)
-            | Q(booth_block_end_time__gt=self.close_time),
+            Q(booth_day__id=self.booth_day_instance.id),
+            Q(booth_block_start_time__lt=self.open_datetime)
+            | Q(booth_block_end_time__gt=self.close_datetime),
         ).delete()
 
     # fmt: off
@@ -129,13 +149,13 @@ class BoothDayHourManager:
         """
         new_blocks = []
 
-        while start_end["end_time"].hour <= self.close_time.hour and start_end["cont"]:
+        while start_end["end_time"].hour <= self.close_datetime.hour and start_end["cont"]:
             new_block = BoothBlock(
-                booth_day=self.booth_day,
+                booth_day=self.booth_day_instance,
                 booth_block_start_time=start_end["start_time"],
                 booth_block_end_time=start_end["end_time"],
                 booth_block_reserved=False,
-                booth_block_enabled=self.booth_day.booth_day_enabled,
+                booth_block_enabled=self.booth_day_instance.booth_day_enabled,
             )
             new_blocks.append(new_block)
 
@@ -158,8 +178,8 @@ class BoothDayHourManager:
         Returns:
             bool: True if both open and close times are the same, False otherwise.
         """
-        is_same_open_time = self.open_time == self.booth_day.booth_day_open_time
-        is_same_close_time = self.close_time == self.booth_day.booth_day_close_time
+        is_same_open_time = self.open_datetime == self.booth_day_instance.booth_day_open_time
+        is_same_close_time = self.close_datetime == self.booth_day_instance.booth_day_close_time
         return is_same_open_time and is_same_close_time
 
     def _adjust_time_within_bounds(self, time: int) -> Tuple[int, bool]:

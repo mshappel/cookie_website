@@ -4,7 +4,7 @@ from bootstrap_datepicker_plus.widgets import TimePickerInput
 from django import forms
 from django.utils.translation import gettext as _
 
-from cookie_booths.models import BoothHours
+from cookie_booths.models import BoothDailyAttributes
 from utils.constants import DAYS_OF_WEEK, GOLDEN_TICKET_DAYS
 
 _logger = logging.getLogger(__name__)
@@ -34,17 +34,8 @@ class BoothHoursForm(forms.ModelForm):
     """
 
     class Meta:
-        model = BoothHours
-
-        fields = ["booth_start_date", "booth_end_date"]
-        labels = {
-            "booth_start_date": _("Enter the date sales will begin at this booth."),
-            "booth_end_date": _("Enter the last date of sales for this booth."),
-        }
-        help_texts = {
-            "booth_start_date": _("Enter the date sales will begin at this booth."),
-            "booth_end_date": _("Enter the last date of sales for this booth."),
-        }
+        model = BoothDailyAttributes
+        fields = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -80,38 +71,6 @@ class BoothHoursForm(forms.ModelForm):
             self.fields[f"{day}_close_time"] = forms.TimeField(
                 widget=TimePickerInput(), required=False
             )
-
-    def clean_booth_start_date(self):
-        """
-        Validates the booth start date.
-
-        Returns:
-            str: The cleaned booth start date.
-
-        Raises:
-            forms.ValidationError: If the booth start date is not specified.
-        """
-        data = self.cleaned_data["booth_start_date"]
-        if data is None:
-            raise forms.ValidationError("Please specify a valid start date")
-
-        return data
-
-    def clean_booth_end_date(self):
-        """
-        Validates the booth end date.
-
-        Returns:
-            str: The cleaned booth end date.
-
-        Raises:
-            forms.ValidationError: If the booth end date is not specified.
-        """
-        data = self.cleaned_data["booth_end_date"]
-        if data is None:
-            raise forms.ValidationError("Please specify a valid end date")
-
-        return data
 
     def clean(self):
         """

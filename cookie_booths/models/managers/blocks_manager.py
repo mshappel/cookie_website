@@ -10,12 +10,16 @@ from troops.models import Troop
 from utils.date_utils import get_week_start_end_from_date
 
 if TYPE_CHECKING:
-    from cookie_booths.models import BoothBlock
+    from cookie_booths.models import BoothBlock, BoothDay
 
 ORDERING_FIELDS = ["booth_day__booth", "booth_day", "booth_block_start_time"]
 
 
 class BoothBlockManager(models.Manager):
+
+    def get_booth_blocks_for_day(self, booth_day: "BoothDay"):
+        """Returns the BoothBlock instances associated with the given BoothDay."""
+        return self.filter(booth_day=booth_day)
 
     def order_booth_blocks(self) -> QuerySet:
         """

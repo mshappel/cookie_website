@@ -1,17 +1,22 @@
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from django.db import models
 
 from accounts.models import CustomUser as User
-from cookie_booths.models.day import BoothDay
 from cookie_booths.models.managers.blocks_manager import BoothBlockManager
+
+if TYPE_CHECKING:
+    from cookie_booths.models.day import BoothDay
 
 
 class BoothBlock(models.Model):
     """Contains information for a particular booth block"""
 
-    booth_day = models.ForeignKey(BoothDay, on_delete=models.CASCADE)
+    booth_day: "BoothDay" = models.ForeignKey(
+        "cookie_booths.BoothDay",
+        on_delete=models.CASCADE,
+    )
 
     booth_block_start_time = models.DateTimeField(blank=True, null=True)
     booth_block_end_time = models.DateTimeField(blank=True, null=True)

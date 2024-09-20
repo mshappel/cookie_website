@@ -1,24 +1,38 @@
+import logging
+
 from django.db import models
 
-from cookie_booths.models.location import BoothLocation
+from cookie_booths.models.managers.daily_attributes_manager import (
+    BoothAttributesManager,
+)
+from utils.date_utils import parse_time
+
+_logger = logging.getLogger(__name__)
+_logger.addHandler(logging.NullHandler())
 
 
-class BoothHours(models.Model):
+class BoothDailyAttributes(models.Model):
     class Meta:
-        verbose_name_plural = "Booth hours"
+        verbose_name_plural = "Booth Daily Attributes"
 
     def __str__(self):
         # Easier to use admin names
-        return f"{self.booth_location} Hours"
+        return f"{self.booth_location} Daily Attributes"
 
-    booth_location = models.OneToOneField(BoothLocation, null=True, on_delete=models.CASCADE)
-    booth_start_date = models.DateField(blank=True, null=True)
-    booth_end_date = models.DateField(blank=True, null=True)
+    booth_location = models.OneToOneField(
+        "cookie_booths.BoothLocation",
+        null=True,
+        on_delete=models.CASCADE,
+    )
 
     # Use a JSONField to store daily attributes
     daily_attributes: models.JSONField = models.JSONField(default=dict)
 
+    objects: BoothAttributesManager = BoothAttributesManager()
+
     def save(self, *args, **kwargs):
+        print(f"Before save: {self.daily_attributes}")
+
         # Ensure the JSONField has a default structure if it's empty
         if not self.daily_attributes:
             self.daily_attributes = {
@@ -40,20 +54,24 @@ class BoothHours(models.Model):
                     "golden_ticket": False,
                 },
             }
-        super().save(*args, **kwargs)
 
-    def get_daily_attribute(self, day: str, attribute: str) -> any:
+        super().save(*args, **kwargs)
+        print(f"After save: {self.daily_attributes}")
+
+    def get_daily_attribute_day(self, day: str) -> dict:
         """
         Retrieve the value of a specific attribute for a given day.
 
         Args:
             day (str): The day for which to retrieve the attribute value.
-            attribute (str): The name of the attribute to retrieve.
 
         Returns:
-            The value of the specified attribute for the given day, or None if the attribute or day does not exist.
+            The value of the specified day's attributes.
         """
-        return self.daily_attributes.get(day, {}).get(attribute)
+        attributes: dict = self.daily_attributes.get(day, {})
+        attributes["open_time"] = parse_time(attributes.get("open_time"))
+        attributes["close_time"] = parse_time(attributes.get("close_time"))
+        return attributes
 
     def set_daily_attribute(self, day: str, attribute: str, value: any) -> None:
         """
@@ -70,4 +88,17 @@ class BoothHours(models.Model):
         if day not in self.daily_attributes:
             self.daily_attributes[day] = {}
         self.daily_attributes[day][attribute] = value
+        self.save()
+
+    def set_daily_attributes(self, daily_attributes: dict) -> None:
+        """
+        Set the daily attributes for the booth.
+
+        Args:
+            daily_attributes (dict): The daily attributes to set.
+
+        Returns:
+            None
+        """
+        self.daily_attributes = daily_attributes
         self.save()

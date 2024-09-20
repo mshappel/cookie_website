@@ -35,9 +35,12 @@ class BoothLocationForm(forms.ModelForm):
             "booth_block_level_restrictions_start": _("Lowest Troop Level"),
             "booth_block_level_restrictions_end": _("Highest Troop Level"),
             "booth_enabled": _("Booth Is Enabled"),
+            "booth_start_date": _("Enter the date sales will begin at this booth."),
+            "booth_end_date": _("Enter the last date of sales for this booth."),
         }
 
         fields = list(field_label_map.keys())
+
         labels = field_label_map
 
         help_texts = {
@@ -49,8 +52,42 @@ class BoothLocationForm(forms.ModelForm):
                 "Select the highest level troop that can use this booth"
             ),
             "booth_enabled": _("Enabled means booth blocks are able to be reserved."),
+            "booth_start_date": _("Enter the date sales will begin at this booth."),
+            "booth_end_date": _("Enter the last date of sales for this booth."),
         }
 
+    def clean_booth_start_date(self):
+        """
+        Validates the booth start date.
+
+        Returns:
+            str: The cleaned booth start date.
+
+        Raises:
+            forms.ValidationError: If the booth start date is not specified.
+        """
+        data = self.cleaned_data["booth_start_date"]
+        if data is None:
+            raise forms.ValidationError("Please specify a valid start date")
+
+        return data
+
+    def clean_booth_end_date(self):
+        """
+        Validates the booth end date.
+
+        Returns:
+            str: The cleaned booth end date.
+
+        Raises:
+            forms.ValidationError: If the booth end date is not specified.
+        """
+        data = self.cleaned_data["booth_end_date"]
+        if data is None:
+            raise forms.ValidationError("Please specify a valid end date")
+
+        return data
+    
     def clean(self):
         """
         Clean and validate the form data.

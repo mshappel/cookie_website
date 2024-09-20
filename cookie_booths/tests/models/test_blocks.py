@@ -1,16 +1,32 @@
+from datetime import date
+
 from django.test import TestCase
 
 from accounts.models import AccountType
 from accounts.models import CustomUser as User
-from cookie_booths.models import BoothBlock, BoothDay, BoothLocation
+from cookie_booths.models import (
+    BoothDailyAttributes,
+    BoothLocation,
+)
 
 
 class BaseBoothBlockTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.location: BoothLocation = BoothLocation.objects.create()
-        cls.day: BoothDay = BoothDay.objects.create(booth=cls.location)
-        cls.block: BoothBlock = BoothBlock.objects.create(booth_day=cls.day)
+        cls.user = User.objects.create(
+            email="admin@test.com",
+            account_type=AccountType.COOKIE_ADMIN,
+        )
+        cls.booth_location: BoothLocation = BoothLocation.objects.create(
+            booth_location="Test Booth Location",
+            booth_address="123 Test St",
+            booth_enabled=True,
+            booth_start_date=date(2023, 1, 1),
+            booth_end_date=date(2023, 1, 31),
+        )
+        cls.booth_daily_attributes = BoothDailyAttributes.objects.create(
+            booth_location=cls.booth_location,
+        )
 
         cls.user_tcc = User.objects.create(
             email="tcc@test.com",
@@ -20,11 +36,6 @@ class BaseBoothBlockTestCase(TestCase):
             email="cc@test.com",
             account_type=AccountType.COOKIE_CAPTAIN,
         )
-
-        cls.block.enable_block()
-
-    def setUp(self):
-        self.block.refresh_from_db()
 
 
 class BoothBlockTestCase(BaseBoothBlockTestCase):
