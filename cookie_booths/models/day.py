@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional
 from django.db import models
 from pytz import utc
 
-from cookie_booths.models.blocks import BoothBlock
+from cookie_booths.models.time_block import BoothTimeBlock
 from cookie_booths.models.helpers.day_update_blocks import BoothDayUpdateBlocks
 from cookie_booths.models.managers.days_manager import BoothDayManager
 
@@ -133,8 +133,8 @@ class BoothDay(models.Model):
 
         _logger.debug("Setting %s to %s for %s", day_attr, enabled, str(self))
         setattr(self, day_attr, enabled)
-        block: "BoothBlock"
-        for block in BoothBlock.objects.get_booth_blocks_for_day(self):
+        block: "BoothTimeBlock"
+        for block in BoothTimeBlock.objects.get_booth_blocks_for_day(self):
 
             if block_attr:
                 setattr(block, block_attr, enabled)

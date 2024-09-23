@@ -1,7 +1,7 @@
 import logging
 
 import cookie_booths.views.helpers as helpers
-from cookie_booths.models import BoothBlock, CookieSeason
+from cookie_booths.models import BoothTimeBlock, CookieSeason
 from troops.models import Troop
 from utils.display_message import MessageLoader
 
@@ -15,7 +15,7 @@ warning_messages = message_loader.load_warning_messages()
 
 
 def handle_post_request(request, block_id, action_func, daisy=False):
-    block = BoothBlock.objects.get(id=block_id)
+    block = BoothTimeBlock.objects.get(id=block_id)
     message, success = action_func(request, block, daisy)
     return helpers.message_response.create_message_response(
         message=message,

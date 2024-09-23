@@ -4,12 +4,7 @@ from datetime import timedelta
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
-from cookie_booths.models import (
-    BoothDailyAttributes,
-    BoothDay,
-    BoothLocation,
-    CookieSeason,
-)
+from cookie_booths.models import BoothDay, BoothLocation, BoothSchedule, CookieSeason
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
@@ -33,8 +28,8 @@ def store_pre_boothlocation_save_state(sender, instance: BoothLocation, **kwargs
     pre_boothlocation_save_state[instance.pk] = instance
 
 
-@receiver(pre_save, sender=BoothDailyAttributes)
-def store_pre_boothdailyattributes_save_state(sender, instance: BoothDailyAttributes, **kwargs):
+@receiver(pre_save, sender=BoothSchedule)
+def store_pre_boothdailyattributes_save_state(sender, instance: BoothSchedule, **kwargs):
     pre_boothdailyattributes_save_state[instance.pk] = instance
 
 
@@ -42,7 +37,7 @@ def store_pre_boothdailyattributes_save_state(sender, instance: BoothDailyAttrib
 def update_hours(sender, instance: BoothLocation, created, **kwargs):
     _logger.debug("Updating hours for booth day %s", str(instance))
     if created:
-        BoothDailyAttributes.objects.create(booth_location=instance)
+        BoothSchedule.objects.create(booth_location=instance)
     else:
         old_instance: BoothLocation = pre_boothlocation_save_state.pop(instance.pk, None)
         booth_location = instance.booth_location
@@ -53,8 +48,8 @@ def update_hours(sender, instance: BoothLocation, created, **kwargs):
                 BoothDay.enable_disable_booth_day(booth_location=booth_location)
 
 
-@receiver(post_save, sender=BoothDailyAttributes)
-def create_or_update_days(sender, instance: BoothDailyAttributes, created, **kwargs):
+@receiver(post_save, sender=BoothSchedule)
+def create_or_update_days(sender, instance: BoothSchedule, created, **kwargs):
     _logger.debug("Creating or updating days for booth day %s", str(instance.booth_location))
     BoothDay.update_booth_day_attributes(instance.booth_location)
 
@@ -68,4 +63,3 @@ def _booth_dates_changed(old_instance: BoothLocation, new_instance: BoothLocatio
 def _booth_enabled_changed(old_instance: BoothLocation, new_instance: BoothLocation):
     booth_enabled_changed = old_instance.booth_enabled != new_instance.booth_enabled
     return booth_enabled_changed
-

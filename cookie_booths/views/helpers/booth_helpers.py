@@ -1,6 +1,6 @@
 import logging
 
-from cookie_booths.models import BoothBlock
+from cookie_booths.models import BoothTimeBlock
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
@@ -21,7 +21,7 @@ def get_booth_information():
     """
     _logger.info("Fetching booth information")
     booth_information = []
-    ordered_booth_blocks = BoothBlock.objects.order_booth_blocks()
+    ordered_booth_blocks = BoothTimeBlock.objects.order_booth_blocks()
 
     for booth in ordered_booth_blocks:
         current_booth_information = {

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Callable, Tuple, TypedDict
 
 from django.db.models import Q
 
-from cookie_booths.models.blocks import BoothBlock
+from cookie_booths.models.time_block import BoothTimeBlock
 from utils.constants import GOLDEN_TICKET_DAYS
 
 if TYPE_CHECKING:
@@ -97,7 +97,7 @@ class BoothDayUpdateBlocks:
         """
         # In order to minimize database queries, we will first query all blocks for the booth day
         blocks = list(
-            BoothBlock.objects.filter(booth_day__id=self.booth_day_instance.id).order_by(
+            BoothTimeBlock.objects.filter(booth_day__id=self.booth_day_instance.id).order_by(
                 "booth_block_start_time"
             )
         )
@@ -105,7 +105,7 @@ class BoothDayUpdateBlocks:
         if not blocks:
             self.booth_day_instance.booth_day_hours_set = False
         else:
-            first_block: BoothBlock = blocks[0]  # This is the first block
+            first_block: BoothTimeBlock = blocks[0]  # This is the first block
             start_end = {
                 "start_time": first_block.booth_block_start_time - timedelta(hours=2),
                 "end_time": first_block.booth_block_start_time,
@@ -113,7 +113,7 @@ class BoothDayUpdateBlocks:
             }
             self._add_blocks(start_end, self._adjust_times_backwards)
 
-            last_block: BoothBlock = blocks[-1]  # This is the last block
+            last_block: BoothTimeBlock = blocks[-1]  # This is the last block
             start_end = {
                 "start_time": last_block.booth_block_end_time,
                 "end_time": last_block.booth_block_end_time + timedelta(hours=2),
@@ -126,7 +126,7 @@ class BoothDayUpdateBlocks:
         Clears the BoothBlock objects that overlap with the specified open and close times
         for a booth day.
         """
-        BoothBlock.objects.filter(
+        BoothTimeBlock.objects.filter(
             Q(booth_day__id=self.booth_day_instance.id),
             Q(booth_block_start_time__lt=self.open_datetime)
             | Q(booth_block_end_time__gt=self.close_datetime),
@@ -150,7 +150,7 @@ class BoothDayUpdateBlocks:
         new_blocks = []
 
         while start_end["end_time"].hour <= self.close_datetime.hour and start_end["cont"]:
-            new_block = BoothBlock(
+            new_block = BoothTimeBlock(
                 booth_day=self.booth_day_instance,
                 booth_block_start_time=start_end["start_time"],
                 booth_block_end_time=start_end["end_time"],
@@ -167,7 +167,7 @@ class BoothDayUpdateBlocks:
                 start_end["cont"] = False
 
         # In order to minimize database queries, we will use bulk_create
-        BoothBlock.objects.bulk_create(new_blocks)
+        BoothTimeBlock.objects.bulk_create(new_blocks)
 
         return start_end
 

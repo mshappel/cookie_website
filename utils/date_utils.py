@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from typing import Generator
 
+from django.utils import timezone
 from django.utils.timezone import timedelta
 
 
@@ -21,3 +22,8 @@ def date_range_generator(start_date: date, end_date: date) -> Generator[date, No
 
 def parse_time(time_str: str) -> datetime.time:
     return datetime.strptime(time_str, "%H:%M:%S").time() if time_str else None
+
+
+def get_one_week_ago():
+    one_week_ago = timezone.now() - timedelta(days=7)
+    return one_week_ago

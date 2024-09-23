@@ -3,7 +3,7 @@ import logging
 from django.http import HttpRequest
 
 from accounts.models import CustomUser as User
-from cookie_booths.models import BoothBlock, CookieSeason
+from cookie_booths.models import BoothTimeBlock, CookieSeason
 from troops.models import Troop
 from utils.display_message import MessageLoader
 
@@ -107,7 +107,7 @@ def get_requestor_and_user_type(request: HttpRequest):
 
 
 def _get_cookie_captain_remaining_tickets(cookie_captain_id, date):
-    total_booth_count = BoothBlock.objects.total_booth_count_for_cookie_captain(
+    total_booth_count = BoothTimeBlock.objects.total_booth_count_for_cookie_captain(
         cookie_captain_id=cookie_captain_id,
         date=date,
     )
@@ -123,7 +123,7 @@ def _get_cookie_captain_remaining_tickets(cookie_captain_id, date):
 
 
 def _get_troop_remaining_tickets(troop_id: Troop, date):
-    blocks_aggregated = BoothBlock.objects.aggregated_booth_count_for_troop(
+    blocks_aggregated = BoothTimeBlock.objects.aggregated_booth_count_for_troop(
         troop_id=troop_id,
         date=date,
     )
@@ -158,7 +158,7 @@ def _get_num_tickets_remaining(troop_or_cookie_captain_id, date, is_cookie_capta
         return _get_troop_remaining_tickets(troop_or_cookie_captain_id, date)
 
 
-def _get_troop_and_tickets(troop_number=None, email=None, block_to_reserve: BoothBlock = None):
+def _get_troop_and_tickets(troop_number=None, email=None, block_to_reserve: BoothTimeBlock = None):
     response = DEFAULT_RESPONSE.copy()
 
     if troop_number:

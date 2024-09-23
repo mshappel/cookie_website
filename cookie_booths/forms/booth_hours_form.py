@@ -4,7 +4,7 @@ from bootstrap_datepicker_plus.widgets import TimePickerInput
 from django import forms
 from django.utils.translation import gettext as _
 
-from cookie_booths.models import BoothDailyAttributes
+from cookie_booths.models import BoothSchedule
 from utils.constants import DAYS_OF_WEEK, GOLDEN_TICKET_DAYS
 
 _logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class BoothHoursForm(forms.ModelForm):
     """
 
     class Meta:
-        model = BoothDailyAttributes
+        model = BoothSchedule
         fields = []
 
     def __init__(self, *args, **kwargs):

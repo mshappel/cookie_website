@@ -6,7 +6,7 @@ from django.views.generic.edit import DeleteView
 
 import cookie_booths.views.helpers as helpers
 from cookie_booths.forms import BoothHoursForm, BoothLocationForm
-from cookie_booths.models import BoothDailyAttributes, BoothDay, BoothLocation
+from cookie_booths.models import BoothDay, BoothLocation, BoothSchedule
 from utils.display_message import MessageLoader
 
 message_loader = MessageLoader()
@@ -113,7 +113,7 @@ def edit_booth_location_hours(request, booth_id):
 
     """
     booth = get_object_or_404(BoothLocation, id=booth_id)
-    hours, _ = BoothDailyAttributes.objects.get_or_create(booth_location=booth)
+    hours, _ = BoothSchedule.objects.get_or_create(booth_location=booth)
     form = BoothHoursForm(instance=hours, data=request.POST or None)
 
     if request.method == "POST" and form.is_valid():

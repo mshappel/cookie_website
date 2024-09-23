@@ -3,7 +3,7 @@ from datetime import date, datetime, time
 from django.test import TestCase
 
 from cookie_booths.models import BoothLocation
-from cookie_booths.models.daily_attributes import BoothDailyAttributes
+from cookie_booths.models.schedule import BoothSchedule
 
 
 class BoothDailyAttributesTestCase(TestCase):
@@ -16,7 +16,7 @@ class BoothDailyAttributesTestCase(TestCase):
             booth_start_date=date(2024, 1, 1),
             booth_end_date=date(2024, 1, 31),
         )
-        cls.booth_daily_attributes: BoothDailyAttributes = BoothDailyAttributes.objects.get(
+        cls.booth_daily_attributes: BoothSchedule = BoothSchedule.objects.get(
             booth_location=cls.booth_location
         )
 
@@ -56,7 +56,7 @@ class BoothDailyAttributesTestCase(TestCase):
         )
 
     def test_save(self):
-        self.booth_daily_attributes.daily_attributes = {
+        self.booth_daily_attributes.booth_schedule = {
             "monday": {"open": True, "open_time": "09:00", "close_time": "17:00"},
             "tuesday": {"open": True, "open_time": "09:00", "close_time": "17:00"},
         }

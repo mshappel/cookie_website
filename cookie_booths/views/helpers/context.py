@@ -4,7 +4,7 @@ from datetime import datetime
 from django.http import HttpRequest, HttpResponse
 
 from accounts.models import CustomUser as User
-from cookie_booths.models import BoothBlock
+from cookie_booths.models import BoothTimeBlock
 from cookie_booths.views.helpers import permissions
 from troops.models import Troop
 from utils.display_message import MessageLoader
@@ -39,7 +39,7 @@ def get_booth_context(request: HttpRequest, time_threshold: datetime) -> dict:
     is_daisy_troop: bool = Troop.objects.is_daisy_troop_by_email(requestor_email)
 
     # Process each booth block to determine its state and permissions
-    processed_booth_information = BoothBlock.objects.retrieve_and_process_booth_information(
+    processed_booth_information = BoothTimeBlock.objects.retrieve_and_process_booth_information(
         time_threshold=time_threshold, request_user=requestor
     )
     _logger.debug("Processed booth information: %s", processed_booth_information)

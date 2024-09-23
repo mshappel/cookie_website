@@ -2,7 +2,7 @@ import logging
 
 from django.http import HttpResponse
 
-from cookie_booths.models import BoothBlock, BoothDay
+from cookie_booths.models import BoothDay, BoothTimeBlock
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
@@ -20,7 +20,7 @@ def handle_block_toggle(request, block_id, action):
     Returns:
         HttpResponse: The HTTP response object.
     """
-    return _handle_toggle(request, block_id, action, BoothBlock, "block")
+    return _handle_toggle(request, block_id, action, BoothTimeBlock, "block")
 
 
 def handle_day_toggle(request, action):

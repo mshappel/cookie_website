@@ -4,10 +4,7 @@ from django.test import TestCase
 
 from accounts.models import AccountType
 from accounts.models import CustomUser as User
-from cookie_booths.models import (
-    BoothDailyAttributes,
-    BoothLocation,
-)
+from cookie_booths.models import BoothLocation, BoothSchedule
 
 
 class BaseBoothBlockTestCase(TestCase):
@@ -24,7 +21,7 @@ class BaseBoothBlockTestCase(TestCase):
             booth_start_date=date(2023, 1, 1),
             booth_end_date=date(2023, 1, 31),
         )
-        cls.booth_daily_attributes = BoothDailyAttributes.objects.create(
+        cls.booth_daily_attributes = BoothSchedule.objects.create(
             booth_location=cls.booth_location,
         )
 

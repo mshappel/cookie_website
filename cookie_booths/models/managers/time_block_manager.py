@@ -10,12 +10,12 @@ from troops.models import Troop
 from utils.date_utils import get_week_start_end_from_date
 
 if TYPE_CHECKING:
-    from cookie_booths.models import BoothBlock, BoothDay
+    from cookie_booths.models import BoothDay, BoothTimeBlock
 
 ORDERING_FIELDS = ["booth_day__booth", "booth_day", "booth_block_start_time"]
 
 
-class BoothBlockManager(models.Manager):
+class BoothTimeBlockManager(models.Manager):
 
     def get_booth_blocks_for_day(self, booth_day: "BoothDay"):
         """Returns the BoothBlock instances associated with the given BoothDay."""
@@ -30,7 +30,7 @@ class BoothBlockManager(models.Manager):
         """
         return self._select_and_order_booth_blocks(self)
 
-    def get_block_to_reserve(self, block_id: int) -> "BoothBlock":
+    def get_block_to_reserve(self, block_id: int) -> "BoothTimeBlock":
         """
         Retrieves a booth block to reserve based on the given block ID.
 
@@ -43,7 +43,7 @@ class BoothBlockManager(models.Manager):
         block = self.select_related("booth_day__booth").get(id=block_id)
         return block
 
-    def is_owner_cookie_captain(self, block: "BoothBlock") -> bool:
+    def is_owner_cookie_captain(self, block: "BoothTimeBlock") -> bool:
         """
         Check if the owner of the object is a cookie captain.
 
@@ -53,7 +53,7 @@ class BoothBlockManager(models.Manager):
         owner = block.booth_block_current_owner
         return owner.is_cookie_captain
 
-    def get_current_owner_email(self, block: "BoothBlock") -> str:
+    def get_current_owner_email(self, block: "BoothTimeBlock") -> str:
         """
         Get the email of the current owner of the booth block.
 
@@ -62,7 +62,7 @@ class BoothBlockManager(models.Manager):
         """
         return block.booth_block_current_owner.email
 
-    def get_cookie_captain_name_and_email(self, block: "BoothBlock") -> tuple:
+    def get_cookie_captain_name_and_email(self, block: "BoothTimeBlock") -> tuple:
         """
         Get the name and email of the cookie captain for the booth block.
 
@@ -72,7 +72,7 @@ class BoothBlockManager(models.Manager):
         captain: User = block.booth_block_current_owner
         return captain.get_full_name(), captain.email
 
-    def get_cookie_captain_email_message(self, booth_block: "BoothBlock"):
+    def get_cookie_captain_email_message(self, booth_block: "BoothTimeBlock"):
         cookie_captain_name, cookie_captain_email = self.get_cookie_captain_name_and_email(
             booth_block
         )
@@ -80,7 +80,7 @@ class BoothBlockManager(models.Manager):
 
     def block_owned_by_requester(
         self,
-        block: "BoothBlock",
+        block: "BoothTimeBlock",
         request_user: User,
         is_daisy: Optional[bool] = False,
     ) -> bool:
@@ -125,7 +125,7 @@ class BoothBlockManager(models.Manager):
         )
 
         # Initialize booth information list
-        booth_information: List["BoothBlock"] = self.create_booth_information_list(
+        booth_information: List["BoothTimeBlock"] = self.create_booth_information_list(
             selected_booth_blocks=selected_booth_blocks,
             requestor_email=requestor_email,
             is_cookie_captain=is_cookie_captain,
@@ -175,7 +175,7 @@ class BoothBlockManager(models.Manager):
         return booth_information
 
     def create_booth_information(
-        self, booth_block: "BoothBlock", requestor_email: str, is_cookie_captain: bool
+        self, booth_block: "BoothTimeBlock", requestor_email: str, is_cookie_captain: bool
     ):
         """
         Creates booth information dictionary.
@@ -208,7 +208,7 @@ class BoothBlockManager(models.Manager):
 
     def is_booth_owned_by_current_user(
         self,
-        booth: "BoothBlock",
+        booth: "BoothTimeBlock",
         owner,
         is_cookie_captain: bool,
     ) -> bool:

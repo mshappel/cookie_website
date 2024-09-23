@@ -6,7 +6,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 
-from cookie_booths.models import BoothBlock
+from cookie_booths.models import BoothTimeBlock
 from utils.display_message import MessageLoader
 
 message_loader = MessageLoader()
@@ -20,7 +20,7 @@ def handle_booth_form_submission(
     form: ModelForm,
     success_redirect: str,
     template_name: str,
-    booth: Optional[BoothBlock] = None,
+    booth: Optional[BoothTimeBlock] = None,
 ) -> HttpResponse:
     """
     Handles the submission of a booth form.

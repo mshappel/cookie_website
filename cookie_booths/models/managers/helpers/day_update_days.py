@@ -2,7 +2,7 @@ import logging
 from datetime import date
 from typing import TYPE_CHECKING, Callable
 
-from cookie_booths.models.daily_attributes import BoothDailyAttributes
+from cookie_booths.models.schedule import BoothSchedule
 from cookie_booths.models.helpers.day_update_blocks import BoothDayUpdateBlocks
 from cookie_booths.models.location import BoothLocation
 from utils.date_utils import date_range_generator
@@ -22,7 +22,7 @@ class BoothDayUpdateDays:
 
     def update_booth_common(
         self,
-        process_day_method: Callable[["BoothLocation", BoothDailyAttributes, date], None],
+        process_day_method: Callable[["BoothLocation", BoothSchedule, date], None],
     ) -> None:
         """Common logic for updating booth location.
 
@@ -32,10 +32,8 @@ class BoothDayUpdateDays:
         booth_start_date: date = self.booth_location.booth_start_date
         booth_end_date: date = self.booth_location.booth_end_date
 
-        daily_attributes_for_day: BoothDailyAttributes = (
-            BoothDailyAttributes.objects.fetch_booth_daily_attributes(
-                booth_location=self.booth_location
-            )
+        daily_attributes_for_day: BoothSchedule = BoothSchedule.objects.fetch_booth_schedule(
+            booth_location=self.booth_location
         )
 
         # Collect operations for bulk processing
@@ -67,7 +65,7 @@ class BoothDayUpdateDays:
     def update_booth_day_attributes(
         self,
         booth_location: "BoothLocation",
-        daily_attributes: BoothDailyAttributes,
+        daily_attributes: BoothSchedule,
         day: date,
         deletions: list,
     ) -> None:
@@ -108,7 +106,7 @@ class BoothDayUpdateDays:
     def enable_disable_booth_day(
         self,
         booth_location: "BoothLocation",
-        daily_attributes: BoothDailyAttributes,
+        daily_attributes: BoothSchedule,
         day: date,
         deletions: list,
     ) -> None:

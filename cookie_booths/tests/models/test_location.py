@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from cookie_booths.models import BoothDailyAttributes, BoothLocation
+from cookie_booths.models import BoothLocation, BoothSchedule
 
 
 class BoothLocationTestCase(TestCase):

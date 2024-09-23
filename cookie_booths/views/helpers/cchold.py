@@ -2,7 +2,7 @@ import logging
 
 from django.shortcuts import get_object_or_404
 
-from cookie_booths.models import BoothBlock
+from cookie_booths.models import BoothTimeBlock
 from cookie_booths.views.helpers.message_response import create_message_response
 from cookie_booths.views.helpers.permissions import can_hold_for_cookie_captains
 from utils.display_message import MessageLoader
@@ -52,7 +52,9 @@ def process_block_action(request, block_id, action):
     )
 
 
-def _block_action_for_cookie_captain(condition, block: BoothBlock, success_message, warning_message, action):
+def _block_action_for_cookie_captain(
+    condition, block: BoothTimeBlock, success_message, warning_message, action
+):
     if condition:
         if action == "hold":
             block.hold_for_cookie_captains()
@@ -68,7 +70,7 @@ def _block_action_for_cookie_captain(condition, block: BoothBlock, success_messa
 
 def _get_booth_block(request, block_id):
     if can_hold_for_cookie_captains(request.user):
-        block = get_object_or_404(BoothBlock, id=block_id)
+        block = get_object_or_404(BoothTimeBlock, id=block_id)
     else:
         block = None
     return block
