@@ -35,5 +35,14 @@ class BoothReservation(models.Model, SaveReservationMixin):
     def __str__(self):
         return f"{self.time_block} reserved by {self.current_owner}"
 
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to enforce that held_for_cookie_captains is False
+        if current_owner or current_owner_troop_number is set.
+        """
+        if self.current_owner or self.current_owner_troop_number:
+            self.held_for_cookie_captains = False
+        super().save(*args, **kwargs)
+    
     def get_owner(self):
         return self.current_owner

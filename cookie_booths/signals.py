@@ -43,15 +43,15 @@ def update_hours(sender, instance: BoothLocation, created, **kwargs):
         booth_location = instance.booth_location
         if old_instance:
             if _booth_dates_changed(old_instance, instance):
-                BoothDay.update_booth_day_attributes(booth_location=booth_location)
+                BoothDay.objects.update_booth_schedule(booth_location=booth_location)
             if _booth_enabled_changed(old_instance, instance):
-                BoothDay.enable_disable_booth_day(booth_location=booth_location)
+                BoothDay.objects.enable_disable_booth_day(booth_location=booth_location)
 
 
 @receiver(post_save, sender=BoothSchedule)
 def create_or_update_days(sender, instance: BoothSchedule, created, **kwargs):
     _logger.debug("Creating or updating days for booth day %s", str(instance.booth_location))
-    BoothDay.update_booth_day_attributes(instance.booth_location)
+    BoothDay.objects.update_booth_schedule(instance.booth_location)
 
 
 def _booth_dates_changed(old_instance: BoothLocation, new_instance: BoothLocation):

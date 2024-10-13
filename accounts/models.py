@@ -102,67 +102,18 @@ class CustomUser(AbstractUser):
         return self.is_admin or self.is_cookie_staff
 
 
-class CookieCaptain(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True)
-    tickets = models.IntegerField(default=3)
+class Configuration(models.Model):
+    tickets_per_week = models.IntegerField(default=3)
 
-    class Meta:
-        verbose_name = "Cookie Captain"
-        verbose_name_plural = "Cookie Captains"
+    def __str__(self):
+        return f"Configuration - Tickets per week: {self.tickets_per_week}"
 
-    # Add any additional fields or methods specific to Cookie Captain
-
-
-class CookieAdmin(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True)
-
-    class Meta:
-        verbose_name = "Cookie Admin"
-        verbose_name_plural = "Cookie Admins"
-
-    # Add any additional fields or methods specific to Cookie Admin
-
-
-class TCC(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True)
-
-    class Meta:
-        verbose_name = "TCC"
-        verbose_name_plural = "TCCs"
-
-    # Add any additional fields or methods specific to TCC
-
-
-class CookieStaff(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True)
-
-    class Meta:
-        verbose_name = "Cookie Staff"
-        verbose_name_plural = "Cookie Staff"
-
-    # Add any additional fields or methods specific to Cookie Staff
-
-
-@receiver(post_save, sender=CustomUser)
-def create_or_update_user_profile(sender, instance: CustomUser, created, **kwargs):
-    if created:
-        if instance.is_cookie_captain:
-            CookieCaptain.objects.create(user=instance)
-        elif instance.is_admin:
-            CookieAdmin.objects.create(user=instance)
-        elif instance.is_tcc:
-            TCC.objects.create(user=instance)
-        elif instance.is_cookie_staff:
-            CookieStaff.objects.create(user=instance)
-    else:
-        if instance.is_cookie_captain:
-            CookieCaptain.objects.get_or_create(user=instance)
-        elif instance.is_admin:
-            CookieAdmin.objects.get_or_create(user=instance)
-        elif instance.is_tcc:
-            TCC.objects.get_or_create(user=instance)
-        elif instance.is_cookie_staff:
-            CookieStaff.objects.get_or_create(user=instance)
+    @staticmethod
+    def get_cookie_captain_tickets_per_week():
+        config = Configuration.objects.first()
+        if config:
+            return config.tickets_per_week
+        return 0
 
 
 class UserPreferences(models.Model):

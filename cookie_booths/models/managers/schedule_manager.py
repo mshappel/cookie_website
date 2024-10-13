@@ -5,8 +5,8 @@ from django.apps import apps
 from django.db import models
 
 if TYPE_CHECKING:
-    from cookie_booths.models.schedule import BoothSchedule
     from cookie_booths.models.location import BoothLocation
+    from cookie_booths.models.schedule import BoothSchedule
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
@@ -26,5 +26,5 @@ class BoothScheduleManager(models.Manager):
             BoothHours: The booth hours instance.
         """
         _logger.debug("Fetching booth hours for booth location %s", str(booth_location))
-        booth_hours_model: "BoothSchedule" = apps.get_model("cookie_booths.BoothDailyAttributes")
+        booth_hours_model: "BoothSchedule" = apps.get_model("cookie_booths.BoothSchedule")
         return booth_hours_model.objects.get(booth_location=booth_location)

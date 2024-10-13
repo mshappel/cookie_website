@@ -1,16 +1,12 @@
 import logging
-from datetime import datetime, time
 from typing import TYPE_CHECKING, Optional
 
 from django.db import models
-from pytz import utc
 
-from cookie_booths.models.time_block import BoothTimeBlock
-from cookie_booths.models.helpers.day_update_blocks import BoothDayUpdateBlocks
 from cookie_booths.models.managers.days_manager import BoothDayManager
+from cookie_booths.models.time_block import BoothTimeBlock
 
 if TYPE_CHECKING:
-
     from cookie_booths.models.location import BoothLocation
 
 _logger = logging.getLogger(__name__)
@@ -27,7 +23,6 @@ class BoothDay(models.Model):
 
     booth_day_date = models.DateField(blank=True, null=True)
 
-    booth_day_hours_set = models.BooleanField(default=False)
     booth_day_open_time = models.DateTimeField(blank=True, null=True)
     booth_day_close_time = models.DateTimeField(blank=True, null=True)
     booth_day_is_golden = models.BooleanField(default=False)
@@ -60,50 +55,6 @@ class BoothDay(models.Model):
 
     def disable_freeforall(self) -> bool:
         return self._set_freeforall_enabled(False)
-
-    def add_or_update_hours(self, open_time: datetime, close_time: datetime) -> None:
-        """
-        Add or update the hours for a booth day.
-
-        Args:
-            open_time (datetime): The open time for the booth day.
-            close_time (datetime): The close time for the booth day.
-
-        Returns:
-            None
-        """
-        update_blocks = BoothDayUpdateBlocks(self, open_time, close_time)
-        update_blocks.add_or_update_hours_per_day()
-
-    def update_day(
-        self,
-        open_time: time,
-        close_time: time,
-        is_golden: bool,
-    ) -> None:
-        """
-        Updates the booth day with the given open and close times and golden booth status.
-
-        Args:
-            open_time (datetime.time): The opening time of the booth.
-            close_time (datetime.time): The closing time of the booth.
-            is_golden (bool): Indicates whether the booth is a golden booth or not.
-
-        Returns:
-            None
-        """
-        day = self.booth_day_date
-        open_datetime = datetime.combine(day, open_time, tzinfo=utc)
-        close_datetime = datetime.combine(day, close_time, tzinfo=utc)
-
-        # Add or update hours per day using BoothDayUpdateBlocks
-        booth_day_update_blocks = BoothDayUpdateBlocks(
-            booth_day_instance=self,
-            open_time=open_datetime,
-            close_time=close_datetime,
-            is_golden=is_golden,
-        )
-        booth_day_update_blocks.add_or_update_hours_per_day()
 
     def _set_enabled(
         self,

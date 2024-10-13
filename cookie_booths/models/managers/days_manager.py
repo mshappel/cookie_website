@@ -4,9 +4,6 @@ from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.db import models
-from django.db.models import Q
-
-from cookie_booths.models.managers.helpers.day_update_days import BoothDayUpdateDays
 
 if TYPE_CHECKING:
     from cookie_booths.models.day import BoothDay
@@ -27,44 +24,21 @@ class BoothDayManager(models.Manager):
     def order_booth_days(self):
         return self.booth_day_model.objects.order_by("booth_location", "booth_day_date")
 
-    def find_booth_days_outside_range_for_deletion(
-        self,
-        booth_location: "BoothLocation",
-        start_date: date,
-        end_date: date,
-        deletions: list,
-    ) -> None:
-        """Collects booth days that are out of the specified date range for deletion.
-
+    def get_existing_booth_days_in_bulk(
+        self, location: "BoothLocation", booth_start_date: date, booth_end_date: date
+    ) -> models.QuerySet:
+        """
+        Retrieves existing booth days for a given location within a specified date range.
         Args:
-            booth_location (BoothLocation): The booth location instance to delete days for.
-            start_date (date): The start date of the range.
-            end_date (date): The end date of the range.
-            deletions (list): List to collect deletions.
+            location (BoothLocation): The location of the booth.
+            booth_start_date (date): The start date of the booth.
+            booth_end_date (date): The end date of the booth.
+        Returns:
+            models.QuerySet: A queryset containing the existing booth days within the specified date range,
+                             indexed by the booth day date.
         """
-        query = Q(booth_location=booth_location)
-
-        if start_date and end_date:
-            query &= Q(booth_day_date__lt=start_date) | Q(booth_day_date__gt=end_date)
-
-        out_of_range_booth_days = self.filter(query).values_list("id", flat=True)
-        deletions.extend(out_of_range_booth_days)
-
-    def update_booth_day_attributes(self, booth_location: "BoothLocation") -> None:
-        """
-        Updates the booths for the given booth location. Will delete days no longer in range
-
-        Args:
-            booth_location (BoothLocation): The booth location instance to update hours for.
-        """
-        update_days = BoothDayUpdateDays(self.booth_day_model, booth_location)
-        update_days.update_booth_common(BoothDayUpdateDays.update_booth_day_attributes)
-
-    def enable_disable_booth_day(self, booth_location: "BoothLocation") -> None:
-        """Updates the booth for the given booth location.
-
-        Args:
-            booth_location (BoothLocation): The booth location instance to update.
-        """
-        update_days = BoothDayUpdateDays(self.booth_day_model, booth_location)
-        update_days.update_booth_common(BoothDayUpdateDays.enable_disable_booth_day)
+        existing_booth_days = self.booth_day_model.objects.filter(
+            booth_location=location,
+            booth_day_date__range=[booth_start_date, booth_end_date],
+        ).in_bulk(field_name="booth_day_date")
+        return existing_booth_days

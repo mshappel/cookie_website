@@ -131,3 +131,7 @@ class BoothHoursForm(forms.ModelForm):
                     day_of_week_close,
                     f"Please specify a valid close time for {day_of_week.title()}.",
                 )
+
+
+#          "booth_start_date": _("Enter the date sales will begin at this booth."),
+#         "booth_end_date": _("Enter the last date of sales for this booth."),

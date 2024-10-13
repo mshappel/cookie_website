@@ -16,6 +16,8 @@ phonenumberslite = "^8.13.40"
 twilio = "^9.2.3"
 django-bootstrap5 = "^24.2"
 pyyaml = "^6.0.2"
+coverage = "^7.6.1"
+python-dateutil = "^2.9.0.post0"
 
 
 [build-system]

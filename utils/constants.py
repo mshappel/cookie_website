@@ -51,3 +51,6 @@ class DayOfWeek(Enum):
     FRIDAY = 4
     SATURDAY = 5
     SUNDAY = 6
+
+
+GOLDEN_TICKET_LIST = [DayOfWeek.SATURDAY.name.lower(), DayOfWeek.SUNDAY.name.lower()]

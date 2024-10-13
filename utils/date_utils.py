@@ -4,6 +4,9 @@ from typing import Generator
 from django.utils import timezone
 from django.utils.timezone import timedelta
 
+TIME_BLOCK_IN_HOURS = 2
+TIME_BLOCK_IN_SECONDS = TIME_BLOCK_IN_HOURS * 3600
+
 
 def get_week_start_end_from_date(date):
     start_date = date - timedelta(days=date.weekday())

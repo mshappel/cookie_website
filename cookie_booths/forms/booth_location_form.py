@@ -35,8 +35,6 @@ class BoothLocationForm(forms.ModelForm):
             "booth_block_level_restrictions_start": _("Lowest Troop Level"),
             "booth_block_level_restrictions_end": _("Highest Troop Level"),
             "booth_enabled": _("Booth Is Enabled"),
-            "booth_start_date": _("Enter the date sales will begin at this booth."),
-            "booth_end_date": _("Enter the last date of sales for this booth."),
         }
 
         fields = list(field_label_map.keys())

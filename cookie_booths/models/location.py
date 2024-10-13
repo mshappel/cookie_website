@@ -3,7 +3,8 @@ import logging
 from django.db import models
 
 from cookie_booths.models.managers.location_manager import BoothLocationManager
-from utils.constants import GIRL_SCOUT_TROOP_LEVELS_WITH_NONE
+from utils.constants import GirlScoutTroopLevel
+from utils.enum_conversation import enum_choices_to_tuple
 
 _logger = logging.getLogger(__name__)
 _logger.addHandler(logging.NullHandler())
@@ -19,14 +20,11 @@ class BoothLocation(models.Model):
     booth_enabled = models.BooleanField(default=False, blank=False, null=False)
 
     booth_block_level_restrictions_start = models.SmallIntegerField(
-        choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE, default=0, blank=False, null=False
+        choices=enum_choices_to_tuple(GirlScoutTroopLevel), default=0, blank=False, null=False
     )
     booth_block_level_restrictions_end = models.SmallIntegerField(
-        choices=GIRL_SCOUT_TROOP_LEVELS_WITH_NONE, default=0, blank=False, null=False
+        choices=enum_choices_to_tuple(GirlScoutTroopLevel), default=0, blank=False, null=False
     )
-
-    booth_start_date = models.DateField(blank=False, null=False)
-    booth_end_date = models.DateField(blank=False, null=False)
 
     booth_is_outside = models.BooleanField(default=False, blank=False, null=False)
     booth_notes = models.CharField(max_length=100, blank=True)
